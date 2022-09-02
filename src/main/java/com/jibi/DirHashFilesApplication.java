@@ -1,6 +1,5 @@
 package com.jibi;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
@@ -94,19 +93,40 @@ public class DirHashFilesApplication {
         }
     }
 
+    private HashMap<String, String> mapDirFiles(String dir) {
+        log.debug("**************************************************************************************************************************************************************************");
+        Collection<File> files = getFiles(dir);
+        HashMap<String, String> hashMapFiles = new HashMap<>();
+        String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
+        long numTotalFiles = files.size();
+        double blockSize = 1.0 * numTotalFiles / numOfPercentPrints;
+        log.info("Number of files to hash {}", numTotalFiles);
+        AtomicLong hashedFiles = new AtomicLong(0);
+        files.parallelStream().forEach(file -> {
+            String fileHash = getFileChecksum(file);
+            hashedFiles.incrementAndGet();
+            String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
+            //log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
+            hashMapFiles.put(relativeFilePath, fileHash);
+            printHashingStatus(numTotalFiles, blockSize, hashedFiles.get());
+        });
+        return hashMapFiles;
+    }
+
+    private long numOfPercentPrints = 1000;
+    private double lastBlockPrint = 0;
+
+    private void printHashingStatus(long numTotalFiles, double blockSize, long hashedFiles) {
+        if (hashedFiles >= blockSize * lastBlockPrint) {
+            double percentCompleted = 100.0 * hashedFiles / numTotalFiles;
+            lastBlockPrint = lastBlockPrint + blockSize;
+            log.debug("Hashing Percent Completed={}   [{}/{}]  ", String.format("%.2f", percentCompleted), hashedFiles, numTotalFiles);
+        }
+    }
+
     private void startCreateHash(String dirValue, String outFileValue) {
         try {
-            Collection<File> files = getFiles(dirValue);
-
-            log.debug("**************************************************************************************************************************************************************************");
-            HashMap<String, String> hashMapFiles = new HashMap<>();
-            String dirValuePrefix = (dirValue + "\\").replaceAll("\\\\", "\\\\\\\\");
-            files.parallelStream().forEach(file -> {
-                String fileHash = getFileChecksum(file);
-                String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
-                log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
-                hashMapFiles.put(relativeFilePath, fileHash);
-            });
+            HashMap<String, String> hashMapFiles = mapDirFiles(dirValue);
 
             Path path = Path.of(outFileValue);
             log.debug("**************************************************************************************************************************************************************************");
@@ -121,17 +141,7 @@ public class DirHashFilesApplication {
 
     private void startCheckHash(String dirValue, String inFileValue) {
         try {
-            Collection<File> files = getFiles(dirValue);
-
-            log.debug("**************************************************************************************************************************************************************************");
-            HashMap<String, String> hashMapFiles = new HashMap<>();
-            String dirValuePrefix = (dirValue + "\\").replaceAll("\\\\", "\\\\\\\\");
-            files.parallelStream().forEach(file -> {
-                String fileHash = getFileChecksum(file);
-                String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
-                log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
-                hashMapFiles.put(relativeFilePath, fileHash);
-            });
+            HashMap<String, String> hashMapFiles = mapDirFiles(dirValue);
 
             Map<String, String> sigMap = readKeyValueFile(inFileValue);
 
@@ -174,27 +184,8 @@ public class DirHashFilesApplication {
 
     private void startCompareHash(String dirLeftValue, String dirRightValue) {
         try {
-            Collection<File> filesLeft = getFiles(dirLeftValue);
-            Collection<File> filesRight = getFiles(dirRightValue);
-
-            log.debug("**************************************************************************************************************************************************************************");
-            HashMap<String, String> hashMapFilesLeft = new HashMap<>();
-            String dirValuePrefixLeft = (dirLeftValue + "\\").replaceAll("\\\\", "\\\\\\\\");
-            filesLeft.parallelStream().forEach(file -> {
-                String fileHash = getFileChecksum(file);
-                String relativeFilePath = file.toString().replaceFirst(dirValuePrefixLeft, "");
-                log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
-                hashMapFilesLeft.put(relativeFilePath, fileHash);
-            });
-            log.debug("**************************************************************************************************************************************************************************");
-            HashMap<String, String> hashMapFilesRight = new HashMap<>();
-            String dirValuePrefixRight = (dirRightValue + "\\").replaceAll("\\\\", "\\\\\\\\");
-            filesRight.parallelStream().forEach(file -> {
-                String fileHash = getFileChecksum(file);
-                String relativeFilePath = file.toString().replaceFirst(dirValuePrefixRight, "");
-                log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
-                hashMapFilesRight.put(relativeFilePath, fileHash);
-            });
+            HashMap<String, String> hashMapFilesLeft = mapDirFiles(dirLeftValue);
+            HashMap<String, String> hashMapFilesRight = mapDirFiles(dirRightValue);
 
             AtomicLong matchedFiles = new AtomicLong(0);
             AtomicLong notMatchedFiles = new AtomicLong(0);
