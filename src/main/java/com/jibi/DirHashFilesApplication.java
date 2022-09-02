@@ -49,6 +49,14 @@ public class DirHashFilesApplication {
         infile.setRequired(false);
         options.addOption(infile);
 
+        Option dirLeft = new Option("dl", "dirleft", true, "Directory left");
+        dirLeft.setRequired(false);
+        options.addOption(dirLeft);
+
+        Option dirRight = new Option("dr", "dirright", true, "Directory right");
+        dirRight.setRequired(false);
+        options.addOption(dirRight);
+
         HelpFormatter formatter = new HelpFormatter();
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd;
@@ -76,6 +84,13 @@ public class DirHashFilesApplication {
                 throw new RuntimeException("incorrect parameters...");
             }
             dirHashFilesApplication.startCheckHash(dirValue, inFileValue);
+        } else if ("comparehash".equals(modeValue)) {
+            String dirLeftValue = cmd.getOptionValue("dirleft");
+            String dirRightValue = cmd.getOptionValue("dirright");
+            if (StringUtils.isEmpty(dirLeftValue) || StringUtils.isEmpty(dirRightValue)) {
+                throw new RuntimeException("incorrect parameters...");
+            }
+            dirHashFilesApplication.startCompareHash(dirLeftValue, dirRightValue);
         }
     }
 
@@ -145,6 +160,67 @@ public class DirHashFilesApplication {
                 if (!hashMapFiles.containsKey(file)) {
                     missingFiles.incrementAndGet();
                     log.info("{} {} {}", StringUtils.rightPad("Missing File", PAD_MARK), StringUtils.rightPad(sigMap.get(file), PAD_HASH), file);
+                }
+            });
+            log.debug("**************************************************************************************************************************************************************************");
+            log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
+            log.debug("**************************************************************************************************************************************************************************");
+
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    private void startCompareHash(String dirLeftValue, String dirRightValue) {
+        try {
+            Collection<File> filesLeft = getFiles(dirLeftValue);
+            Collection<File> filesRight = getFiles(dirRightValue);
+
+            log.debug("**************************************************************************************************************************************************************************");
+            HashMap<String, String> hashMapFilesLeft = new HashMap<>();
+            String dirValuePrefixLeft = (dirLeftValue + "\\").replaceAll("\\\\", "\\\\\\\\");
+            filesLeft.parallelStream().forEach(file -> {
+                String fileHash = getFileChecksum(file);
+                String relativeFilePath = file.toString().replaceFirst(dirValuePrefixLeft, "");
+                log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
+                hashMapFilesLeft.put(relativeFilePath, fileHash);
+            });
+            log.debug("**************************************************************************************************************************************************************************");
+            HashMap<String, String> hashMapFilesRight = new HashMap<>();
+            String dirValuePrefixRight = (dirRightValue + "\\").replaceAll("\\\\", "\\\\\\\\");
+            filesRight.parallelStream().forEach(file -> {
+                String fileHash = getFileChecksum(file);
+                String relativeFilePath = file.toString().replaceFirst(dirValuePrefixRight, "");
+                log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
+                hashMapFilesRight.put(relativeFilePath, fileHash);
+            });
+
+            AtomicLong matchedFiles = new AtomicLong(0);
+            AtomicLong notMatchedFiles = new AtomicLong(0);
+            AtomicLong newFiles = new AtomicLong(0);
+            AtomicLong missingFiles = new AtomicLong(0);
+
+            log.debug("**************************************************************************************************************************************************************************");
+            hashMapFilesLeft.keySet().stream().forEach(file -> {
+                if (hashMapFilesRight.containsKey(file)) {
+                    if (!hashMapFilesLeft.get(file).equals(hashMapFilesRight.get(file))) {
+                        notMatchedFiles.incrementAndGet();
+                        log.info("{} {} {}", StringUtils.rightPad("Not Matched", PAD_MARK), StringUtils.rightPad(hashMapFilesRight.get(file), PAD_HASH), file);
+                    } else {
+                        matchedFiles.incrementAndGet();
+                        log.debug("{} {} {}", StringUtils.rightPad("Matched", PAD_MARK), StringUtils.rightPad(hashMapFilesRight.get(file), PAD_HASH), file);
+                    }
+                } else {
+                    newFiles.incrementAndGet();
+                    log.info("{} {} {}", StringUtils.rightPad("New File", PAD_MARK), StringUtils.rightPad(hashMapFilesRight.get(file), PAD_HASH), file);
+                }
+            });
+
+            hashMapFilesRight.keySet().stream().forEach(file -> {
+                if (!hashMapFilesLeft.containsKey(file)) {
+                    missingFiles.incrementAndGet();
+                    log.info("{} {} {}", StringUtils.rightPad("Missing File", PAD_MARK), StringUtils.rightPad(hashMapFilesRight.get(file), PAD_HASH), file);
                 }
             });
             log.debug("**************************************************************************************************************************************************************************");
