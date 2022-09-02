@@ -87,10 +87,15 @@ public class DirHashFilesApplication {
             HashMap<String, String> hashMapFiles = new HashMap<>();
             String dirValuePrefix = (dirValue + "\\").replaceAll("\\\\", "\\\\\\\\");
             files.parallelStream().forEach(file -> {
-                hashMapFiles.put(file.toString().replaceFirst(dirValuePrefix, ""), getFileChecksum(file));
+                String fileHash = getFileChecksum(file);
+                String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
+                log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
+                hashMapFiles.put(relativeFilePath, fileHash);
             });
 
             Path path = Path.of(outFileValue);
+            log.debug("**************************************************************************************************************************************************************************");
+            log.info("Output file path {}", path.toFile().getAbsolutePath());
             Files.write(path, () -> hashMapFiles.entrySet().stream()
                     .<CharSequence>map(e -> e.getValue() + "=" + e.getKey())
                     .iterator());
@@ -107,7 +112,10 @@ public class DirHashFilesApplication {
             HashMap<String, String> hashMapFiles = new HashMap<>();
             String dirValuePrefix = (dirValue + "\\").replaceAll("\\\\", "\\\\\\\\");
             files.parallelStream().forEach(file -> {
-                hashMapFiles.put(file.toString().replaceFirst(dirValuePrefix, ""), getFileChecksum(file));
+                String fileHash = getFileChecksum(file);
+                String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
+                log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
+                hashMapFiles.put(relativeFilePath, fileHash);
             });
 
             Map<String, String> sigMap = readKeyValueFile(inFileValue);
@@ -192,10 +200,7 @@ public class DirHashFilesApplication {
                 sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
             }
 
-            String hash = sb.toString();
-            log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(hash, PAD_HASH), file);
-            //return complete hash
-            return hash;
+            return sb.toString();
         } catch (IOException ioException) {
             return null;
         } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
