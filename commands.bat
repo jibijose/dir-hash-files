@@ -19,3 +19,9 @@ java -jar target\dirhashfiles-1.0-SNAPSHOT-shaded.jar -m createhash -d "I:\TO_SY
 java -jar target\dirhashfiles-1.0-SNAPSHOT-shaded.jar -m checkhash -d "R:\TO_SYNC_UNSORTED" -i jj.sig
 java -jar target\dirhashfiles-1.0-SNAPSHOT-shaded.jar -m comparehash -dl "I:\TO_SYNC_UNSORTED" -dr "R:\TO_SYNC_UNSORTED"
 
+
+C:\ not working.
+% by file size, not by number of files.
+Optimize thread pool based on IO capacity.
+
+

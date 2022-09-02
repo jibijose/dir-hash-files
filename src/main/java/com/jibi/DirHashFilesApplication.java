@@ -1,5 +1,7 @@
 package com.jibi;
 
+import static org.apache.commons.lang3.StringUtils.rightPad;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
@@ -15,9 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -126,7 +126,7 @@ public class DirHashFilesApplication {
 
     private void startCreateHash(String dirValue, String outFileValue) {
         try {
-            HashMap<String, String> hashMapFiles = mapDirFiles(dirValue);
+            Map<String, String> hashMapFiles = mapDirFiles(dirValue);
 
             Path path = Path.of(outFileValue);
             log.debug("**************************************************************************************************************************************************************************");
@@ -139,44 +139,58 @@ public class DirHashFilesApplication {
         }
     }
 
+    private void compareAndReportLeftRight(Map<String, String> hashMapFilesLeft, Map<String, String> hashMapFilesRight) {
+
+
+        Map<String, HashStatus> hashStatusMap = new HashMap<>();
+
+        hashMapFilesLeft.keySet().stream().forEach(file -> {
+            hashStatusMap.put(file, HashStatus.buildWithLeftHash(file, "Missing File", hashMapFilesLeft.get(file)));
+        });
+        hashMapFilesRight.keySet().stream().forEach(file -> {
+            if (hashMapFilesLeft.containsKey(file)) {
+                String leftHash = hashMapFilesLeft.get((file));
+                String rightHash = hashMapFilesRight.get(file);
+                hashStatusMap.get(file).setRighthash(rightHash);
+                if (leftHash.equals(rightHash)) {
+                    hashStatusMap.get(file).setStatus("Matched");
+                } else {
+                    hashStatusMap.get(file).setStatus("Not Matched");
+                }
+            } else {
+                hashStatusMap.put(file, new HashStatus(file, "New File", null, hashMapFilesRight.get(file)));
+            }
+        });
+        log.debug("**************************************************************************************************************************************************************************");
+        hashStatusMap.values().stream().filter(HashStatus::isNotMatched).forEach(hashStatus -> {
+            log.debug("{} {} {} {}", rightPad(hashStatus.getStatus(), PAD_MARK), rightPad(hashStatus.getLefthash(), PAD_HASH),
+                    rightPad(hashStatus.getRighthash(), PAD_HASH), hashStatus.getFilename());
+        });
+        log.debug("**************************************************************************************************************************************************************************");
+        hashStatusMap.values().stream().filter(HashStatus::isMissingFile).forEach(hashStatus -> {
+            log.debug("{} {} {} {}", rightPad(hashStatus.getStatus(), PAD_MARK), rightPad(hashStatus.getLefthash(), PAD_HASH),
+                    rightPad(hashStatus.getRighthash(), PAD_HASH), hashStatus.getFilename());
+        });
+        log.debug("**************************************************************************************************************************************************************************");
+        hashStatusMap.values().stream().filter(HashStatus::isNewFile).forEach(hashStatus -> {
+            log.debug("{} {} {} {}", rightPad(hashStatus.getStatus(), PAD_MARK), rightPad(hashStatus.getLefthash(), PAD_HASH),
+                    rightPad(hashStatus.getRighthash(), PAD_HASH), hashStatus.getFilename());
+        });
+        log.debug("**************************************************************************************************************************************************************************");
+        long matchedFiles = hashStatusMap.values().stream().filter(HashStatus::isMatched).count();
+        long notMatchedFiles = hashStatusMap.values().stream().filter(HashStatus::isNotMatched).count();
+        long missingFiles = hashStatusMap.values().stream().filter(HashStatus::isMissingFile).count();
+        long newFiles = hashStatusMap.values().stream().filter(HashStatus::isNewFile).count();
+        log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
+        log.debug("**************************************************************************************************************************************************************************");
+    }
+
     private void startCheckHash(String dirValue, String inFileValue) {
         try {
-            HashMap<String, String> hashMapFiles = mapDirFiles(dirValue);
-
+            Map<String, String> hashMapFiles = mapDirFiles(dirValue);
             Map<String, String> sigMap = readKeyValueFile(inFileValue);
 
-            AtomicLong matchedFiles = new AtomicLong(0);
-            AtomicLong notMatchedFiles = new AtomicLong(0);
-            AtomicLong newFiles = new AtomicLong(0);
-            AtomicLong missingFiles = new AtomicLong(0);
-
-            log.debug("**************************************************************************************************************************************************************************");
-            hashMapFiles.keySet().stream().forEach(file -> {
-                if (sigMap.containsKey(file)) {
-                    if (!hashMapFiles.get(file).equals(sigMap.get(file))) {
-                        notMatchedFiles.incrementAndGet();
-                        log.info("{} {} {}", StringUtils.rightPad("Not Matched", PAD_MARK), StringUtils.rightPad(sigMap.get(file), PAD_HASH), file);
-                    } else {
-                        matchedFiles.incrementAndGet();
-                        log.debug("{} {} {}", StringUtils.rightPad("Matched", PAD_MARK), StringUtils.rightPad(sigMap.get(file), PAD_HASH), file);
-                    }
-                } else {
-                    newFiles.incrementAndGet();
-                    log.info("{} {} {}", StringUtils.rightPad("New File", PAD_MARK), StringUtils.rightPad(sigMap.get(file), PAD_HASH), file);
-                }
-            });
-
-            sigMap.keySet().stream().forEach(file -> {
-                if (!hashMapFiles.containsKey(file)) {
-                    missingFiles.incrementAndGet();
-                    log.info("{} {} {}", StringUtils.rightPad("Missing File", PAD_MARK), StringUtils.rightPad(sigMap.get(file), PAD_HASH), file);
-                }
-            });
-            log.debug("**************************************************************************************************************************************************************************");
-            log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
-            log.debug("**************************************************************************************************************************************************************************");
-
-
+            compareAndReportLeftRight(sigMap, hashMapFiles);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -184,41 +198,10 @@ public class DirHashFilesApplication {
 
     private void startCompareHash(String dirLeftValue, String dirRightValue) {
         try {
-            HashMap<String, String> hashMapFilesLeft = mapDirFiles(dirLeftValue);
-            HashMap<String, String> hashMapFilesRight = mapDirFiles(dirRightValue);
+            Map<String, String> hashMapFilesLeft = mapDirFiles(dirLeftValue);
+            Map<String, String> hashMapFilesRight = mapDirFiles(dirRightValue);
 
-            AtomicLong matchedFiles = new AtomicLong(0);
-            AtomicLong notMatchedFiles = new AtomicLong(0);
-            AtomicLong newFiles = new AtomicLong(0);
-            AtomicLong missingFiles = new AtomicLong(0);
-
-            log.debug("**************************************************************************************************************************************************************************");
-            hashMapFilesLeft.keySet().stream().forEach(file -> {
-                if (hashMapFilesRight.containsKey(file)) {
-                    if (!hashMapFilesLeft.get(file).equals(hashMapFilesRight.get(file))) {
-                        notMatchedFiles.incrementAndGet();
-                        log.info("{} {} {}", StringUtils.rightPad("Not Matched", PAD_MARK), StringUtils.rightPad(hashMapFilesRight.get(file), PAD_HASH), file);
-                    } else {
-                        matchedFiles.incrementAndGet();
-                        log.debug("{} {} {}", StringUtils.rightPad("Matched", PAD_MARK), StringUtils.rightPad(hashMapFilesRight.get(file), PAD_HASH), file);
-                    }
-                } else {
-                    newFiles.incrementAndGet();
-                    log.info("{} {} {}", StringUtils.rightPad("New File", PAD_MARK), StringUtils.rightPad(hashMapFilesRight.get(file), PAD_HASH), file);
-                }
-            });
-
-            hashMapFilesRight.keySet().stream().forEach(file -> {
-                if (!hashMapFilesLeft.containsKey(file)) {
-                    missingFiles.incrementAndGet();
-                    log.info("{} {} {}", StringUtils.rightPad("Missing File", PAD_MARK), StringUtils.rightPad(hashMapFilesRight.get(file), PAD_HASH), file);
-                }
-            });
-            log.debug("**************************************************************************************************************************************************************************");
-            log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
-            log.debug("**************************************************************************************************************************************************************************");
-
-
+            compareAndReportLeftRight(hashMapFilesLeft, hashMapFilesRight);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
