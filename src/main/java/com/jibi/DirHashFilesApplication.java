@@ -1,5 +1,7 @@
 package com.jibi;
 
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
@@ -20,7 +22,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
+@Slf4j
 public class DirHashFilesApplication {
+
+    private static int PAD_MARK = 14;
+    private static int PAD_HASH = 66;
+
+
     public static void main(String[] args) {
         DirHashFilesApplication dirHashFilesApplication = new DirHashFilesApplication();
         Options options = new Options();
@@ -46,8 +54,8 @@ public class DirHashFilesApplication {
         CommandLine cmd;
         try {
             cmd = parser.parse(options, args);
-        } catch (ParseException e) {
-            System.out.println(e.getMessage());
+        } catch (ParseException parseException) {
+            log.error("Parseexception", parseException);
             formatter.printHelp("Java directory hasher", options);
             System.exit(1);
             return;
@@ -74,16 +82,13 @@ public class DirHashFilesApplication {
     private void startCreateHash(String dirValue, String outFileValue) {
         try {
             Collection<File> files = getFiles(dirValue);
-            //files.stream().forEach(System.out::println);
 
+            log.debug("**************************************************************************************************************************************************************************");
             HashMap<String, String> hashMapFiles = new HashMap<>();
             String dirValuePrefix = (dirValue + "\\").replaceAll("\\\\", "\\\\\\\\");
             files.parallelStream().forEach(file -> {
                 hashMapFiles.put(file.toString().replaceFirst(dirValuePrefix, ""), getFileChecksum(file));
             });
-            //System.out.println("**************************************************************************************************************************************************************************");
-            //hashMapFiles.keySet().stream().forEach(el -> System.out.println(hashMapFiles.get(el) + "     " + el));
-            //System.out.println("**************************************************************************************************************************************************************************");
 
             Path path = Path.of(outFileValue);
             Files.write(path, () -> hashMapFiles.entrySet().stream()
@@ -97,16 +102,13 @@ public class DirHashFilesApplication {
     private void startCheckHash(String dirValue, String inFileValue) {
         try {
             Collection<File> files = getFiles(dirValue);
-            //files.stream().forEach(System.out::println);
 
+            log.debug("**************************************************************************************************************************************************************************");
             HashMap<String, String> hashMapFiles = new HashMap<>();
             String dirValuePrefix = (dirValue + "\\").replaceAll("\\\\", "\\\\\\\\");
             files.parallelStream().forEach(file -> {
                 hashMapFiles.put(file.toString().replaceFirst(dirValuePrefix, ""), getFileChecksum(file));
             });
-            //System.out.println("**************************************************************************************************************************************************************************");
-            //hashMapFiles.keySet().stream().forEach(el -> System.out.println(hashMapFiles.get(el) + "     " + el));
-            //System.out.println("**************************************************************************************************************************************************************************");
 
             Map<String, String> sigMap = readKeyValueFile(inFileValue);
 
@@ -115,31 +117,31 @@ public class DirHashFilesApplication {
             AtomicLong newFiles = new AtomicLong(0);
             AtomicLong missingFiles = new AtomicLong(0);
 
-            System.out.println("**************************************************************************************************************************************************************************");
+            log.debug("**************************************************************************************************************************************************************************");
             hashMapFiles.keySet().stream().forEach(file -> {
                 if (sigMap.containsKey(file)) {
                     if (!hashMapFiles.get(file).equals(sigMap.get(file))) {
                         notMatchedFiles.incrementAndGet();
-                        System.out.println(StringUtils.rightPad("Not Matched", 20) + StringUtils.rightPad(sigMap.get(file), 70) + file);
+                        log.info("{} {} {}", StringUtils.rightPad("Not Matched", PAD_MARK), StringUtils.rightPad(sigMap.get(file), PAD_HASH), file);
                     } else {
                         matchedFiles.incrementAndGet();
-                        System.out.println(StringUtils.rightPad("Matched", 20) + StringUtils.rightPad(hashMapFiles.get(file), 70) + file);
+                        log.debug("{} {} {}", StringUtils.rightPad("Matched", PAD_MARK), StringUtils.rightPad(sigMap.get(file), PAD_HASH), file);
                     }
                 } else {
                     newFiles.incrementAndGet();
-                    System.out.println(StringUtils.rightPad("New File", 20) + StringUtils.rightPad(hashMapFiles.get(file), 70) + file);
+                    log.info("{} {} {}", StringUtils.rightPad("New File", PAD_MARK), StringUtils.rightPad(sigMap.get(file), PAD_HASH), file);
                 }
             });
 
             sigMap.keySet().stream().forEach(file -> {
                 if (!hashMapFiles.containsKey(file)) {
                     missingFiles.incrementAndGet();
-                    System.out.println(StringUtils.rightPad("Missing File", 20) + StringUtils.rightPad(sigMap.get(file), 70) + file);
+                    log.info("{} {} {}", StringUtils.rightPad("Missing File", PAD_MARK), StringUtils.rightPad(sigMap.get(file), PAD_HASH), file);
                 }
             });
-            System.out.println("**************************************************************************************************************************************************************************");
-            System.out.println("Matched = " + matchedFiles + ", Not matched = " + notMatchedFiles + ", Missing files = " + missingFiles + ", New files = " + newFiles);
-            System.out.println("**************************************************************************************************************************************************************************");
+            log.debug("**************************************************************************************************************************************************************************");
+            log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
+            log.debug("**************************************************************************************************************************************************************************");
 
 
         } catch (Exception exception) {
@@ -190,8 +192,10 @@ public class DirHashFilesApplication {
                 sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
             }
 
+            String hash = sb.toString();
+            log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(hash, PAD_HASH), file);
             //return complete hash
-            return sb.toString();
+            return hash;
         } catch (IOException ioException) {
             return null;
         } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
@@ -202,7 +206,6 @@ public class DirHashFilesApplication {
     private Collection<File> getFiles(String dirValue) {
         File dir = new File(dirValue);
         Collection files = FileUtils.listFiles(dir, new RegexFileFilter("^(.*?)"), DirectoryFileFilter.DIRECTORY);
-        //files.stream().forEach(System.out::println);
         return files;
     }
 }
