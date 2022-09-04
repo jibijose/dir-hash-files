@@ -7,6 +7,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.RegexFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -76,6 +78,8 @@ public class DirHashFilesApplication {
                 throw new RuntimeException("incorrect parameters...");
             }
             dirHashFilesApplication.startCreateHash(dirValue, outFileValue);
+            //Collection<File> files = dirHashFilesApplication.getFiles(dirValue);
+            //files.stream().forEach(System.out::println);
         } else if ("checkhash".equals(modeValue)) {
             String dirValue = cmd.getOptionValue("dir");
             String inFileValue = cmd.getOptionValue("infile");
@@ -221,7 +225,7 @@ public class DirHashFilesApplication {
         return map;
     }
 
-    private static String getFileChecksum(File file) {
+    private String getFileChecksum(File file) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             //Get file input stream for reading the file content
@@ -258,8 +262,32 @@ public class DirHashFilesApplication {
         }
     }
 
-    private Collection<File> getFiles(String dirValue) {
+    private static List<File> getFiles(final String directory) {
+        if (directory == null) {
+            return Collections.EMPTY_LIST;
+        }
+        List<File> fileList = new ArrayList<>();
+        File[] files = new File(directory).listFiles();
+        if (files == null) {
+            return Collections.EMPTY_LIST;
+        }
+        for (File element : files) {
+            if (element.isDirectory()) {
+                fileList.addAll(getFiles(element.getPath()));
+            } else {
+                fileList.add(element);
+            }
+        }
+        return fileList;
+    }
+
+    private Collection<File> getFilesOld(String dirValue) {
         File dir = new File(dirValue);
+        File[] filesRootDir = dir.listFiles();
+        for (File file : filesRootDir) {
+            if (file.isDirectory()) continue;
+        }
+
         Collection files = FileUtils.listFiles(dir, new RegexFileFilter("^(.*?)"), DirectoryFileFilter.DIRECTORY);
         return files;
     }
