@@ -1,0 +1,7 @@
+
+
+Status by size instead of file counts?
+
+status as a diff thread?
+
+two drives in two diff thread pools?

@@ -1,5 +1,6 @@
 package com.jibi;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,9 @@ public class DirHashFilesApplication {
 
     private static int PAD_MARK = 14;
     private static int PAD_HASH = 66;
+
+    private static int FILE_PAD_HASH = 64;
+    private static int FILE_PAD_SIZE = 15;
 
 
     public static void main(String[] args) {
@@ -97,10 +101,11 @@ public class DirHashFilesApplication {
         }
     }
 
-    private HashMap<String, String> mapDirFiles(String dir) {
+    private Collection<FileInfo> mapDirFiles(String dir) {
         log.debug("**************************************************************************************************************************************************************************");
         Collection<File> files = getFiles(dir);
-        HashMap<String, String> hashMapFiles = new HashMap<>();
+
+        /* HashMap<String, String> hashMapFiles = new HashMap<>();
         String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
         long numTotalFiles = files.size();
         double blockSize = 1.0 * numTotalFiles / numOfPercentPrints;
@@ -113,8 +118,23 @@ public class DirHashFilesApplication {
             //log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
             hashMapFiles.put(relativeFilePath, fileHash);
             printHashingStatus(numTotalFiles, blockSize, hashedFiles.get());
+        }); */
+
+        Collection<FileInfo> listFileInfos = new ArrayList<>();
+        String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
+        files.stream().forEach(file -> {
+            String fileHash = getFileChecksum(file);
+            String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
+            FileInfo fileInfo = new FileInfo();
+            fileInfo.setFilename(relativeFilePath);
+            fileInfo.setHash(fileHash);
+            fileInfo.setSize(file.length());
+            //file.lastModified(new Date(file.lastModified());
+            listFileInfos.add(fileInfo);
         });
-        return hashMapFiles;
+
+
+        return listFileInfos;
     }
 
     private long numOfPercentPrints = 1000;
@@ -130,55 +150,53 @@ public class DirHashFilesApplication {
 
     private void startCreateHash(String dirValue, String outFileValue) {
         try {
-            Map<String, String> hashMapFiles = mapDirFiles(dirValue);
+            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
 
             Path path = Path.of(outFileValue);
             log.debug("**************************************************************************************************************************************************************************");
             log.info("Output file path {}", path.toFile().getAbsolutePath());
-            Files.write(path, () -> hashMapFiles.entrySet().stream()
-                    .<CharSequence>map(e -> e.getValue() + "=" + e.getKey())
-                    .iterator());
+            Files.write(path, () -> listFileInfos.stream().<CharSequence>map(e -> format("%1$" + FILE_PAD_HASH + "s", e.getHash()) + format("%1$" + FILE_PAD_SIZE + "s", e.getSize()) + "   " + e.getFilename()).iterator());
         } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
 
-    private void compareAndReportLeftRight(Map<String, String> hashMapFilesLeft, Map<String, String> hashMapFilesRight) {
+    private void compareAndReportLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
 
 
         Map<String, HashStatus> hashStatusMap = new HashMap<>();
 
-        hashMapFilesLeft.keySet().stream().forEach(file -> {
-            hashStatusMap.put(file, HashStatus.buildWithLeftHash(file, "Missing File", hashMapFilesLeft.get(file)));
+        listFileInfosLeft.stream().forEach(fileInfoLeft -> {
+            hashStatusMap.put(fileInfoLeft.getFilename(), HashStatus.buildWithLeftHash(fileInfoLeft.getFilename(), "Missing File", fileInfoLeft));
         });
-        hashMapFilesRight.keySet().stream().forEach(file -> {
-            if (hashMapFilesLeft.containsKey(file)) {
-                String leftHash = hashMapFilesLeft.get((file));
-                String rightHash = hashMapFilesRight.get(file);
-                hashStatusMap.get(file).setRighthash(rightHash);
-                if (leftHash.equals(rightHash)) {
-                    hashStatusMap.get(file).setStatus("Matched");
+        listFileInfosRight.stream().forEach(fileInfoRight -> {
+            if (listFileInfosLeft.contains(fileInfoRight)) {
+                FileInfo fileInfoLeft = listFileInfosLeft.stream().filter(fileInfo -> fileInfo.equals(fileInfoRight)).findFirst().get();
+                hashStatusMap.get(fileInfoRight.getFilename()).getRight().setHash(fileInfoRight.getHash());
+                hashStatusMap.get(fileInfoRight.getFilename()).getRight().setSize(fileInfoRight.getSize());
+                if (fileInfoLeft.getHash().equals(fileInfoRight.getHash()) && fileInfoLeft.getSize() == fileInfoRight.getSize()) {
+                    hashStatusMap.get(fileInfoRight.getFilename()).setStatus("Matched");
                 } else {
-                    hashStatusMap.get(file).setStatus("Not Matched");
+                    hashStatusMap.get(fileInfoRight.getFilename()).setStatus("Not Matched");
                 }
             } else {
-                hashStatusMap.put(file, new HashStatus(file, "New File", null, hashMapFilesRight.get(file)));
+                hashStatusMap.put(fileInfoRight.getFilename(), HashStatus.buildWithRightHash(fileInfoRight.getFilename(), "New File", fileInfoRight));
             }
         });
         log.debug("**************************************************************************************************************************************************************************");
         hashStatusMap.values().stream().filter(HashStatus::isNotMatched).forEach(hashStatus -> {
-            log.debug("{} {} {} {}", rightPad(hashStatus.getStatus(), PAD_MARK), rightPad(hashStatus.getLefthash(), PAD_HASH),
-                    rightPad(hashStatus.getRighthash(), PAD_HASH), hashStatus.getFilename());
+            log.debug("{} {}", rightPad(hashStatus.getStatus(), PAD_MARK), hashStatus.getFilename());
+            log.debug("{}   ->   {}", hashStatus.getLeft(), hashStatus.getRight());
         });
         log.debug("**************************************************************************************************************************************************************************");
         hashStatusMap.values().stream().filter(HashStatus::isMissingFile).forEach(hashStatus -> {
-            log.debug("{} {} {} {}", rightPad(hashStatus.getStatus(), PAD_MARK), rightPad(hashStatus.getLefthash(), PAD_HASH),
-                    rightPad(hashStatus.getRighthash(), PAD_HASH), hashStatus.getFilename());
+            log.debug("{} {}", rightPad(hashStatus.getStatus(), PAD_MARK), hashStatus.getFilename());
+            log.debug("{}", hashStatus.getLeft());
         });
         log.debug("**************************************************************************************************************************************************************************");
         hashStatusMap.values().stream().filter(HashStatus::isNewFile).forEach(hashStatus -> {
-            log.debug("{} {} {} {}", rightPad(hashStatus.getStatus(), PAD_MARK), rightPad(hashStatus.getLefthash(), PAD_HASH),
-                    rightPad(hashStatus.getRighthash(), PAD_HASH), hashStatus.getFilename());
+            log.debug("{} {}", rightPad(hashStatus.getStatus(), PAD_MARK), hashStatus.getFilename());
+            log.debug("{}", hashStatus.getRight());
         });
         log.debug("**************************************************************************************************************************************************************************");
         long matchedFiles = hashStatusMap.values().stream().filter(HashStatus::isMatched).count();
@@ -191,10 +209,10 @@ public class DirHashFilesApplication {
 
     private void startCheckHash(String dirValue, String inFileValue) {
         try {
-            Map<String, String> hashMapFiles = mapDirFiles(dirValue);
-            Map<String, String> sigMap = readKeyValueFile(inFileValue);
+            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
+            Collection<FileInfo> listFileInfosSignature = readKeyValueFile(inFileValue);
 
-            compareAndReportLeftRight(sigMap, hashMapFiles);
+            compareAndReportLeftRight(listFileInfosSignature, listFileInfos);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -202,27 +220,33 @@ public class DirHashFilesApplication {
 
     private void startCompareHash(String dirLeftValue, String dirRightValue) {
         try {
-            Map<String, String> hashMapFilesLeft = mapDirFiles(dirLeftValue);
-            Map<String, String> hashMapFilesRight = mapDirFiles(dirRightValue);
+            Collection<FileInfo> listFileInfosLeft = mapDirFiles(dirLeftValue);
+            Collection<FileInfo> listFileInfosRight = mapDirFiles(dirRightValue);
 
-            compareAndReportLeftRight(hashMapFilesLeft, hashMapFilesRight);
+            compareAndReportLeftRight(listFileInfosLeft, listFileInfosRight);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
 
-    public Map<String, String> readKeyValueFile(String filePath) {
-        Map<String, String> map = new HashMap<>();
+    public Collection<FileInfo> readKeyValueFile(String filePath) {
+        Collection<FileInfo> listFileInfos = new ArrayList<>();
         try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
-            lines.filter(line -> line.contains("="))
-                    .forEach(line -> {
-                        String[] keyValuePair = line.split("=", 2);
-                        map.put(keyValuePair[1], keyValuePair[0]);
-                    });
+            lines.filter(line -> !line.trim().equals("")).forEach(line -> {
+                String[] keyValuePair = line.split(" +");
+                if (keyValuePair.length == 3) {
+                    FileInfo fileInfo = new FileInfo();
+                    fileInfo.setHash(keyValuePair[0]);
+                    fileInfo.setSize(Long.parseLong(keyValuePair[1]));
+                    fileInfo.setFilename(keyValuePair[2]);
+                    listFileInfos.add(fileInfo);
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return map;
+
+        return listFileInfos;
     }
 
     private String getFileChecksum(File file) {

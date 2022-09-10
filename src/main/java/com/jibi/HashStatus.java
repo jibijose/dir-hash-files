@@ -1,14 +1,11 @@
 package com.jibi;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.Date;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class HashStatus {
 
     public static String MATCHED = "Matched";
@@ -19,14 +16,35 @@ public class HashStatus {
 
     private String filename;
     private String status;
-    private String lefthash;
-    private String righthash;
+    private OneSide left;
+    private OneSide right;
 
-    public static HashStatus buildWithLeftHash(String filename, String status, String lefthash) {
+    public HashStatus() {
+        left = new OneSide();
+        right = new OneSide();
+    }
+
+    public HashStatus(String filename, String status) {
+        super();
+        this.filename = filename;
+        this.status = status;
+    }
+
+    public static HashStatus buildWithLeftHash(String filename, String status, FileInfo fileInfoLeft) {
         HashStatus hashStatus = new HashStatus();
         hashStatus.setFilename(filename);
         hashStatus.setStatus(status);
-        hashStatus.setLefthash(lefthash);
+        hashStatus.getLeft().setHash(fileInfoLeft.getHash());
+        hashStatus.getLeft().setSize(fileInfoLeft.getSize());
+        return hashStatus;
+    }
+
+    public static HashStatus buildWithRightHash(String filename, String status, FileInfo fileInfoRight) {
+        HashStatus hashStatus = new HashStatus();
+        hashStatus.setFilename(filename);
+        hashStatus.setStatus(status);
+        hashStatus.getRight().setHash(fileInfoRight.getHash());
+        hashStatus.getRight().setSize(fileInfoRight.getSize());
         return hashStatus;
     }
 
@@ -57,4 +75,17 @@ public class HashStatus {
         }
         return false;
     }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    public static class OneSide {
+        private String hash;
+        private long size;
+        private Date lastModified;
+    }
 }
+
+
