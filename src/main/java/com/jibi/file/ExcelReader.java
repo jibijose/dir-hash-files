@@ -2,7 +2,7 @@ package com.jibi.file;
 
 public class ExcelReader {
 
-    private String filename;
+    protected String filename;
 
     public ExcelReader(String filename) {
         this.filename = filename;

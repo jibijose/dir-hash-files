@@ -23,7 +23,7 @@ public class HashStatusExcelWriter extends ExcelWriter {
 
     public void writeExcel(Map<String, HashStatus> hashStatusMap) {
         try {
-            FileOutputStream fileStream = new FileOutputStream("jjtrial.xlsx");
+            FileOutputStream fileStream = new FileOutputStream(filename);
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("HashStatus");
             sheet.createFreezePane(0, 1);

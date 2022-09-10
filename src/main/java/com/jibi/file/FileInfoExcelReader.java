@@ -22,7 +22,7 @@ public class FileInfoExcelReader extends ExcelReader {
     public Collection<FileInfo> readExcel() {
         Collection<FileInfo> listFileInfos = new ArrayList<>();
         try {
-            FileInputStream fileStream = new FileInputStream("jjinfo.xlsx");
+            FileInputStream fileStream = new FileInputStream(filename);
             XSSFWorkbook workbook = new XSSFWorkbook(fileStream);
             XSSFSheet sheet = workbook.getSheet("FileInfo");
 

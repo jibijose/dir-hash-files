@@ -1,12 +1,12 @@
 package com.jibi;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
 import com.jibi.file.FileInfoExcelReader;
 import com.jibi.file.FileInfoExcelWriter;
 import com.jibi.file.HashStatusExcelWriter;
 import com.jibi.util.DateUtil;
+import com.jibi.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -41,23 +40,19 @@ public class DirHashFilesApplication {
         mode.setRequired(true);
         options.addOption(mode);
 
-        Option dir = new Option("d", "dir", true, "Directory");
-        dir.setRequired(false);
-        options.addOption(dir);
-
         Option outfile = new Option("o", "outfile", true, "Hash output file");
         outfile.setRequired(false);
         options.addOption(outfile);
 
-        Option infile = new Option("i", "infile", true, "Hash input file");
+        Option infile = new Option("l", "leftside", true, "left side");
         infile.setRequired(false);
         options.addOption(infile);
 
-        Option dirLeft = new Option("dl", "dirleft", true, "Directory left");
+        Option dirLeft = new Option("c", "centerside", true, "center side");
         dirLeft.setRequired(false);
         options.addOption(dirLeft);
 
-        Option dirRight = new Option("dr", "dirright", true, "Directory right");
+        Option dirRight = new Option("r", "rightside", true, "right side");
         dirRight.setRequired(false);
         options.addOption(dirRight);
 
@@ -81,20 +76,14 @@ public class DirHashFilesApplication {
                 throw new RuntimeException("incorrect parameters...");
             }
             dirHashFilesApplication.startCreateHash(dirValue, outFileValue);
-        } else if ("checkhash".equals(modeValue)) {
-            String dirValue = cmd.getOptionValue("dir");
-            String inFileValue = cmd.getOptionValue("infile");
-            if (StringUtils.isEmpty(dirValue) || StringUtils.isEmpty(inFileValue)) {
-                throw new RuntimeException("incorrect parameters...");
-            }
-            dirHashFilesApplication.startCheckHash(dirValue, inFileValue);
         } else if ("comparehash".equals(modeValue)) {
-            String dirLeftValue = cmd.getOptionValue("dirleft");
-            String dirRightValue = cmd.getOptionValue("dirright");
-            if (StringUtils.isEmpty(dirLeftValue) || StringUtils.isEmpty(dirRightValue)) {
+            String leftSideValue = cmd.getOptionValue("leftside");
+            String rightSideValue = cmd.getOptionValue("rightside");
+            String outFileValue = cmd.getOptionValue("outfile");
+            if (StringUtils.isEmpty(leftSideValue) || StringUtils.isEmpty(rightSideValue) || StringUtils.isEmpty(outFileValue)) {
                 throw new RuntimeException("incorrect parameters...");
             }
-            dirHashFilesApplication.startCompareHash(dirLeftValue, dirRightValue);
+            dirHashFilesApplication.startCompareHash(leftSideValue, rightSideValue, outFileValue);
         }
     }
 
@@ -108,24 +97,38 @@ public class DirHashFilesApplication {
         }
     }
 
-    private void startCheckHash(String dirValue, String inFileValue) {
+    private void startCompareHash(String leftSideValue, String rightSideValue, String outFileValue) {
         try {
-            FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader("jjinfo.xlsx");
-            Collection<FileInfo> listFileInfosSignature = fileInfoExcelReader.readExcel();
-            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
+            Collection<FileInfo> listFileInfosLeft;
+            if (FileUtil.isDriveOrFolder(leftSideValue)) {
+                log.info("Left side {} is drive or folder", leftSideValue);
+                listFileInfosLeft = mapDirFiles(leftSideValue);
+            } else if (FileUtil.isFileInfoExcel(leftSideValue)) {
+                log.info("Left side {} is FileInfo excel", leftSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue);
+                listFileInfosLeft = fileInfoExcelReader.readExcel();
+            } else {
+                log.error("Left side {} not correct", leftSideValue);
+                throw new RuntimeException(String.format("Left side %s not correct", leftSideValue));
+            }
 
-            compareAndReportLeftRight(listFileInfosSignature, listFileInfos);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-    }
+            Collection<FileInfo> listFileInfosRight;
+            if (FileUtil.isDriveOrFolder(rightSideValue)) {
+                log.info("Right side {} is drive or folder", rightSideValue);
+                listFileInfosRight = mapDirFiles(rightSideValue);
+            } else if (FileUtil.isFileInfoExcel(rightSideValue)) {
+                log.info("Right side {} is FileInfo excel", rightSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
+                listFileInfosRight = fileInfoExcelReader.readExcel();
+            } else {
+                log.error("Right side {} not correct", leftSideValue);
+                throw new RuntimeException(String.format("Right side %s not correct", rightSideValue));
+            }
 
-    private void startCompareHash(String dirLeftValue, String dirRightValue) {
-        try {
-            Collection<FileInfo> listFileInfosLeft = mapDirFiles(dirLeftValue);
-            Collection<FileInfo> listFileInfosRight = mapDirFiles(dirRightValue);
+            Map<String, HashStatus> hashStatusMap = compareAndReportLeftRight(listFileInfosLeft, listFileInfosRight);
 
-            compareAndReportLeftRight(listFileInfosLeft, listFileInfosRight);
+            HashStatusExcelWriter hashStatusExcelWriter = new HashStatusExcelWriter(outFileValue);
+            hashStatusExcelWriter.writeExcel(hashStatusMap);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -164,7 +167,7 @@ public class DirHashFilesApplication {
     }
 
 
-    private void compareAndReportLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
+    private Map<String, HashStatus> compareAndReportLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
         Map<String, HashStatus> hashStatusMap = new HashMap<>();
 
         listFileInfosLeft.stream().forEach(fileInfoLeft -> {
@@ -209,8 +212,7 @@ public class DirHashFilesApplication {
         log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
         log.debug("**************************************************************************************************************************************************************************");
 
-        HashStatusExcelWriter hashStatusExcelWriter = new HashStatusExcelWriter("jjtrial.xlsx");
-        hashStatusExcelWriter.writeExcel(hashStatusMap);
+        return hashStatusMap;
     }
 
 

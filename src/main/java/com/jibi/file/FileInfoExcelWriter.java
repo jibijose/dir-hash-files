@@ -23,7 +23,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
 
     public void writeExcel(Collection<FileInfo> listFileInfos) {
         try {
-            FileOutputStream fileStream = new FileOutputStream("jjinfo.xlsx");
+            FileOutputStream fileStream = new FileOutputStream(filename);
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("FileInfo");
             sheet.createFreezePane(0, 1);
