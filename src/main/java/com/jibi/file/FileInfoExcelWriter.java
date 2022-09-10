@@ -26,7 +26,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
             FileOutputStream fileStream = new FileOutputStream("jjinfo.xlsx");
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("FileInfo");
-            //sheet.createFreezePane(0, 1);
+            sheet.createFreezePane(0, 1);
             sheet.setColumnWidth(0, 70 * 256);
             sheet.setColumnWidth(1, 16 * 256);
             sheet.setColumnWidth(2, 32 * 256);
@@ -55,7 +55,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
                 addDataCells(dataRow, fileInfo, dataRowStyle);
             });
 
-            //sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
+            sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
             workbook.write(fileStream);
 
         } catch (Exception exception) {

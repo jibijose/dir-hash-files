@@ -101,15 +101,7 @@ public class DirHashFilesApplication {
     private void startCreateHash(String dirValue, String outFileValue) {
         try {
             Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
-
-            Path path = Path.of(outFileValue);
-            log.debug("**************************************************************************************************************************************************************************");
-            log.info("Output file path {}", path.toFile().getAbsolutePath());
-            Files.write(path, () -> listFileInfos.stream().<CharSequence>map(e -> format("%1$" + FILE_PAD_HASH + "s",
-                    e.getHash()) + format("%1$" + FILE_PAD_SIZE + "s", e.getSize()) + format("%1$" + FILE_PAD_DATE + "s",
-                    DateUtil.format(e.getLastModified())) + "   " + e.getFilename()).iterator());
-
-            FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter("jjinfo.xlsx");
+            FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
             fileInfoExcelWriter.writeExcel(listFileInfos);
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -118,13 +110,11 @@ public class DirHashFilesApplication {
 
     private void startCheckHash(String dirValue, String inFileValue) {
         try {
-            Collection<FileInfo> listFileInfosSignature = readSignatureFile(inFileValue);
+            FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader("jjinfo.xlsx");
+            Collection<FileInfo> listFileInfosSignature = fileInfoExcelReader.readExcel();
             Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
 
             compareAndReportLeftRight(listFileInfosSignature, listFileInfos);
-
-            FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader("jjinfo.xlsx");
-            Collection<FileInfo> excelFileInfos = fileInfoExcelReader.readExcel();
         } catch (Exception exception) {
             exception.printStackTrace();
         }
