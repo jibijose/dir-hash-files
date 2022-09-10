@@ -9,9 +9,17 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +28,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -214,6 +223,8 @@ public class DirHashFilesApplication {
         long newFiles = hashStatusMap.values().stream().filter(HashStatus::isNewFile).count();
         log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
         log.debug("**************************************************************************************************************************************************************************");
+
+        createExcelReport(hashStatusMap);
     }
 
 
@@ -297,5 +308,101 @@ public class DirHashFilesApplication {
             }
         }
         return fileList;
+    }
+
+    private void createExcelReport(Map<String, HashStatus> hashStatusMap) {
+        try {
+            var fileStream = new FileOutputStream("jjtrial.xlsx");
+            var workbook = new XSSFWorkbook();
+            var sheet = workbook.createSheet("Test People Sheet");
+            sheet.setColumnWidth(0, 16 * 256);
+            sheet.setColumnWidth(1, 70 * 256);
+            sheet.setColumnWidth(2, 16 * 256);
+            sheet.setColumnWidth(3, 32 * 256);
+            sheet.setColumnWidth(4, 70 * 256);
+            sheet.setColumnWidth(5, 16 * 256);
+            sheet.setColumnWidth(6, 32 * 256);
+            sheet.setColumnWidth(7, 200 * 256);
+
+            // Create a header row describing what the columns mean
+            CellStyle topRowStyle = workbook.createCellStyle();
+            var font = workbook.createFont();
+            font.setBold(true);
+            topRowStyle.setFont(font);
+            //topRowStyle.setFillForegroundColor((short) 10000);
+            //topRowStyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("dd-MMM-yyyy"));
+
+            XSSFRow headerRow = sheet.createRow(0);
+            addStringCells(headerRow, List.of("Status", "Left-Hash", "Left-Size", "Left-Modified", "Right-Hash", "Right-Size", "Right-Modified", "filename"), topRowStyle);
+
+            AtomicInteger rowIndex = new AtomicInteger(1);
+            hashStatusMap.keySet().stream().forEach(hashStatus -> {
+                XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
+                addDataCells(dataRow, hashStatusMap.get(hashStatus), topRowStyle);
+            });
+
+            workbook.write(fileStream);
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    private void addStringCells(Row row, List<String> strings, CellStyle style) {
+        for (int i = 0; i < strings.size(); i++) {
+            Cell cell = row.createCell(i, CellType.STRING);
+            cell.setCellValue(strings.get(i));
+            cell.setCellStyle(style);
+        }
+    }
+
+    private void addDataCells(Row row, HashStatus hashStatus, CellStyle style) {
+        int colIndex = 0;
+        Cell cell = null;
+        SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+
+        cell = row.createCell(colIndex++, CellType.STRING);
+        cell.setCellValue(hashStatus.getStatus());
+        cell.setCellStyle(style);
+
+        cell = row.createCell(colIndex++, CellType.STRING);
+        if (hashStatus.getLeft().getHash() != null) {
+            cell.setCellValue(hashStatus.getLeft().getHash());
+        }
+        cell.setCellStyle(style);
+
+        cell = row.createCell(colIndex++, CellType.STRING);
+        if (hashStatus.getLeft().getSize() != 0) {
+            cell.setCellValue(hashStatus.getLeft().getSize());
+        }
+        cell.setCellStyle(style);
+
+        cell = row.createCell(colIndex++, CellType.STRING);
+        if (hashStatus.getLeft().getLastModified() != null) {
+            cell.setCellValue(formatter.format(hashStatus.getLeft().getLastModified()));
+        }
+        cell.setCellStyle(style);
+
+        cell = row.createCell(colIndex++, CellType.STRING);
+        if (hashStatus.getRight().getHash() != null) {
+            cell.setCellValue(hashStatus.getRight().getHash());
+        }
+        cell.setCellStyle(style);
+
+        cell = row.createCell(colIndex++, CellType.STRING);
+        if (hashStatus.getRight().getSize() != 0) {
+            cell.setCellValue(hashStatus.getRight().getSize());
+        }
+        cell.setCellStyle(style);
+
+        cell = row.createCell(colIndex++, CellType.STRING);
+        if (hashStatus.getRight().getLastModified() != null) {
+            cell.setCellValue(formatter.format(hashStatus.getRight().getLastModified()));
+        }
+        cell.setCellStyle(style);
+
+        cell = row.createCell(colIndex++, CellType.STRING);
+        cell.setCellValue(hashStatus.getFilename());
+        cell.setCellStyle(style);
     }
 }
