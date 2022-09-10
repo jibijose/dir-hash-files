@@ -7,6 +7,8 @@ import com.jibi.file.FileInfoExcelWriter;
 import com.jibi.file.HashStatusExcelWriter;
 import com.jibi.util.DateUtil;
 import com.jibi.util.FileUtil;
+import com.jibi.vo.FileInfo;
+import com.jibi.vo.HashStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
@@ -40,21 +42,25 @@ public class DirHashFilesApplication {
         mode.setRequired(true);
         options.addOption(mode);
 
-        Option outfile = new Option("o", "outfile", true, "Hash output file");
-        outfile.setRequired(false);
-        options.addOption(outfile);
+        Option inDir = new Option("i", "indir", true, "In drive/dir");
+        inDir.setRequired(false);
+        options.addOption(inDir);
 
-        Option infile = new Option("l", "leftside", true, "left side");
-        infile.setRequired(false);
-        options.addOption(infile);
+        Option outFile = new Option("o", "outfile", true, "Hash output file");
+        outFile.setRequired(false);
+        options.addOption(outFile);
 
-        Option dirLeft = new Option("c", "centerside", true, "center side");
-        dirLeft.setRequired(false);
-        options.addOption(dirLeft);
+        Option leftSide = new Option("l", "leftside", true, "Left side");
+        leftSide.setRequired(false);
+        options.addOption(leftSide);
 
-        Option dirRight = new Option("r", "rightside", true, "right side");
-        dirRight.setRequired(false);
-        options.addOption(dirRight);
+        Option centerSide = new Option("c", "centerside", true, "Center side");
+        centerSide.setRequired(false);
+        options.addOption(centerSide);
+
+        Option rightSide = new Option("r", "rightside", true, "Right side");
+        rightSide.setRequired(false);
+        options.addOption(rightSide);
 
         HelpFormatter formatter = new HelpFormatter();
         CommandLineParser parser = new DefaultParser();
@@ -70,12 +76,12 @@ public class DirHashFilesApplication {
 
         String modeValue = cmd.getOptionValue("mode");
         if ("createhash".equals(modeValue)) {
-            String dirValue = cmd.getOptionValue("dir");
+            String inDirValue = cmd.getOptionValue("indir");
             String outFileValue = cmd.getOptionValue("outfile");
-            if (StringUtils.isEmpty(dirValue) || StringUtils.isEmpty(outFileValue)) {
+            if (StringUtils.isEmpty(inDirValue) || StringUtils.isEmpty(outFileValue)) {
                 throw new RuntimeException("incorrect parameters...");
             }
-            dirHashFilesApplication.startCreateHash(dirValue, outFileValue);
+            dirHashFilesApplication.startCreateHash(inDirValue, outFileValue);
         } else if ("comparehash".equals(modeValue)) {
             String leftSideValue = cmd.getOptionValue("leftside");
             String rightSideValue = cmd.getOptionValue("rightside");
@@ -125,7 +131,7 @@ public class DirHashFilesApplication {
                 throw new RuntimeException(String.format("Right side %s not correct", rightSideValue));
             }
 
-            Map<String, HashStatus> hashStatusMap = compareAndReportLeftRight(listFileInfosLeft, listFileInfosRight);
+            Map<String, HashStatus> hashStatusMap = compareLeftCenterRight(listFileInfosLeft, listFileInfosRight);
 
             HashStatusExcelWriter hashStatusExcelWriter = new HashStatusExcelWriter(outFileValue);
             hashStatusExcelWriter.writeExcel(hashStatusMap);
@@ -135,8 +141,9 @@ public class DirHashFilesApplication {
     }
 
     private Collection<FileInfo> mapDirFiles(String dir) {
-        log.debug("**************************************************************************************************************************************************************************");
+        log.debug("************************************************************************************************************************");
         Collection<File> files = getFiles(dir);
+        log.info("Got {} files to process", files.size());
 
         Collection<FileInfo> listFileInfos = new ArrayList<>();
         String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
@@ -151,7 +158,7 @@ public class DirHashFilesApplication {
             listFileInfos.add(fileInfo);
         });
 
-
+        log.info("Mapped {} file hashes", listFileInfos.size());
         return listFileInfos;
     }
 
@@ -167,7 +174,7 @@ public class DirHashFilesApplication {
     }
 
 
-    private Map<String, HashStatus> compareAndReportLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
+    private Map<String, HashStatus> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
         Map<String, HashStatus> hashStatusMap = new HashMap<>();
 
         listFileInfosLeft.stream().forEach(fileInfoLeft -> {
@@ -189,28 +196,28 @@ public class DirHashFilesApplication {
                 hashStatusMap.put(fileInfoRight.getFilename(), HashStatus.buildWithRightHash(fileInfoRight.getFilename(), "New File", fileInfoRight));
             }
         });
-        log.debug("**************************************************************************************************************************************************************************");
+        log.debug("************************************************************************************************************************");
         hashStatusMap.values().stream().filter(HashStatus::isNotMatched).forEach(hashStatus -> {
             log.debug("{} {}", rightPad(hashStatus.getStatus(), PAD_MARK), hashStatus.getFilename());
             log.debug("{}   ->   {}", hashStatus.getLeft(), hashStatus.getRight());
         });
-        log.debug("**************************************************************************************************************************************************************************");
+        log.debug("************************************************************************************************************************");
         hashStatusMap.values().stream().filter(HashStatus::isMissingFile).forEach(hashStatus -> {
             log.debug("{} {}", rightPad(hashStatus.getStatus(), PAD_MARK), hashStatus.getFilename());
             log.debug("{}", hashStatus.getLeft());
         });
-        log.debug("**************************************************************************************************************************************************************************");
+        log.debug("************************************************************************************************************************");
         hashStatusMap.values().stream().filter(HashStatus::isNewFile).forEach(hashStatus -> {
             log.debug("{} {}", rightPad(hashStatus.getStatus(), PAD_MARK), hashStatus.getFilename());
             log.debug("{}", hashStatus.getRight());
         });
-        log.debug("**************************************************************************************************************************************************************************");
+        log.debug("************************************************************************************************************************");
         long matchedFiles = hashStatusMap.values().stream().filter(HashStatus::isMatched).count();
         long notMatchedFiles = hashStatusMap.values().stream().filter(HashStatus::isNotMatched).count();
         long missingFiles = hashStatusMap.values().stream().filter(HashStatus::isMissingFile).count();
         long newFiles = hashStatusMap.values().stream().filter(HashStatus::isNewFile).count();
         log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
-        log.debug("**************************************************************************************************************************************************************************");
+        log.debug("************************************************************************************************************************");
 
         return hashStatusMap;
     }

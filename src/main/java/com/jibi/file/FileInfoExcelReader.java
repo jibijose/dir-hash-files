@@ -2,7 +2,7 @@ package com.jibi.file;
 
 import static com.jibi.util.DateUtil.parse;
 
-import com.jibi.FileInfo;
+import com.jibi.vo.FileInfo;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;

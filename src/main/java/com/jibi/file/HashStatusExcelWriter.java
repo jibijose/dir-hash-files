@@ -2,8 +2,7 @@ package com.jibi.file;
 
 import static com.jibi.util.DateUtil.format;
 
-import com.jibi.util.DateUtil;
-import com.jibi.HashStatus;
+import com.jibi.vo.HashStatus;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFRow;

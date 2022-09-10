@@ -1,4 +1,4 @@
-package com.jibi;
+package com.jibi.vo;
 
 import lombok.*;
 
