@@ -36,6 +36,7 @@ public class HashStatus {
         hashStatus.setStatus(status);
         hashStatus.getLeft().setHash(fileInfoLeft.getHash());
         hashStatus.getLeft().setSize(fileInfoLeft.getSize());
+        hashStatus.getLeft().setLastModified(fileInfoLeft.getLastModified());
         return hashStatus;
     }
 
@@ -45,6 +46,7 @@ public class HashStatus {
         hashStatus.setStatus(status);
         hashStatus.getRight().setHash(fileInfoRight.getHash());
         hashStatus.getRight().setSize(fileInfoRight.getSize());
+        hashStatus.getRight().setLastModified(fileInfoRight.getLastModified());
         return hashStatus;
     }
 

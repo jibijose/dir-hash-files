@@ -17,5 +17,6 @@ public class FileInfo {
     private long size;
     @EqualsAndHashCode.Exclude
     private String hash;
-    //@EqualsAndHashCode.Exclude private Date lastModified;
+    @EqualsAndHashCode.Exclude
+    private Date lastModified;
 }

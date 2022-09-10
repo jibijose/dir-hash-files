@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -27,11 +28,13 @@ import java.util.stream.Stream;
 @Slf4j
 public class DirHashFilesApplication {
 
+    private static String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss SSS zzz";
     private static int PAD_MARK = 14;
     private static int PAD_HASH = 66;
 
     private static int FILE_PAD_HASH = 64;
     private static int FILE_PAD_SIZE = 15;
+    private static int FILE_PAD_DATE = 36;
 
 
     public static void main(String[] args) {
@@ -122,14 +125,14 @@ public class DirHashFilesApplication {
 
         Collection<FileInfo> listFileInfos = new ArrayList<>();
         String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
-        files.stream().forEach(file -> {
+        files.parallelStream().forEach(file -> {
             String fileHash = getFileChecksum(file);
             String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
             FileInfo fileInfo = new FileInfo();
             fileInfo.setFilename(relativeFilePath);
             fileInfo.setHash(fileHash);
             fileInfo.setSize(file.length());
-            //file.lastModified(new Date(file.lastModified());
+            fileInfo.setLastModified(new Date(file.lastModified()));
             listFileInfos.add(fileInfo);
         });
 
@@ -151,19 +154,20 @@ public class DirHashFilesApplication {
     private void startCreateHash(String dirValue, String outFileValue) {
         try {
             Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
+            SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
 
             Path path = Path.of(outFileValue);
             log.debug("**************************************************************************************************************************************************************************");
             log.info("Output file path {}", path.toFile().getAbsolutePath());
-            Files.write(path, () -> listFileInfos.stream().<CharSequence>map(e -> format("%1$" + FILE_PAD_HASH + "s", e.getHash()) + format("%1$" + FILE_PAD_SIZE + "s", e.getSize()) + "   " + e.getFilename()).iterator());
+            Files.write(path, () -> listFileInfos.stream().<CharSequence>map(e -> format("%1$" + FILE_PAD_HASH + "s",
+                    e.getHash()) + format("%1$" + FILE_PAD_SIZE + "s", e.getSize()) + format("%1$" + FILE_PAD_DATE + "s",
+                    formatter.format(e.getLastModified())) + "   " + e.getFilename()).iterator());
         } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
 
     private void compareAndReportLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
-
-
         Map<String, HashStatus> hashStatusMap = new HashMap<>();
 
         listFileInfosLeft.stream().forEach(fileInfoLeft -> {
@@ -174,7 +178,9 @@ public class DirHashFilesApplication {
                 FileInfo fileInfoLeft = listFileInfosLeft.stream().filter(fileInfo -> fileInfo.equals(fileInfoRight)).findFirst().get();
                 hashStatusMap.get(fileInfoRight.getFilename()).getRight().setHash(fileInfoRight.getHash());
                 hashStatusMap.get(fileInfoRight.getFilename()).getRight().setSize(fileInfoRight.getSize());
-                if (fileInfoLeft.getHash().equals(fileInfoRight.getHash()) && fileInfoLeft.getSize() == fileInfoRight.getSize()) {
+                hashStatusMap.get(fileInfoRight.getFilename()).getRight().setLastModified(fileInfoRight.getLastModified());
+                if (fileInfoLeft.getHash().equals(fileInfoRight.getHash()) && fileInfoLeft.getSize() == fileInfoRight.getSize()
+                        && fileInfoLeft.getLastModified().compareTo(fileInfoRight.getLastModified()) == 0) {
                     hashStatusMap.get(fileInfoRight.getFilename()).setStatus("Matched");
                 } else {
                     hashStatusMap.get(fileInfoRight.getFilename()).setStatus("Not Matched");
@@ -209,8 +215,8 @@ public class DirHashFilesApplication {
 
     private void startCheckHash(String dirValue, String inFileValue) {
         try {
-            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
             Collection<FileInfo> listFileInfosSignature = readKeyValueFile(inFileValue);
+            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
 
             compareAndReportLeftRight(listFileInfosSignature, listFileInfos);
         } catch (Exception exception) {
@@ -233,13 +239,19 @@ public class DirHashFilesApplication {
         Collection<FileInfo> listFileInfos = new ArrayList<>();
         try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
             lines.filter(line -> !line.trim().equals("")).forEach(line -> {
-                String[] keyValuePair = line.split(" +");
-                if (keyValuePair.length == 3) {
-                    FileInfo fileInfo = new FileInfo();
-                    fileInfo.setHash(keyValuePair[0]);
-                    fileInfo.setSize(Long.parseLong(keyValuePair[1]));
-                    fileInfo.setFilename(keyValuePair[2]);
-                    listFileInfos.add(fileInfo);
+                try {
+                    String[] keyValuePair = line.split(" +", 3);
+                    if (keyValuePair.length == 3) {
+                        FileInfo fileInfo = new FileInfo();
+                        fileInfo.setHash(keyValuePair[0]);
+                        fileInfo.setSize(Long.parseLong(keyValuePair[1]));
+                        String[] keyValuePairInner = keyValuePair[2].split("   ", 2);
+                        fileInfo.setLastModified(new SimpleDateFormat(DATE_FORMAT).parse(keyValuePairInner[0]));
+                        fileInfo.setFilename(keyValuePairInner[1]);
+                        listFileInfos.add(fileInfo);
+                    }
+                } catch (java.text.ParseException parseException) {
+                    log.warn("Parsing error [{}]", line, parseException);
                 }
             });
         } catch (IOException e) {
