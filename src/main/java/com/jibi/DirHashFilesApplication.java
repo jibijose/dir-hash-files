@@ -3,6 +3,8 @@ package com.jibi;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
+import com.jibi.file.FileInfoExcelReader;
+import com.jibi.file.FileInfoExcelWriter;
 import com.jibi.file.HashStatusExcelWriter;
 import com.jibi.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -106,6 +108,9 @@ public class DirHashFilesApplication {
             Files.write(path, () -> listFileInfos.stream().<CharSequence>map(e -> format("%1$" + FILE_PAD_HASH + "s",
                     e.getHash()) + format("%1$" + FILE_PAD_SIZE + "s", e.getSize()) + format("%1$" + FILE_PAD_DATE + "s",
                     DateUtil.format(e.getLastModified())) + "   " + e.getFilename()).iterator());
+
+            FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter("jjinfo.xlsx");
+            fileInfoExcelWriter.writeExcel(listFileInfos);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -117,6 +122,9 @@ public class DirHashFilesApplication {
             Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
 
             compareAndReportLeftRight(listFileInfosSignature, listFileInfos);
+
+            FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader("jjinfo.xlsx");
+            Collection<FileInfo> excelFileInfos = fileInfoExcelReader.readExcel();
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -212,7 +220,7 @@ public class DirHashFilesApplication {
         log.debug("**************************************************************************************************************************************************************************");
 
         HashStatusExcelWriter hashStatusExcelWriter = new HashStatusExcelWriter("jjtrial.xlsx");
-        hashStatusExcelWriter.createExcelReport(hashStatusMap);
+        hashStatusExcelWriter.writeExcel(hashStatusMap);
     }
 
 

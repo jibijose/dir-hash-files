@@ -1,5 +1,7 @@
 package com.jibi.file;
 
+import static com.jibi.util.DateUtil.format;
+
 import com.jibi.util.DateUtil;
 import com.jibi.HashStatus;
 import org.apache.poi.ss.usermodel.*;
@@ -19,11 +21,11 @@ public class HashStatusExcelWriter extends ExcelWriter {
         super(filename);
     }
 
-    public void createExcelReport(Map<String, HashStatus> hashStatusMap) {
+    public void writeExcel(Map<String, HashStatus> hashStatusMap) {
         try {
             FileOutputStream fileStream = new FileOutputStream("jjtrial.xlsx");
             XSSFWorkbook workbook = new XSSFWorkbook();
-            XSSFSheet sheet = workbook.createSheet("Test People Sheet");
+            XSSFSheet sheet = workbook.createSheet("HashStatus");
             sheet.createFreezePane(0, 1);
             sheet.setColumnWidth(0, 16 * 256);
             sheet.setColumnWidth(1, 70 * 256);
@@ -95,7 +97,7 @@ public class HashStatusExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatus.getLeft().getLastModified() != null) {
-            cell.setCellValue(DateUtil.format(hashStatus.getLeft().getLastModified()));
+            cell.setCellValue(format(hashStatus.getLeft().getLastModified()));
         }
         cell.setCellStyle(style);
 
@@ -113,7 +115,7 @@ public class HashStatusExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatus.getRight().getLastModified() != null) {
-            cell.setCellValue(DateUtil.format(hashStatus.getRight().getLastModified()));
+            cell.setCellValue(format(hashStatus.getRight().getLastModified()));
         }
         cell.setCellStyle(style);
 
