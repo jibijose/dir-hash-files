@@ -8,7 +8,6 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.RegexFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -21,8 +20,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -85,8 +82,6 @@ public class DirHashFilesApplication {
                 throw new RuntimeException("incorrect parameters...");
             }
             dirHashFilesApplication.startCreateHash(dirValue, outFileValue);
-            //Collection<File> files = dirHashFilesApplication.getFiles(dirValue);
-            //files.stream().forEach(System.out::println);
         } else if ("checkhash".equals(modeValue)) {
             String dirValue = cmd.getOptionValue("dir");
             String inFileValue = cmd.getOptionValue("infile");
@@ -104,24 +99,47 @@ public class DirHashFilesApplication {
         }
     }
 
+    private void startCreateHash(String dirValue, String outFileValue) {
+        try {
+            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
+            SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+
+            Path path = Path.of(outFileValue);
+            log.debug("**************************************************************************************************************************************************************************");
+            log.info("Output file path {}", path.toFile().getAbsolutePath());
+            Files.write(path, () -> listFileInfos.stream().<CharSequence>map(e -> format("%1$" + FILE_PAD_HASH + "s",
+                    e.getHash()) + format("%1$" + FILE_PAD_SIZE + "s", e.getSize()) + format("%1$" + FILE_PAD_DATE + "s",
+                    formatter.format(e.getLastModified())) + "   " + e.getFilename()).iterator());
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    private void startCheckHash(String dirValue, String inFileValue) {
+        try {
+            Collection<FileInfo> listFileInfosSignature = readSignatureFile(inFileValue);
+            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
+
+            compareAndReportLeftRight(listFileInfosSignature, listFileInfos);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    private void startCompareHash(String dirLeftValue, String dirRightValue) {
+        try {
+            Collection<FileInfo> listFileInfosLeft = mapDirFiles(dirLeftValue);
+            Collection<FileInfo> listFileInfosRight = mapDirFiles(dirRightValue);
+
+            compareAndReportLeftRight(listFileInfosLeft, listFileInfosRight);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
     private Collection<FileInfo> mapDirFiles(String dir) {
         log.debug("**************************************************************************************************************************************************************************");
         Collection<File> files = getFiles(dir);
-
-        /* HashMap<String, String> hashMapFiles = new HashMap<>();
-        String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
-        long numTotalFiles = files.size();
-        double blockSize = 1.0 * numTotalFiles / numOfPercentPrints;
-        log.info("Number of files to hash {}", numTotalFiles);
-        AtomicLong hashedFiles = new AtomicLong(0);
-        files.parallelStream().forEach(file -> {
-            String fileHash = getFileChecksum(file);
-            hashedFiles.incrementAndGet();
-            String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
-            //log.debug("{} {} {}", StringUtils.rightPad("Hashed", PAD_MARK), StringUtils.rightPad(fileHash, PAD_HASH), relativeFilePath);
-            hashMapFiles.put(relativeFilePath, fileHash);
-            printHashingStatus(numTotalFiles, blockSize, hashedFiles.get());
-        }); */
 
         Collection<FileInfo> listFileInfos = new ArrayList<>();
         String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
@@ -151,21 +169,6 @@ public class DirHashFilesApplication {
         }
     }
 
-    private void startCreateHash(String dirValue, String outFileValue) {
-        try {
-            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
-            SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-
-            Path path = Path.of(outFileValue);
-            log.debug("**************************************************************************************************************************************************************************");
-            log.info("Output file path {}", path.toFile().getAbsolutePath());
-            Files.write(path, () -> listFileInfos.stream().<CharSequence>map(e -> format("%1$" + FILE_PAD_HASH + "s",
-                    e.getHash()) + format("%1$" + FILE_PAD_SIZE + "s", e.getSize()) + format("%1$" + FILE_PAD_DATE + "s",
-                    formatter.format(e.getLastModified())) + "   " + e.getFilename()).iterator());
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-    }
 
     private void compareAndReportLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
         Map<String, HashStatus> hashStatusMap = new HashMap<>();
@@ -213,29 +216,8 @@ public class DirHashFilesApplication {
         log.debug("**************************************************************************************************************************************************************************");
     }
 
-    private void startCheckHash(String dirValue, String inFileValue) {
-        try {
-            Collection<FileInfo> listFileInfosSignature = readKeyValueFile(inFileValue);
-            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
 
-            compareAndReportLeftRight(listFileInfosSignature, listFileInfos);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-    }
-
-    private void startCompareHash(String dirLeftValue, String dirRightValue) {
-        try {
-            Collection<FileInfo> listFileInfosLeft = mapDirFiles(dirLeftValue);
-            Collection<FileInfo> listFileInfosRight = mapDirFiles(dirRightValue);
-
-            compareAndReportLeftRight(listFileInfosLeft, listFileInfosRight);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-    }
-
-    public Collection<FileInfo> readKeyValueFile(String filePath) {
+    public Collection<FileInfo> readSignatureFile(String filePath) {
         Collection<FileInfo> listFileInfos = new ArrayList<>();
         try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
             lines.filter(line -> !line.trim().equals("")).forEach(line -> {
@@ -315,16 +297,5 @@ public class DirHashFilesApplication {
             }
         }
         return fileList;
-    }
-
-    private Collection<File> getFilesOld(String dirValue) {
-        File dir = new File(dirValue);
-        File[] filesRootDir = dir.listFiles();
-        for (File file : filesRootDir) {
-            if (file.isDirectory()) continue;
-        }
-
-        Collection files = FileUtils.listFiles(dir, new RegexFileFilter("^(.*?)"), DirectoryFileFilter.DIRECTORY);
-        return files;
     }
 }
