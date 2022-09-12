@@ -2,6 +2,7 @@ package com.jibi;
 
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
+import com.jibi.concurrent.FileOperationPool;
 import com.jibi.concurrent.MappingStatusPrint;
 import com.jibi.file.FileInfoExcelReader;
 import com.jibi.file.FileInfoExcelWriter;
@@ -21,11 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -161,14 +160,24 @@ public class DirHashFilesApplication {
 
         Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
         String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
-        files.parallelStream().forEach(file -> {
-            String fileHash = getFileChecksum(file);
-            String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
-            FileInfo fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
-            listFileInfos.add(fileInfo);
-            mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
-            mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
-        });
+
+        try {
+            FileOperationPool fileOperationPool = new FileOperationPool();
+            fileOperationPool.submit(
+                    () -> files.parallelStream().forEach(file -> {
+                        String fileHash = getFileChecksum(file);
+                        String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
+                        FileInfo fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
+                        listFileInfos.add(fileInfo);
+                        mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
+                        mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
+                        log.trace("Hashed file {}", fileInfo.getFilename());
+                    })).get();
+        } catch (InterruptedException interruptedException) {
+            log.warn("Interrupted exception", interruptedException);
+        } catch (ExecutionException executionException) {
+            log.warn("Execution exception", executionException);
+        }
 
         try {
             countDownLatch.await();

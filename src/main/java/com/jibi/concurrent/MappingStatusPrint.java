@@ -53,7 +53,7 @@ public class MappingStatusPrint implements Runnable {
                     Thread.sleep(sleepIntervalMillis);
                 }
             } catch (InterruptedException interruptedException) {
-                log.warn("Interuppted", interruptedException);
+                log.warn("Interrupted", interruptedException);
             }
         }
         countDownLatch.countDown();
