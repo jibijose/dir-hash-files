@@ -2,6 +2,7 @@ package com.jibi;
 
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
+import com.jibi.concurrent.MappingStatusPrint;
 import com.jibi.file.FileInfoExcelReader;
 import com.jibi.file.FileInfoExcelWriter;
 import com.jibi.file.HashStatusExcelWriter;
@@ -20,7 +21,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -143,36 +148,36 @@ public class DirHashFilesApplication {
     private Collection<FileInfo> mapDirFiles(String dir) {
         log.debug("************************************************************************************************************************");
         Collection<File> files = getFiles(dir);
-        log.info("Got {} files to process", files.size());
+        long totalFiles = files.size();
+        long totalFileSize = files.stream().mapToLong(File::length).sum();
+        log.info("Got {} files of total size {} to process", totalFiles, totalFileSize);
+        AtomicLong processedFiles = new AtomicLong(0);
+        AtomicLong processedFileSize = new AtomicLong(0);
 
-        Collection<FileInfo> listFileInfos = new ArrayList<>();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        MappingStatusPrint mappingStatusPrint = new MappingStatusPrint(countDownLatch, totalFiles, totalFileSize);
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.submit(mappingStatusPrint);
+
+        Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
         String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
         files.parallelStream().forEach(file -> {
             String fileHash = getFileChecksum(file);
             String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
-            FileInfo fileInfo = new FileInfo();
-            fileInfo.setFilename(relativeFilePath);
-            fileInfo.setHash(fileHash);
-            fileInfo.setSize(file.length());
-            fileInfo.setLastModified(new Date(file.lastModified()));
+            FileInfo fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
             listFileInfos.add(fileInfo);
+            mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
+            mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
         });
 
-        log.info("Mapped {} file hashes", listFileInfos.size());
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException interruptedException) {
+            log.warn("Interuppted countdownwatch", interruptedException);
+        }
+        log.info("Mapped {} file hashes out of {} files", listFileInfos.size(), totalFiles);
         return listFileInfos;
     }
-
-    private long numOfPercentPrints = 1000;
-    private double lastBlockPrint = 0;
-
-    private void printHashingStatus(long numTotalFiles, double blockSize, long hashedFiles) {
-        if (hashedFiles >= blockSize * lastBlockPrint) {
-            double percentCompleted = 100.0 * hashedFiles / numTotalFiles;
-            lastBlockPrint = lastBlockPrint + blockSize;
-            log.debug("Hashing Percent Completed={}   [{}/{}]  ", String.format("%.2f", percentCompleted), hashedFiles, numTotalFiles);
-        }
-    }
-
 
     private Map<String, HashStatus> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
         Map<String, HashStatus> hashStatusMap = new HashMap<>();

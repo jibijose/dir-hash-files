@@ -1,8 +1,14 @@
 
-Create xlsx report?
 
-Status by size instead of file counts?
 
-status as a diff thread?
+optmized less threads for IO reading....
 
 two drives in two diff thread pools?
+
+time left?
+
+three fold comparision.
+
+
+diff hash algos.
+optional hash?
