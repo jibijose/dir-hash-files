@@ -22,16 +22,23 @@ public class HashStatusExcelWriter extends ExcelWriter {
     }
 
     public void writeExcel(Algorithm algoSelected, Map<String, HashStatus> hashStatusMap) {
+        int algoLength = 20;
+        String algoValue = "NA";
+        if (algoSelected != null) {
+            algoLength = algoSelected.getLength();
+            algoValue = algoSelected.getValue();
+        }
+
         try {
             FileOutputStream fileStream = new FileOutputStream(filename);
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("HashStatus");
             sheet.createFreezePane(0, 1);
             sheet.setColumnWidth(0, 16 * 256);
-            sheet.setColumnWidth(1, (algoSelected.getLength() + 3) * 256);
+            sheet.setColumnWidth(1, (algoLength + 3) * 256);
             sheet.setColumnWidth(2, 16 * 256);
             sheet.setColumnWidth(3, 32 * 256);
-            sheet.setColumnWidth(4, (algoSelected.getLength() + 3) * 256);
+            sheet.setColumnWidth(4, (algoLength + 3) * 256);
             sheet.setColumnWidth(5, 16 * 256);
             sheet.setColumnWidth(6, 32 * 256);
             sheet.setColumnWidth(7, 64 * 256);
@@ -51,8 +58,8 @@ public class HashStatusExcelWriter extends ExcelWriter {
             dataRowStyle.setFont(fontData);
 
             XSSFRow headerRow = sheet.createRow(0);
-            addStringCells(headerRow, List.of("Status", "Left-Hash (" + algoSelected.getValue() + ")", "Left-Size", "Left-Modified",
-                    "Right-Hash (" + algoSelected.getValue() + ")", "Right-Size", "Right-Modified", "filename"), topRowStyle);
+            addStringCells(headerRow, List.of("Status", "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
+                    "Right-Hash (" + algoValue + ")", "Right-Size", "Right-Modified", "filename"), topRowStyle);
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             hashStatusMap.keySet().stream().forEach(hashStatus -> {

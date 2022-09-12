@@ -17,11 +17,8 @@ import com.jibi.vo.HashStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -53,7 +50,7 @@ public class DirHashFilesApplication {
         options.addOption(inDir);
 
         Option hashAlgo = new Option("h", "hashalgo", true, "Hash algorithm");
-        hashAlgo.setRequired(true);
+        hashAlgo.setRequired(false);
         options.addOption(hashAlgo);
 
         Option outFile = new Option("o", "outfile", true, "Hash output file");
@@ -86,7 +83,7 @@ public class DirHashFilesApplication {
 
         String modeValue = cmd.getOptionValue("mode");
         String hashAlgoValue = cmd.getOptionValue("hashalgo");
-        if (StringUtils.isEmpty(hashAlgoValue) || !Algorithm.isValidAlgo(hashAlgoValue)) {
+        if (!StringUtils.isEmpty(hashAlgoValue) && !Algorithm.isValidAlgo(hashAlgoValue)) {
             throw new RuntimeException(format("incorrect hash algo parameter %s Supported algorithms [MD2, MD5, SHA, SHA224, SHA256, SHA384, SHA512]", hashAlgoValue));
         }
         String outFileValue = cmd.getOptionValue("outfile");
@@ -112,7 +109,6 @@ public class DirHashFilesApplication {
             }
             dirHashFilesApplication.startCompareHash(hashAlgoValue, leftSideValue, rightSideValue, outFileValue);
         }
-        Thread.getAllStackTraces();
     }
 
     private void startCreateHash(String hashAlgoValue, String dirValue, String outFileValue) {
@@ -149,7 +145,7 @@ public class DirHashFilesApplication {
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
 
-            Map<String, HashStatus> hashStatusMap = compareLeftCenterRight(listFileInfosLeft, listFileInfosRight);
+            Map<String, HashStatus> hashStatusMap = compareLeftCenterRight(algoSelected, listFileInfosLeft, listFileInfosRight);
 
             HashStatusExcelWriter hashStatusExcelWriter = new HashStatusExcelWriter(outFileValue);
             hashStatusExcelWriter.writeExcel(algoSelected, hashStatusMap);
@@ -206,7 +202,7 @@ public class DirHashFilesApplication {
         return listFileInfos;
     }
 
-    private Map<String, HashStatus> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
+    private Map<String, HashStatus> compareLeftCenterRight(Algorithm algoSelected, Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
         Map<String, HashStatus> hashStatusMap = new HashMap<>();
 
         listFileInfosLeft.stream().forEach(fileInfoLeft -> {

@@ -9,11 +9,16 @@ import java.security.NoSuchAlgorithmException;
 public class HashOperation {
 
     private Algorithm algoSelected;
-    public HashOperation(Algorithm  algoSelected) {
+
+    public HashOperation(Algorithm algoSelected) {
         this.algoSelected = algoSelected;
     }
 
     public String getFileChecksum(File file) {
+        if (algoSelected == null) {
+            return "";
+        }
+
         try {
             MessageDigest digest = MessageDigest.getInstance(algoSelected.getValue());
             //Get file input stream for reading the file content

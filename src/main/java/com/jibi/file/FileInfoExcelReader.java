@@ -32,8 +32,13 @@ public class FileInfoExcelReader extends ExcelReader {
             XSSFSheet sheet = workbook.getSheet("FileInfo");
 
             String fileInfoAlgorithm = sheet.getRow(0).getCell(0).getStringCellValue();
-            if (!algoSelected.getValue().equals(fileInfoAlgorithm)) {
-                throw new RuntimeException(format("FileInfo hash %s not matching with hash %s", fileInfoAlgorithm, algoSelected.getValue()));
+            if (algoSelected == null && fileInfoAlgorithm.equals("NA")) {
+                log.info("File has no hash and no algorithm specified");
+            } else if (algoSelected != null && fileInfoAlgorithm.equals(algoSelected.getValue())) {
+                log.info("File has {} hash and {} algorithm specified", fileInfoAlgorithm, algoSelected.getValue());
+            } else {
+                throw new RuntimeException(format("FileInfo hash %s not matching with hash %s",
+                        fileInfoAlgorithm, algoSelected == null ? algoSelected : algoSelected.getValue()));
             }
 
             int numOfRows = sheet.getLastRowNum();
