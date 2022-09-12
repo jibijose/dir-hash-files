@@ -1,7 +1,10 @@
 package com.jibi;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
+import com.jibi.common.Algorithm;
+import com.jibi.common.HashOperation;
 import com.jibi.concurrent.FileOperationPool;
 import com.jibi.concurrent.MappingStatusPrint;
 import com.jibi.file.FileInfoExcelReader;
@@ -14,14 +17,14 @@ import com.jibi.vo.HashStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -37,7 +40,6 @@ public class DirHashFilesApplication {
     private static int FILE_PAD_SIZE = 15;
     private static int FILE_PAD_DATE = 36;
 
-
     public static void main(String[] args) {
         DirHashFilesApplication dirHashFilesApplication = new DirHashFilesApplication();
         Options options = new Options();
@@ -49,6 +51,10 @@ public class DirHashFilesApplication {
         Option inDir = new Option("i", "indir", true, "In drive/dir");
         inDir.setRequired(false);
         options.addOption(inDir);
+
+        Option hashAlgo = new Option("h", "hashalgo", true, "Hash algorithm");
+        hashAlgo.setRequired(true);
+        options.addOption(hashAlgo);
 
         Option outFile = new Option("o", "outfile", true, "Hash output file");
         outFile.setRequired(false);
@@ -79,72 +85,80 @@ public class DirHashFilesApplication {
         }
 
         String modeValue = cmd.getOptionValue("mode");
+        String hashAlgoValue = cmd.getOptionValue("hashalgo");
+        if (StringUtils.isEmpty(hashAlgoValue) || !Algorithm.isValidAlgo(hashAlgoValue)) {
+            throw new RuntimeException(format("incorrect hash algo parameter %s Supported algorithms [MD2, MD5, SHA, SHA224, SHA256, SHA384, SHA512]", hashAlgoValue));
+        }
+        String outFileValue = cmd.getOptionValue("outfile");
+        if (StringUtils.isEmpty(outFileValue)) {
+            throw new RuntimeException(format("incorrect out file.xlsx parameter %s", outFileValue));
+        }
+
         if ("createhash".equals(modeValue)) {
             String inDirValue = cmd.getOptionValue("indir");
-            String outFileValue = cmd.getOptionValue("outfile");
-            if (StringUtils.isEmpty(inDirValue) || StringUtils.isEmpty(outFileValue)) {
-                throw new RuntimeException("incorrect parameters...");
+            if (StringUtils.isEmpty(inDirValue)) {
+                throw new RuntimeException(format("incorrect in dir/drive parameter %s", inDirValue));
             }
-            dirHashFilesApplication.startCreateHash(inDirValue, outFileValue);
+            dirHashFilesApplication.startCreateHash(hashAlgoValue, inDirValue, outFileValue);
         } else if ("comparehash".equals(modeValue)) {
             String leftSideValue = cmd.getOptionValue("leftside");
-            String rightSideValue = cmd.getOptionValue("rightside");
-            String outFileValue = cmd.getOptionValue("outfile");
-            if (StringUtils.isEmpty(leftSideValue) || StringUtils.isEmpty(rightSideValue) || StringUtils.isEmpty(outFileValue)) {
-                throw new RuntimeException("incorrect parameters...");
+            if (FileUtil.validDirDriveFileValue(leftSideValue)) {
+                throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));
             }
-            dirHashFilesApplication.startCompareHash(leftSideValue, rightSideValue, outFileValue);
+
+            String rightSideValue = cmd.getOptionValue("rightside");
+            if (FileUtil.validDirDriveFileValue(rightSideValue)) {
+                throw new RuntimeException(format("incorrect right side dir/drive/file.xlsx parameter %s", rightSideValue));
+            }
+            dirHashFilesApplication.startCompareHash(hashAlgoValue, leftSideValue, rightSideValue, outFileValue);
         }
+        Thread.getAllStackTraces();
     }
 
-    private void startCreateHash(String dirValue, String outFileValue) {
+    private void startCreateHash(String hashAlgoValue, String dirValue, String outFileValue) {
         try {
-            Collection<FileInfo> listFileInfos = mapDirFiles(dirValue);
+            Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+            Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
-            fileInfoExcelWriter.writeExcel(listFileInfos);
+            fileInfoExcelWriter.writeExcel(algoSelected, listFileInfos);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
 
-    private void startCompareHash(String leftSideValue, String rightSideValue, String outFileValue) {
+    private void startCompareHash(String hashAlgoValue, String leftSideValue, String rightSideValue, String outFileValue) {
         try {
-            Collection<FileInfo> listFileInfosLeft;
+            Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+            Collection<FileInfo> listFileInfosLeft = null;
             if (FileUtil.isDriveOrFolder(leftSideValue)) {
                 log.info("Left side {} is drive or folder", leftSideValue);
-                listFileInfosLeft = mapDirFiles(leftSideValue);
+                listFileInfosLeft = mapDirFiles(algoSelected, leftSideValue);
             } else if (FileUtil.isFileInfoExcel(leftSideValue)) {
                 log.info("Left side {} is FileInfo excel", leftSideValue);
                 FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue);
-                listFileInfosLeft = fileInfoExcelReader.readExcel();
-            } else {
-                log.error("Left side {} not correct", leftSideValue);
-                throw new RuntimeException(String.format("Left side %s not correct", leftSideValue));
+                listFileInfosLeft = fileInfoExcelReader.readExcel(algoSelected);
             }
 
-            Collection<FileInfo> listFileInfosRight;
+            Collection<FileInfo> listFileInfosRight = null;
             if (FileUtil.isDriveOrFolder(rightSideValue)) {
                 log.info("Right side {} is drive or folder", rightSideValue);
-                listFileInfosRight = mapDirFiles(rightSideValue);
+                listFileInfosRight = mapDirFiles(algoSelected, rightSideValue);
             } else if (FileUtil.isFileInfoExcel(rightSideValue)) {
                 log.info("Right side {} is FileInfo excel", rightSideValue);
                 FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
-                listFileInfosRight = fileInfoExcelReader.readExcel();
-            } else {
-                log.error("Right side {} not correct", leftSideValue);
-                throw new RuntimeException(String.format("Right side %s not correct", rightSideValue));
+                listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
 
             Map<String, HashStatus> hashStatusMap = compareLeftCenterRight(listFileInfosLeft, listFileInfosRight);
 
             HashStatusExcelWriter hashStatusExcelWriter = new HashStatusExcelWriter(outFileValue);
-            hashStatusExcelWriter.writeExcel(hashStatusMap);
+            hashStatusExcelWriter.writeExcel(algoSelected, hashStatusMap);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
 
-    private Collection<FileInfo> mapDirFiles(String dir) {
+    private Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir) {
         log.debug("************************************************************************************************************************");
         Collection<File> files = getFiles(dir);
         long totalFiles = files.size();
@@ -163,9 +177,10 @@ public class DirHashFilesApplication {
 
         try {
             FileOperationPool fileOperationPool = new FileOperationPool();
+            HashOperation hashOperation = new HashOperation(algoSelected);
             fileOperationPool.submit(
                     () -> files.parallelStream().forEach(file -> {
-                        String fileHash = getFileChecksum(file);
+                        String fileHash = hashOperation.getFileChecksum(file);
                         String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
                         FileInfo fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
                         listFileInfos.add(fileInfo);
@@ -181,9 +196,12 @@ public class DirHashFilesApplication {
 
         try {
             countDownLatch.await();
+            executorService.shutdownNow();
+            executorService.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException interruptedException) {
             log.warn("Interuppted countdownwatch", interruptedException);
         }
+
         log.info("Mapped {} file hashes out of {} files", listFileInfos.size(), totalFiles);
         return listFileInfos;
     }
@@ -259,42 +277,6 @@ public class DirHashFilesApplication {
         return listFileInfos;
     }
 
-    private String getFileChecksum(File file) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            //Get file input stream for reading the file content
-            FileInputStream fis = new FileInputStream(file);
-
-            //Create byte array to read data in chunks
-            byte[] byteArray = new byte[1024];
-            int bytesCount = 0;
-
-            //Read file data and update in message digest
-            while ((bytesCount = fis.read(byteArray)) != -1) {
-                digest.update(byteArray, 0, bytesCount);
-            }
-            ;
-
-            //close the stream; We don't need it now.
-            fis.close();
-
-            //Get the hash's bytes
-            byte[] bytes = digest.digest();
-
-            //This bytes[] has bytes in decimal format;
-            //Convert it to hexadecimal format
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < bytes.length; i++) {
-                sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
-            }
-
-            return sb.toString();
-        } catch (IOException ioException) {
-            return null;
-        } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-            return null;
-        }
-    }
 
     private static List<File> getFiles(final String directory) {
         if (directory == null) {

@@ -17,4 +17,16 @@ public class FileUtil {
         }
         return false;
     }
+
+    public static boolean validDirDriveFileValue(String sideValue) {
+        if ( StringUtils.isEmpty(sideValue) ) {
+            return false;
+        }
+        if ( !isDriveOrFolder(sideValue)) {
+            return false;
+        } else if ( !isFileInfoExcel(sideValue)) {
+            return false;
+        }
+        return true;
+    }
 }

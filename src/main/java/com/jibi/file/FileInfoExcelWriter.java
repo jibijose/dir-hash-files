@@ -2,6 +2,7 @@ package com.jibi.file;
 
 import static com.jibi.util.DateUtil.format;
 
+import com.jibi.common.Algorithm;
 import com.jibi.vo.FileInfo;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -21,13 +22,13 @@ public class FileInfoExcelWriter extends ExcelWriter {
         super(filename);
     }
 
-    public void writeExcel(Collection<FileInfo> listFileInfos) {
+    public void writeExcel(Algorithm algoSelected, Collection<FileInfo> listFileInfos) {
         try {
             FileOutputStream fileStream = new FileOutputStream(filename);
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("FileInfo");
             sheet.createFreezePane(0, 1);
-            sheet.setColumnWidth(0, 70 * 256);
+            sheet.setColumnWidth(0, (algoSelected.getLength() + 3) * 256);
             sheet.setColumnWidth(1, 16 * 256);
             sheet.setColumnWidth(2, 32 * 256);
             sheet.setColumnWidth(3, 64 * 256);
@@ -47,7 +48,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
             dataRowStyle.setFont(fontData);
 
             XSSFRow headerRow = sheet.createRow(0);
-            addStringCells(headerRow, List.of("Hash", "Size", "Date Modified", "File Name"), topRowStyle);
+            addStringCells(headerRow, List.of(algoSelected.getValue(), "Size", "Date Modified", "File Name"), topRowStyle);
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             listFileInfos.stream().forEach(fileInfo -> {

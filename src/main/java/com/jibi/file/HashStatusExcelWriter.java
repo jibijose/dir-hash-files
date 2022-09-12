@@ -2,6 +2,7 @@ package com.jibi.file;
 
 import static com.jibi.util.DateUtil.format;
 
+import com.jibi.common.Algorithm;
 import com.jibi.vo.HashStatus;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -20,17 +21,17 @@ public class HashStatusExcelWriter extends ExcelWriter {
         super(filename);
     }
 
-    public void writeExcel(Map<String, HashStatus> hashStatusMap) {
+    public void writeExcel(Algorithm algoSelected, Map<String, HashStatus> hashStatusMap) {
         try {
             FileOutputStream fileStream = new FileOutputStream(filename);
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("HashStatus");
             sheet.createFreezePane(0, 1);
             sheet.setColumnWidth(0, 16 * 256);
-            sheet.setColumnWidth(1, 70 * 256);
+            sheet.setColumnWidth(1, (algoSelected.getLength() + 3) * 256);
             sheet.setColumnWidth(2, 16 * 256);
             sheet.setColumnWidth(3, 32 * 256);
-            sheet.setColumnWidth(4, 70 * 256);
+            sheet.setColumnWidth(4, (algoSelected.getLength() + 3) * 256);
             sheet.setColumnWidth(5, 16 * 256);
             sheet.setColumnWidth(6, 32 * 256);
             sheet.setColumnWidth(7, 64 * 256);
@@ -50,7 +51,8 @@ public class HashStatusExcelWriter extends ExcelWriter {
             dataRowStyle.setFont(fontData);
 
             XSSFRow headerRow = sheet.createRow(0);
-            addStringCells(headerRow, List.of("Status", "Left-Hash", "Left-Size", "Left-Modified", "Right-Hash", "Right-Size", "Right-Modified", "filename"), topRowStyle);
+            addStringCells(headerRow, List.of("Status", "Left-Hash (" + algoSelected.getValue() + ")", "Left-Size", "Left-Modified",
+                    "Right-Hash (" + algoSelected.getValue() + ")", "Right-Size", "Right-Modified", "filename"), topRowStyle);
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             hashStatusMap.keySet().stream().forEach(hashStatus -> {
