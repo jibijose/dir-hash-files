@@ -103,11 +103,16 @@ public class DirHashFilesApplication {
                 throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));
             }
 
+            String centerSideValue = cmd.getOptionValue("centerside");
+            if (centerSideValue == null || FileUtil.validDirDriveFileValue(centerSideValue)) {
+                throw new RuntimeException(format("incorrect center side dir/drive/file.xlsx parameter %s", centerSideValue));
+            }
+
             String rightSideValue = cmd.getOptionValue("rightside");
             if (FileUtil.validDirDriveFileValue(rightSideValue)) {
                 throw new RuntimeException(format("incorrect right side dir/drive/file.xlsx parameter %s", rightSideValue));
             }
-            dirHashFilesApplication.startCompareHash(hashAlgoValue, leftSideValue, rightSideValue, outFileValue);
+            dirHashFilesApplication.startCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         }
     }
 
@@ -122,7 +127,7 @@ public class DirHashFilesApplication {
         }
     }
 
-    private void startCompareHash(String hashAlgoValue, String leftSideValue, String rightSideValue, String outFileValue) {
+    private void startCompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
         try {
             Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
             Collection<FileInfo> listFileInfosLeft = null;
@@ -135,6 +140,18 @@ public class DirHashFilesApplication {
                 listFileInfosLeft = fileInfoExcelReader.readExcel(algoSelected);
             }
 
+            Collection<FileInfo> listFileInfosCenter = null;
+            if (centerSideValue != null) {
+                if (FileUtil.isDriveOrFolder(centerSideValue)) {
+                    log.info("Center side {} is drive or folder", centerSideValue);
+                    listFileInfosCenter = mapDirFiles(algoSelected, centerSideValue);
+                } else if (FileUtil.isFileInfoExcel(centerSideValue)) {
+                    log.info("Center side {} is FileInfo excel", centerSideValue);
+                    FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue);
+                    listFileInfosCenter = fileInfoExcelReader.readExcel(algoSelected);
+                }
+            }
+
             Collection<FileInfo> listFileInfosRight = null;
             if (FileUtil.isDriveOrFolder(rightSideValue)) {
                 log.info("Right side {} is drive or folder", rightSideValue);
@@ -145,7 +162,12 @@ public class DirHashFilesApplication {
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
 
-            Map<String, HashStatus> hashStatusMap = compareLeftCenterRight(algoSelected, listFileInfosLeft, listFileInfosRight);
+            Map<String, HashStatus> hashStatusMap;
+            if ( listFileInfosCenter == null ) {
+                hashStatusMap = compareLeftRight(listFileInfosLeft, listFileInfosRight);
+            } else {
+                hashStatusMap = compareLeftCenterRight(listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
+            }
 
             HashStatusExcelWriter hashStatusExcelWriter = new HashStatusExcelWriter(outFileValue);
             hashStatusExcelWriter.writeExcel(algoSelected, hashStatusMap);
@@ -202,7 +224,7 @@ public class DirHashFilesApplication {
         return listFileInfos;
     }
 
-    private Map<String, HashStatus> compareLeftCenterRight(Algorithm algoSelected, Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
+    private Map<String, HashStatus> compareLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
         Map<String, HashStatus> hashStatusMap = new HashMap<>();
 
         listFileInfosLeft.stream().forEach(fileInfoLeft -> {
@@ -246,6 +268,14 @@ public class DirHashFilesApplication {
         long newFiles = hashStatusMap.values().stream().filter(HashStatus::isNewFile).count();
         log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
         log.debug("************************************************************************************************************************");
+
+        return hashStatusMap;
+    }
+
+    private Map<String, HashStatus> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosCenter,
+                                                           Collection<FileInfo> listFileInfosRight) {
+        Map<String, HashStatus> hashStatusMap = new HashMap<>();
+
 
         return hashStatusMap;
     }

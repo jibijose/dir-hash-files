@@ -17,10 +17,12 @@ public class HashStatus {
     private String filename;
     private String status;
     private OneSide left;
+    private OneSide center;
     private OneSide right;
 
     public HashStatus() {
         left = new OneSide();
+        center = new OneSide();
         right = new OneSide();
     }
 
