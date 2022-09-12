@@ -6,7 +6,7 @@ import java.util.Date;
 
 @Getter
 @Setter
-public class HashStatus {
+public class HashStatusTwo {
 
     public static String MATCHED = "Matched";
     public static String NOTMATCHED = "Not Matched";
@@ -17,23 +17,21 @@ public class HashStatus {
     private String filename;
     private String status;
     private OneSide left;
-    private OneSide center;
     private OneSide right;
 
-    public HashStatus() {
+    public HashStatusTwo() {
         left = new OneSide();
-        center = new OneSide();
         right = new OneSide();
     }
 
-    public HashStatus(String filename, String status) {
+    public HashStatusTwo(String filename, String status) {
         super();
         this.filename = filename;
         this.status = status;
     }
 
-    public static HashStatus buildWithLeftHash(String filename, String status, FileInfo fileInfoLeft) {
-        HashStatus hashStatus = new HashStatus();
+    public static HashStatusTwo buildWithLeftHash(String filename, String status, FileInfo fileInfoLeft) {
+        HashStatusTwo hashStatus = new HashStatusTwo();
         hashStatus.setFilename(filename);
         hashStatus.setStatus(status);
         hashStatus.getLeft().setHash(fileInfoLeft.getHash());
@@ -42,8 +40,8 @@ public class HashStatus {
         return hashStatus;
     }
 
-    public static HashStatus buildWithRightHash(String filename, String status, FileInfo fileInfoRight) {
-        HashStatus hashStatus = new HashStatus();
+    public static HashStatusTwo buildWithRightHash(String filename, String status, FileInfo fileInfoRight) {
+        HashStatusTwo hashStatus = new HashStatusTwo();
         hashStatus.setFilename(filename);
         hashStatus.setStatus(status);
         hashStatus.getRight().setHash(fileInfoRight.getHash());

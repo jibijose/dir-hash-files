@@ -3,7 +3,7 @@ package com.jibi.file;
 import static com.jibi.util.DateUtil.format;
 
 import com.jibi.common.Algorithm;
-import com.jibi.vo.HashStatus;
+import com.jibi.vo.HashStatusTwo;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -15,13 +15,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class HashStatusExcelWriter extends ExcelWriter {
+public class HashStatusTwoExcelWriter extends ExcelWriter {
 
-    public HashStatusExcelWriter(String filename) {
+    public HashStatusTwoExcelWriter(String filename) {
         super(filename);
     }
 
-    public void writeExcel(Algorithm algoSelected, Map<String, HashStatus> hashStatusMap) {
+    public void writeExcel(Algorithm algoSelected, Map<String, HashStatusTwo> hashStatusMap) {
         int algoLength = 20;
         String algoValue = "NA";
         if (algoSelected != null) {
@@ -41,7 +41,7 @@ public class HashStatusExcelWriter extends ExcelWriter {
             sheet.setColumnWidth(4, (algoLength + 3) * 256);
             sheet.setColumnWidth(5, 16 * 256);
             sheet.setColumnWidth(6, 32 * 256);
-            sheet.setColumnWidth(7, 64 * 256);
+            sheet.setColumnWidth(7, 128 * 256);
 
             // Create a header row describing what the columns mean
             CellStyle topRowStyle = workbook.createCellStyle();
@@ -83,52 +83,52 @@ public class HashStatusExcelWriter extends ExcelWriter {
         }
     }
 
-    private void addDataCells(Row row, HashStatus hashStatus, CellStyle style) {
+    private void addDataCells(Row row, HashStatusTwo hashStatusTwo, CellStyle style) {
         int colIndex = 0;
         Cell cell = null;
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        cell.setCellValue(hashStatus.getStatus());
+        cell.setCellValue(hashStatusTwo.getStatus());
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatus.getLeft().getHash() != null) {
-            cell.setCellValue(hashStatus.getLeft().getHash());
+        if (hashStatusTwo.getLeft().getHash() != null) {
+            cell.setCellValue(hashStatusTwo.getLeft().getHash());
         }
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatus.getLeft().getSize() != 0) {
-            cell.setCellValue(hashStatus.getLeft().getSize());
+        if (hashStatusTwo.getLeft().getSize() != 0) {
+            cell.setCellValue(hashStatusTwo.getLeft().getSize());
         }
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatus.getLeft().getLastModified() != null) {
-            cell.setCellValue(format(hashStatus.getLeft().getLastModified()));
+        if (hashStatusTwo.getLeft().getLastModified() != null) {
+            cell.setCellValue(format(hashStatusTwo.getLeft().getLastModified()));
         }
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatus.getRight().getHash() != null) {
-            cell.setCellValue(hashStatus.getRight().getHash());
+        if (hashStatusTwo.getRight().getHash() != null) {
+            cell.setCellValue(hashStatusTwo.getRight().getHash());
         }
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatus.getRight().getSize() != 0) {
-            cell.setCellValue(hashStatus.getRight().getSize());
+        if (hashStatusTwo.getRight().getSize() != 0) {
+            cell.setCellValue(hashStatusTwo.getRight().getSize());
         }
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatus.getRight().getLastModified() != null) {
-            cell.setCellValue(format(hashStatus.getRight().getLastModified()));
+        if (hashStatusTwo.getRight().getLastModified() != null) {
+            cell.setCellValue(format(hashStatusTwo.getRight().getLastModified()));
         }
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        cell.setCellValue(hashStatus.getFilename());
+        cell.setCellValue(hashStatusTwo.getFilename());
         cell.setCellStyle(style);
     }
 }

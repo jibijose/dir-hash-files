@@ -9,11 +9,13 @@ import com.jibi.concurrent.FileOperationPool;
 import com.jibi.concurrent.MappingStatusPrint;
 import com.jibi.file.FileInfoExcelReader;
 import com.jibi.file.FileInfoExcelWriter;
-import com.jibi.file.HashStatusExcelWriter;
+import com.jibi.file.HashStatusThreeExcelWriter;
+import com.jibi.file.HashStatusTwoExcelWriter;
 import com.jibi.util.DateUtil;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.FileInfo;
-import com.jibi.vo.HashStatus;
+import com.jibi.vo.HashStatusThree;
+import com.jibi.vo.HashStatusTwo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -162,15 +165,19 @@ public class DirHashFilesApplication {
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
 
-            Map<String, HashStatus> hashStatusMap;
-            if ( listFileInfosCenter == null ) {
+
+            if (listFileInfosCenter == null) {
+                Map<String, HashStatusTwo> hashStatusMap;
                 hashStatusMap = compareLeftRight(listFileInfosLeft, listFileInfosRight);
+                HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
+                hashStatusTwoExcelWriter.writeExcel(algoSelected, hashStatusMap);
             } else {
+                Map<String, HashStatusThree> hashStatusMap;
                 hashStatusMap = compareLeftCenterRight(listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
+                HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
+                hashStatusThreeExcelWriter.writeExcel(algoSelected, hashStatusMap);
             }
 
-            HashStatusExcelWriter hashStatusExcelWriter = new HashStatusExcelWriter(outFileValue);
-            hashStatusExcelWriter.writeExcel(algoSelected, hashStatusMap);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -224,11 +231,11 @@ public class DirHashFilesApplication {
         return listFileInfos;
     }
 
-    private Map<String, HashStatus> compareLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
-        Map<String, HashStatus> hashStatusMap = new HashMap<>();
+    private Map<String, HashStatusTwo> compareLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
+        Map<String, HashStatusTwo> hashStatusMap = new HashMap<>();
 
         listFileInfosLeft.stream().forEach(fileInfoLeft -> {
-            hashStatusMap.put(fileInfoLeft.getFilename(), HashStatus.buildWithLeftHash(fileInfoLeft.getFilename(), "Missing File", fileInfoLeft));
+            hashStatusMap.put(fileInfoLeft.getFilename(), HashStatusTwo.buildWithLeftHash(fileInfoLeft.getFilename(), "Missing File", fileInfoLeft));
         });
         listFileInfosRight.stream().forEach(fileInfoRight -> {
             if (listFileInfosLeft.contains(fileInfoRight)) {
@@ -243,41 +250,74 @@ public class DirHashFilesApplication {
                     hashStatusMap.get(fileInfoRight.getFilename()).setStatus("Not Matched");
                 }
             } else {
-                hashStatusMap.put(fileInfoRight.getFilename(), HashStatus.buildWithRightHash(fileInfoRight.getFilename(), "New File", fileInfoRight));
+                hashStatusMap.put(fileInfoRight.getFilename(), HashStatusTwo.buildWithRightHash(fileInfoRight.getFilename(), "New File", fileInfoRight));
             }
         });
         log.debug("************************************************************************************************************************");
-        hashStatusMap.values().stream().filter(HashStatus::isNotMatched).forEach(hashStatus -> {
+        hashStatusMap.values().stream().filter(HashStatusTwo::isNotMatched).forEach(hashStatus -> {
             log.debug("{} {}", rightPad(hashStatus.getStatus(), PAD_MARK), hashStatus.getFilename());
             log.debug("{}   ->   {}", hashStatus.getLeft(), hashStatus.getRight());
         });
         log.debug("************************************************************************************************************************");
-        hashStatusMap.values().stream().filter(HashStatus::isMissingFile).forEach(hashStatus -> {
+        hashStatusMap.values().stream().filter(HashStatusTwo::isMissingFile).forEach(hashStatus -> {
             log.debug("{} {}", rightPad(hashStatus.getStatus(), PAD_MARK), hashStatus.getFilename());
             log.debug("{}", hashStatus.getLeft());
         });
         log.debug("************************************************************************************************************************");
-        hashStatusMap.values().stream().filter(HashStatus::isNewFile).forEach(hashStatus -> {
+        hashStatusMap.values().stream().filter(HashStatusTwo::isNewFile).forEach(hashStatus -> {
             log.debug("{} {}", rightPad(hashStatus.getStatus(), PAD_MARK), hashStatus.getFilename());
             log.debug("{}", hashStatus.getRight());
         });
         log.debug("************************************************************************************************************************");
-        long matchedFiles = hashStatusMap.values().stream().filter(HashStatus::isMatched).count();
-        long notMatchedFiles = hashStatusMap.values().stream().filter(HashStatus::isNotMatched).count();
-        long missingFiles = hashStatusMap.values().stream().filter(HashStatus::isMissingFile).count();
-        long newFiles = hashStatusMap.values().stream().filter(HashStatus::isNewFile).count();
+        long matchedFiles = hashStatusMap.values().stream().filter(HashStatusTwo::isMatched).count();
+        long notMatchedFiles = hashStatusMap.values().stream().filter(HashStatusTwo::isNotMatched).count();
+        long missingFiles = hashStatusMap.values().stream().filter(HashStatusTwo::isMissingFile).count();
+        long newFiles = hashStatusMap.values().stream().filter(HashStatusTwo::isNewFile).count();
         log.info("Matched = {}, Not matched = {}, Missing files = {}, New files = {}", matchedFiles, notMatchedFiles, missingFiles, newFiles);
         log.debug("************************************************************************************************************************");
 
         return hashStatusMap;
     }
 
-    private Map<String, HashStatus> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosCenter,
-                                                           Collection<FileInfo> listFileInfosRight) {
-        Map<String, HashStatus> hashStatusMap = new HashMap<>();
+    private Map<String, HashStatusThree> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosCenter,
+                                                                Collection<FileInfo> listFileInfosRight) {
+        Map<String, HashStatusThree.OneSide> leftOneSide = listFileInfosLeft.stream()
+                .collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(),
+                        fileInfo -> new HashStatusThree.OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
+        Map<String, HashStatusThree.OneSide> centerOneSide = listFileInfosCenter.stream()
+                .collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(),
+                        fileInfo -> new HashStatusThree.OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
+        Map<String, HashStatusThree.OneSide> rightOneSide = listFileInfosRight.stream()
+                .collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(),
+                        fileInfo -> new HashStatusThree.OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
 
+
+        Map<String, HashStatusThree> hashStatusMap = new HashMap<>();
+        leftOneSide.keySet().stream()
+                .forEach(filename -> {
+                    updateMapNewElement(hashStatusMap, filename);
+                    hashStatusMap.get(filename).setLeft(leftOneSide.get(filename));
+                });
+        centerOneSide.keySet().stream()
+                .forEach(filename -> {
+                    updateMapNewElement(hashStatusMap, filename);
+                    hashStatusMap.get(filename).setCenter(centerOneSide.get(filename));
+                });
+        rightOneSide.keySet().stream()
+                .forEach(filename -> {
+                    updateMapNewElement(hashStatusMap, filename);
+                    hashStatusMap.get(filename).setRight(rightOneSide.get(filename));
+                });
 
         return hashStatusMap;
+    }
+
+    private void updateMapNewElement(Map<String, HashStatusThree> hashStatusMap, String filename) {
+        if (!hashStatusMap.containsKey(filename)) {
+            HashStatusThree hashStatusThree = new HashStatusThree();
+            hashStatusThree.setFilename(filename);
+            hashStatusMap.put(filename, hashStatusThree);
+        }
     }
 
 
