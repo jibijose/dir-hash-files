@@ -5,6 +5,4 @@ two drives in two diff thread pools?
 
 time left?
 
-three fold comparision.
-
-optional hash?
+three fold comparison.
