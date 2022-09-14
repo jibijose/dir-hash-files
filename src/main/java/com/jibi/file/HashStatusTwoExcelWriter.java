@@ -1,8 +1,9 @@
 package com.jibi.file;
 
 import static com.jibi.util.DateUtil.format;
+import static com.jibi.util.FileUtil.MATCH;
+import static com.jibi.util.FileUtil.NEWFILE;
 
-import com.jibi.DirHashFilesApplication;
 import com.jibi.common.Algorithm;
 import com.jibi.vo.HashStatusTwo;
 import org.apache.poi.ss.usermodel.*;
@@ -185,9 +186,9 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusTwo.getStatus());
-        if (DirHashFilesApplication.MATCH.equals(hashStatusTwo.getStatus())) {
+        if (MATCH.equals(hashStatusTwo.getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERBLUESTYLE));
-        } else if (DirHashFilesApplication.NEWFILE.equals(hashStatusTwo.getStatus())) {
+        } else if (NEWFILE.equals(hashStatusTwo.getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERGREENSTYLE));
         } else {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERREDSTYLE));

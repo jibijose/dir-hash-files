@@ -1,6 +1,9 @@
 package com.jibi.file;
 
-import com.jibi.DirHashFilesApplication;
+import static com.jibi.util.FileUtil.MATCH;
+import static com.jibi.util.FileUtil.NEWFILE;
+import static com.jibi.util.FileUtil.NOTSYNCED;
+
 import com.jibi.common.Algorithm;
 import com.jibi.vo.HashStatusThree;
 import org.apache.poi.ss.usermodel.*;
@@ -198,7 +201,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusThree.getStatus());
-        if (DirHashFilesApplication.NOTSYNCED.equals(hashStatusThree.getStatus())) {
+        if (NOTSYNCED.equals(hashStatusThree.getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERREDSTYLE));
         } else {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERGREENSTYLE));
@@ -206,9 +209,9 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusThree.getLeft().getStatus());
-        if (DirHashFilesApplication.MATCH.equals(hashStatusThree.getLeft().getStatus())) {
+        if (MATCH.equals(hashStatusThree.getLeft().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERBLUESTYLE));
-        } else if (DirHashFilesApplication.NEWFILE.equals(hashStatusThree.getLeft().getStatus())) {
+        } else if (NEWFILE.equals(hashStatusThree.getLeft().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERGREENSTYLE));
         } else {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERREDSTYLE));
@@ -216,9 +219,9 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusThree.getCenter().getStatus());
-        if (DirHashFilesApplication.MATCH.equals(hashStatusThree.getCenter().getStatus())) {
+        if (MATCH.equals(hashStatusThree.getCenter().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERBLUESTYLE));
-        } else if (DirHashFilesApplication.NEWFILE.equals(hashStatusThree.getCenter().getStatus())) {
+        } else if (NEWFILE.equals(hashStatusThree.getCenter().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERGREENSTYLE));
         } else {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERREDSTYLE));
@@ -226,9 +229,9 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusThree.getRight().getStatus());
-        if (DirHashFilesApplication.MATCH.equals(hashStatusThree.getRight().getStatus())) {
+        if (MATCH.equals(hashStatusThree.getRight().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERBLUESTYLE));
-        } else if (DirHashFilesApplication.NEWFILE.equals(hashStatusThree.getRight().getStatus())) {
+        } else if (NEWFILE.equals(hashStatusThree.getRight().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERGREENSTYLE));
         } else {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERREDSTYLE));
