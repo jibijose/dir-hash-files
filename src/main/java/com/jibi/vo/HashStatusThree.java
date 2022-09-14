@@ -108,4 +108,10 @@ public class HashStatusThree {
             return false;
         }
     }
+
+    public void updateSideStatus(String leftStatus, String centerStatus, String rightStatus) {
+        getLeft().setStatus(leftStatus);
+        getCenter().setStatus(centerStatus);
+        getRight().setStatus(rightStatus);
+    }
 }

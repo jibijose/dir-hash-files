@@ -279,6 +279,11 @@ public class DirHashFilesApplication {
         return hashStatusMap;
     }
 
+    private final static String NEWFILE = "NewFile";
+    private final static String MATCHED = "Match";
+    private final static String MISMATCH = "Mismatch";
+    private final static String MISSING = "Missing";
+
     private Map<String, HashStatusThree> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosCenter,
                                                                 Collection<FileInfo> listFileInfosRight) {
         Map<String, HashStatusThree.OneSide> leftOneSide = listFileInfosLeft.stream()
@@ -309,51 +314,56 @@ public class DirHashFilesApplication {
                     hashStatusMap.get(filename).setRight(rightOneSide.get(filename));
                 });
         log.info("HashStatusMap size {}", hashStatusMap);
-
         hashStatusMap.keySet().stream()
                 .map(filename -> hashStatusMap.get(filename))
                 .forEach(hashStatusThree -> {
-                    log.info("Marking Not Found file {}", hashStatusThree.getFilename());
-                    if (!hashStatusThree.getLeft().exists()) {
-                        hashStatusThree.getLeft().setStatus("Not Found");
-                        hashStatusThree.setStatus("NotInSync");
-                        compareAndSetStatus(hashStatusThree, hashStatusThree.getCenter(), hashStatusThree.getRight());
-                    }
-                    if (!hashStatusThree.getCenter().exists()) {
-                        hashStatusThree.getCenter().setStatus("Not Found");
-                        hashStatusThree.setStatus("NotInSync");
-                        compareAndSetStatus(hashStatusThree, hashStatusThree.getLeft(), hashStatusThree.getRight());
-                    }
-                    if (!hashStatusThree.getRight().exists()) {
-                        hashStatusThree.getRight().setStatus("Not Found");
-                        hashStatusThree.setStatus("NotInSync");
-                        compareAndSetStatus(hashStatusThree, hashStatusThree.getLeft(), hashStatusThree.getCenter());
-                    }
-                });
-
-        hashStatusMap.keySet().stream()
-                .map(filename -> hashStatusMap.get(filename))
-                .filter(hashStatusThree -> hashStatusThree.getLeft().exists())
-                .forEach(hashStatusThree -> {
-                    log.info("With left side file {}", hashStatusThree.getFilename());
-                    HashStatusThree.OneSide leftSide = hashStatusThree.getLeft();
-                    String leftSideHash = leftSide.getHash();
-                    long leftSideSize = leftSide.getSize();
-                    Date leftSideDate = leftSide.getLastModified();
-                    leftSide.setStatus("Matched");
-                    if (leftSide.compare(hashStatusThree.getCenter())) {
-                        hashStatusThree.getCenter().setStatus("Matched");
+                    if (hashStatusThree.getLeft().exists()) {
+                        log.info("With left side file {}", hashStatusThree.getFilename());
+                        HashStatusThree.OneSide leftSide = hashStatusThree.getLeft();
+                        HashStatusThree.OneSide centerSide = hashStatusThree.getCenter();
+                        HashStatusThree.OneSide rightSide = hashStatusThree.getRight();
+                        if (centerSide.exists() && rightSide.exists()) {
+                            if (leftSide.compare(centerSide) && leftSide.compare(rightSide)) {
+                                hashStatusThree.updateSideStatus(MATCHED, MATCHED, MATCHED);
+                            } else if (leftSide.compare(centerSide)) {
+                                hashStatusThree.updateSideStatus(MATCHED, MATCHED, MISMATCH);
+                            } else if (leftSide.compare(rightSide)) {
+                                hashStatusThree.updateSideStatus(MATCHED, MISMATCH, MATCHED);
+                            } else if (centerSide.compare(rightSide)) {
+                                hashStatusThree.updateSideStatus(MISMATCH, MATCHED, MATCHED);
+                            } else {
+                                hashStatusThree.updateSideStatus(MISMATCH, MISMATCH, MISMATCH);
+                            }
+                        } else if (centerSide.exists() && !rightSide.exists()) {
+                            if (leftSide.compare(centerSide)) {
+                                hashStatusThree.updateSideStatus(MATCHED, MATCHED, MISSING);
+                            } else {
+                                hashStatusThree.updateSideStatus(MISMATCH, MISMATCH, MISSING);
+                            }
+                        } else if (!centerSide.exists() && rightSide.exists()) {
+                            if (leftSide.compare(rightSide)) {
+                                hashStatusThree.updateSideStatus(MATCHED, MISSING, MATCHED);
+                            } else {
+                                hashStatusThree.updateSideStatus(MISMATCH, MISSING, MISMATCH);
+                            }
+                        } else if (!centerSide.exists() && !rightSide.exists()) {
+                            hashStatusThree.updateSideStatus(NEWFILE, MISSING, MISSING);
+                        }
                     } else {
-                        hashStatusThree.getCenter().setStatus("Not Matched");
-                    }
-                    if (leftSide.compare(hashStatusThree.getRight())) {
-                        hashStatusThree.getRight().setStatus("Matched");
-                    } else {
-                        hashStatusThree.getRight().setStatus("Not Matched");
-                    }
-                    if (hashStatusThree.getCenter().compare(hashStatusThree.getRight())) {
-                        if (!hashStatusThree.getCenter().compare(leftSide)) {
-                            leftSide.setStatus("Not Matched");
+                        log.info("Without left side file {}", hashStatusThree.getFilename());
+                        HashStatusThree.OneSide leftSide = hashStatusThree.getLeft();
+                        HashStatusThree.OneSide centerSide = hashStatusThree.getCenter();
+                        HashStatusThree.OneSide rightSide = hashStatusThree.getRight();
+                        if (centerSide.exists() && rightSide.exists()) {
+                            if (centerSide.compare(rightSide)) {
+                                hashStatusThree.updateSideStatus(MISSING, MATCHED, MATCHED);
+                            } else {
+                                hashStatusThree.updateSideStatus(MISSING, MISMATCH, MISMATCH);
+                            }
+                        } else if (centerSide.exists() && !rightSide.exists()) {
+                            hashStatusThree.updateSideStatus(MISSING, NEWFILE, MISSING);
+                        } else if (!centerSide.exists() && rightSide.exists()) {
+                            hashStatusThree.updateSideStatus(MISSING, MISSING, NEWFILE);
                         }
                     }
                 });
