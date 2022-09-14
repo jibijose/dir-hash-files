@@ -3,7 +3,6 @@ package com.jibi.file;
 import com.jibi.DirHashFilesApplication;
 import com.jibi.common.Algorithm;
 import com.jibi.vo.HashStatusThree;
-import com.jibi.vo.HashStatusTwo;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
@@ -207,7 +206,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusThree.getLeft().getStatus());
-        if (DirHashFilesApplication.MATCHED.equals(hashStatusThree.getLeft().getStatus())) {
+        if (DirHashFilesApplication.MATCH.equals(hashStatusThree.getLeft().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERBLUESTYLE));
         } else if (DirHashFilesApplication.NEWFILE.equals(hashStatusThree.getLeft().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERGREENSTYLE));
@@ -217,7 +216,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusThree.getCenter().getStatus());
-        if (DirHashFilesApplication.MATCHED.equals(hashStatusThree.getCenter().getStatus())) {
+        if (DirHashFilesApplication.MATCH.equals(hashStatusThree.getCenter().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERBLUESTYLE));
         } else if (DirHashFilesApplication.NEWFILE.equals(hashStatusThree.getCenter().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERGREENSTYLE));
@@ -227,7 +226,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusThree.getRight().getStatus());
-        if (DirHashFilesApplication.MATCHED.equals(hashStatusThree.getRight().getStatus())) {
+        if (DirHashFilesApplication.MATCH.equals(hashStatusThree.getRight().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERBLUESTYLE));
         } else if (DirHashFilesApplication.NEWFILE.equals(hashStatusThree.getRight().getStatus())) {
             cell.setCellStyle(cellStyles.get(DATAROWCENTERGREENSTYLE));
