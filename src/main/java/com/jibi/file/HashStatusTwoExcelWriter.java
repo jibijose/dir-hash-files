@@ -98,7 +98,7 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatusTwo.getLeft().getSize() != 0) {
+        if (hashStatusTwo.getLeft().getSize() >= 0) {
             cell.setCellValue(hashStatusTwo.getLeft().getSize());
         }
         cell.setCellStyle(style);
@@ -116,7 +116,7 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatusTwo.getRight().getSize() != 0) {
+        if (hashStatusTwo.getRight().getSize() >= 0) {
             cell.setCellValue(hashStatusTwo.getRight().getSize());
         }
         cell.setCellStyle(style);

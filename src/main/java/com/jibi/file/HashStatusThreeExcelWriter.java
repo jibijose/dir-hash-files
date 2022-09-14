@@ -103,7 +103,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         Cell cell = null;
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        cell.setCellValue(hashStatusThree.getStatus());
+        cell.setCellValue(hashStatusThree.getFilename());
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
@@ -125,7 +125,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatusThree.getLeft().getSize() != 0) {
+        if (hashStatusThree.getLeft().getSize() >= 0) {
             cell.setCellValue(hashStatusThree.getLeft().getSize());
         }
         cell.setCellStyle(style);
@@ -143,7 +143,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatusThree.getCenter().getSize() != 0) {
+        if (hashStatusThree.getCenter().getSize() >= 0) {
             cell.setCellValue(hashStatusThree.getCenter().getSize());
         }
         cell.setCellStyle(style);
@@ -161,7 +161,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        if (hashStatusThree.getRight().getSize() != 0) {
+        if (hashStatusThree.getRight().getSize() >= 0) {
             cell.setCellValue(hashStatusThree.getRight().getSize());
         }
         cell.setCellStyle(style);

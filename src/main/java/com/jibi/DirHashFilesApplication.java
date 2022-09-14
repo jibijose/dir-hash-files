@@ -290,7 +290,7 @@ public class DirHashFilesApplication {
         Map<String, HashStatusThree.OneSide> rightOneSide = listFileInfosRight.stream()
                 .collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(),
                         fileInfo -> new HashStatusThree.OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
-
+        log.info("HashStatus size left={} center={} right={}", leftOneSide.size(), centerOneSide.size(), rightOneSide.size());
 
         Map<String, HashStatusThree> hashStatusMap = new HashMap<>();
         leftOneSide.keySet().stream()
@@ -308,8 +308,61 @@ public class DirHashFilesApplication {
                     updateMapNewElement(hashStatusMap, filename);
                     hashStatusMap.get(filename).setRight(rightOneSide.get(filename));
                 });
+        log.info("HashStatusMap size {}", hashStatusMap);
+
+        hashStatusMap.keySet().stream()
+                .map(filename -> hashStatusMap.get(filename))
+                .forEach(hashStatusThree -> {
+                    log.info("Marking Not Found file {}", hashStatusThree.getFilename());
+                    if (!hashStatusThree.getLeft().exists()) {
+                        hashStatusThree.getLeft().setStatus("Not Found");
+                        hashStatusThree.setStatus("NotInSync");
+                        compareAndSetStatus(hashStatusThree, hashStatusThree.getCenter(), hashStatusThree.getRight());
+                    }
+                    if (!hashStatusThree.getCenter().exists()) {
+                        hashStatusThree.getCenter().setStatus("Not Found");
+                        hashStatusThree.setStatus("NotInSync");
+                        compareAndSetStatus(hashStatusThree, hashStatusThree.getLeft(), hashStatusThree.getRight());
+                    }
+                    if (!hashStatusThree.getRight().exists()) {
+                        hashStatusThree.getRight().setStatus("Not Found");
+                        hashStatusThree.setStatus("NotInSync");
+                        compareAndSetStatus(hashStatusThree, hashStatusThree.getLeft(), hashStatusThree.getCenter());
+                    }
+                });
+
+        hashStatusMap.keySet().stream()
+                .map(filename -> hashStatusMap.get(filename))
+                .filter(hashStatusThree -> hashStatusThree.getLeft().exists())
+                .forEach(hashStatusThree -> {
+                    log.info("With left side file {}", hashStatusThree.getFilename());
+                    HashStatusThree.OneSide leftSide = hashStatusThree.getLeft();
+                    String leftSideHash = leftSide.getHash();
+                    long leftSideSize = leftSide.getSize();
+                    Date leftSideDate = leftSide.getLastModified();
+                    leftSide.setStatus("Matched");
+                    if (leftSide.compare(hashStatusThree.getCenter())) {
+                        hashStatusThree.getCenter().setStatus("Matched");
+                    } else {
+                        hashStatusThree.getCenter().setStatus("Not Matched");
+                    }
+                    if (leftSide.compare(hashStatusThree.getRight())) {
+                        hashStatusThree.getRight().setStatus("Matched");
+                    } else {
+                        hashStatusThree.getRight().setStatus("Not Matched");
+                    }
+                    if (hashStatusThree.getCenter().compare(hashStatusThree.getRight())) {
+                        if (!hashStatusThree.getCenter().compare(leftSide)) {
+                            leftSide.setStatus("Not Matched");
+                        }
+                    }
+                });
 
         return hashStatusMap;
+    }
+
+    private void compareAndSetStatus(HashStatusThree hashStatusThree, HashStatusThree.OneSide leftSide, HashStatusThree.OneSide rightSide) {
+
     }
 
     private void updateMapNewElement(Map<String, HashStatusThree> hashStatusMap, String filename) {

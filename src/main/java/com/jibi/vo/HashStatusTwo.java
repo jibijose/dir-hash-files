@@ -85,7 +85,7 @@ public class HashStatusTwo {
     @ToString
     public static class OneSide {
         private String hash;
-        private long size;
+        private long size = -1;
         private Date lastModified;
     }
 }
