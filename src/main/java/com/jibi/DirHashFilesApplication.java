@@ -279,13 +279,13 @@ public class DirHashFilesApplication {
         return hashStatusMap;
     }
 
-    private final static String NEWFILE = "NewFile";
-    private final static String MATCHED = "Match";
-    private final static String MISMATCH = "Mismatch";
-    private final static String MISSING = "Missing";
+    public final static String NEWFILE = "NewFile";
+    public final static String MATCHED = "Match";
+    public final static String MISMATCH = "Mismatch";
+    public final static String MISSING = "Missing";
 
-    private final static String INSYNC = "InSync";
-    private final static String NOTSYNCED = "NotSynced";
+    public final static String INSYNC = "InSync";
+    public final static String NOTSYNCED = "NotSynced";
 
     private Map<String, HashStatusThree> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosCenter,
                                                                 Collection<FileInfo> listFileInfosRight) {
