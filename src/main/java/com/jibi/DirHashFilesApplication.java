@@ -284,6 +284,9 @@ public class DirHashFilesApplication {
     private final static String MISMATCH = "Mismatch";
     private final static String MISSING = "Missing";
 
+    private final static String INSYNC = "InSync";
+    private final static String NOTSYNCED = "NotSynced";
+
     private Map<String, HashStatusThree> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosCenter,
                                                                 Collection<FileInfo> listFileInfosRight) {
         Map<String, HashStatusThree.OneSide> leftOneSide = listFileInfosLeft.stream()
@@ -324,30 +327,30 @@ public class DirHashFilesApplication {
                         HashStatusThree.OneSide rightSide = hashStatusThree.getRight();
                         if (centerSide.exists() && rightSide.exists()) {
                             if (leftSide.compare(centerSide) && leftSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(MATCHED, MATCHED, MATCHED);
+                                hashStatusThree.updateSideStatus(INSYNC, MATCHED, MATCHED, MATCHED);
                             } else if (leftSide.compare(centerSide)) {
-                                hashStatusThree.updateSideStatus(MATCHED, MATCHED, MISMATCH);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MATCHED, MATCHED, MISMATCH);
                             } else if (leftSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(MATCHED, MISMATCH, MATCHED);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MATCHED, MISMATCH, MATCHED);
                             } else if (centerSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(MISMATCH, MATCHED, MATCHED);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MATCHED, MATCHED);
                             } else {
-                                hashStatusThree.updateSideStatus(MISMATCH, MISMATCH, MISMATCH);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISMATCH, MISMATCH);
                             }
                         } else if (centerSide.exists() && !rightSide.exists()) {
                             if (leftSide.compare(centerSide)) {
-                                hashStatusThree.updateSideStatus(MATCHED, MATCHED, MISSING);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MATCHED, MATCHED, MISSING);
                             } else {
-                                hashStatusThree.updateSideStatus(MISMATCH, MISMATCH, MISSING);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISMATCH, MISSING);
                             }
                         } else if (!centerSide.exists() && rightSide.exists()) {
                             if (leftSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(MATCHED, MISSING, MATCHED);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MATCHED, MISSING, MATCHED);
                             } else {
-                                hashStatusThree.updateSideStatus(MISMATCH, MISSING, MISMATCH);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISSING, MISMATCH);
                             }
                         } else if (!centerSide.exists() && !rightSide.exists()) {
-                            hashStatusThree.updateSideStatus(NEWFILE, MISSING, MISSING);
+                            hashStatusThree.updateSideStatus(NOTSYNCED, NEWFILE, MISSING, MISSING);
                         }
                     } else {
                         log.info("Without left side file {}", hashStatusThree.getFilename());
@@ -356,23 +359,19 @@ public class DirHashFilesApplication {
                         HashStatusThree.OneSide rightSide = hashStatusThree.getRight();
                         if (centerSide.exists() && rightSide.exists()) {
                             if (centerSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(MISSING, MATCHED, MATCHED);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MATCHED, MATCHED);
                             } else {
-                                hashStatusThree.updateSideStatus(MISSING, MISMATCH, MISMATCH);
+                                hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MISMATCH, MISMATCH);
                             }
                         } else if (centerSide.exists() && !rightSide.exists()) {
-                            hashStatusThree.updateSideStatus(MISSING, NEWFILE, MISSING);
+                            hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, NEWFILE, MISSING);
                         } else if (!centerSide.exists() && rightSide.exists()) {
-                            hashStatusThree.updateSideStatus(MISSING, MISSING, NEWFILE);
+                            hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MISSING, NEWFILE);
                         }
                     }
                 });
 
         return hashStatusMap;
-    }
-
-    private void compareAndSetStatus(HashStatusThree hashStatusThree, HashStatusThree.OneSide leftSide, HashStatusThree.OneSide rightSide) {
-
     }
 
     private void updateMapNewElement(Map<String, HashStatusThree> hashStatusMap, String filename) {
@@ -382,30 +381,6 @@ public class DirHashFilesApplication {
             hashStatusMap.put(filename, hashStatusThree);
         }
     }
-
-
-    public Collection<FileInfo> readSignatureFile(String filePath) {
-        Collection<FileInfo> listFileInfos = new ArrayList<>();
-        try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
-            lines.filter(line -> !line.trim().equals("")).forEach(line -> {
-                String[] keyValuePair = line.split(" +", 3);
-                if (keyValuePair.length == 3) {
-                    FileInfo fileInfo = new FileInfo();
-                    fileInfo.setHash(keyValuePair[0]);
-                    fileInfo.setSize(Long.parseLong(keyValuePair[1]));
-                    String[] keyValuePairInner = keyValuePair[2].split("   ", 2);
-                    fileInfo.setLastModified(DateUtil.parse(keyValuePairInner[0]));
-                    fileInfo.setFilename(keyValuePairInner[1]);
-                    listFileInfos.add(fileInfo);
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return listFileInfos;
-    }
-
 
     private static List<File> getFiles(final String directory) {
         if (directory == null) {

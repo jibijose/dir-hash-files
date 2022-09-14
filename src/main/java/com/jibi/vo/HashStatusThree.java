@@ -109,7 +109,8 @@ public class HashStatusThree {
         }
     }
 
-    public void updateSideStatus(String leftStatus, String centerStatus, String rightStatus) {
+    public void updateSideStatus(String status, String leftStatus, String centerStatus, String rightStatus) {
+        setStatus(status);
         getLeft().setStatus(leftStatus);
         getCenter().setStatus(centerStatus);
         getRight().setStatus(rightStatus);

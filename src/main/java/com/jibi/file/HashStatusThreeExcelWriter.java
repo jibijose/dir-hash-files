@@ -10,6 +10,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,50 +37,20 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
             XSSFSheet sheet = workbook.createSheet("HashStatus");
             sheet.createFreezePane(0, 1);
 
-            sheet.setColumnWidth(0, 16 * 256);
-            sheet.setColumnWidth(1, 16 * 256);
-            sheet.setColumnWidth(2, 16 * 256);
-            sheet.setColumnWidth(3, 16 * 256);
-
-            sheet.setColumnWidth(4, (algoLength + 3) * 256);
-            sheet.setColumnWidth(5, 16 * 256);
-            sheet.setColumnWidth(6, 32 * 256);
-
-            sheet.setColumnWidth(7, (algoLength + 3) * 256);
-            sheet.setColumnWidth(8, 16 * 256);
-            sheet.setColumnWidth(9, 32 * 256);
-
-            sheet.setColumnWidth(10, (algoLength + 3) * 256);
-            sheet.setColumnWidth(11, 16 * 256);
-            sheet.setColumnWidth(12, 32 * 256);
-
-            sheet.setColumnWidth(13, 128 * 256);
-
-            // Create a header row describing what the columns mean
-            CellStyle topRowStyle = workbook.createCellStyle();
-            var fontTop = workbook.createFont();
-            fontTop.setBold(true);
-            topRowStyle.setFont(fontTop);
-            topRowStyle.setAlignment(HorizontalAlignment.CENTER);
-            topRowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-            topRowStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-            topRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-            CellStyle dataRowStyle = workbook.createCellStyle();
-            var fontData = workbook.createFont();
-            dataRowStyle.setFont(fontData);
+            setSheetWidths(sheet, algoLength);
+            Map<String, CellStyle> cellStyles = createCellStyles(workbook);
 
             XSSFRow headerRow = sheet.createRow(0);
             addStringCells(headerRow, List.of("Status", "Left", "Center", "Right",
                     "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
                     "Center-Hash (" + algoValue + ")", "Center-Size", "Center-Modified",
                     "Right-Hash (" + algoValue + ")", "Right-Size", "Right-Modified",
-                    "filename"), topRowStyle);
+                    "filename"), cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             hashStatusMap.keySet().stream().forEach(hashStatusThree -> {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
-                addDataCells(dataRow, hashStatusMap.get(hashStatusThree), dataRowStyle);
+                addDataCells(dataRow, hashStatusMap.get(hashStatusThree), cellStyles);
             });
 
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
@@ -90,6 +61,52 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         }
     }
 
+    private final static String TOPROWSTYLE = "TopRowStyle";
+    private final static String DATAROWSTYLE = "DataRowStyle";
+
+    private Map<String, CellStyle> createCellStyles(Workbook workbook) {
+        Map<String, CellStyle> cellStyles = new HashMap<>();
+
+        // Create a header row describing what the columns mean
+        CellStyle topRowStyle = workbook.createCellStyle();
+        var fontTop = workbook.createFont();
+        fontTop.setBold(true);
+        topRowStyle.setFont(fontTop);
+        topRowStyle.setAlignment(HorizontalAlignment.CENTER);
+        topRowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        topRowStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        topRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        cellStyles.put(TOPROWSTYLE, topRowStyle);
+
+        CellStyle dataRowStyle = workbook.createCellStyle();
+        var fontData = workbook.createFont();
+        dataRowStyle.setFont(fontData);
+        cellStyles.put(DATAROWSTYLE, dataRowStyle);
+
+        return cellStyles;
+    }
+
+    private void setSheetWidths(XSSFSheet sheet, int algoLength) {
+        sheet.setColumnWidth(0, 16 * 256);
+        sheet.setColumnWidth(1, 16 * 256);
+        sheet.setColumnWidth(2, 16 * 256);
+        sheet.setColumnWidth(3, 16 * 256);
+
+        sheet.setColumnWidth(4, (algoLength + 3) * 256);
+        sheet.setColumnWidth(5, 16 * 256);
+        sheet.setColumnWidth(6, 32 * 256);
+
+        sheet.setColumnWidth(7, (algoLength + 3) * 256);
+        sheet.setColumnWidth(8, 16 * 256);
+        sheet.setColumnWidth(9, 32 * 256);
+
+        sheet.setColumnWidth(10, (algoLength + 3) * 256);
+        sheet.setColumnWidth(11, 16 * 256);
+        sheet.setColumnWidth(12, 32 * 256);
+
+        sheet.setColumnWidth(13, 128 * 256);
+    }
+
     private void addStringCells(Row row, List<String> strings, CellStyle style) {
         for (int i = 0; i < strings.size(); i++) {
             Cell cell = row.createCell(i, CellType.STRING);
@@ -98,12 +115,13 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         }
     }
 
-    private void addDataCells(Row row, HashStatusThree hashStatusThree, CellStyle style) {
+    private void addDataCells(Row row, HashStatusThree hashStatusThree, Map<String, CellStyle> cellStyles) {
+        CellStyle style = cellStyles.get(DATAROWSTYLE);
         int colIndex = 0;
         Cell cell = null;
 
         cell = row.createCell(colIndex++, CellType.STRING);
-        cell.setCellValue(hashStatusThree.getFilename());
+        cell.setCellValue(hashStatusThree.getStatus());
         cell.setCellStyle(style);
 
         cell = row.createCell(colIndex++, CellType.STRING);
