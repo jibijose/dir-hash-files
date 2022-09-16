@@ -1,33 +1,22 @@
 package com.jibi.vo;
 
-import lombok.*;
-
-import java.util.Date;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
-public class HashStatusTwo {
-
-    public static String MATCHED = "Matched";
-    public static String NOTMATCHED = "Not Matched";
-    public static String MISSINGFILE = "Missing File";
-    public static String NEWFILE = "New File";
-
-
-    private String filename;
-    private String status;
+public class HashStatusTwo extends HashStatus {
     private OneSide left;
     private OneSide right;
 
     public HashStatusTwo() {
+        super();
         left = new OneSide();
         right = new OneSide();
     }
 
     public HashStatusTwo(String filename, String status) {
-        super();
-        this.filename = filename;
-        this.status = status;
+        super(filename, status);
     }
 
     public static HashStatusTwo buildWithLeftHash(String filename, String status, FileInfo fileInfoLeft) {
@@ -51,42 +40,38 @@ public class HashStatusTwo {
     }
 
     public boolean isMatched() {
-        if (MATCHED.equals(status)) {
+        if (MATCH.equals(getStatus())) {
             return true;
         }
         return false;
     }
 
     public boolean isNotMatched() {
-        if (NOTMATCHED.equals(status)) {
+        if (MISMATCH.equals(getStatus())) {
             return true;
         }
         return false;
     }
 
     public boolean isMissingFile() {
-        if (MISSINGFILE.equals(status)) {
+        if (MISSING.equals(getStatus())) {
             return true;
         }
         return false;
     }
 
     public boolean isNewFile() {
-        if (NEWFILE.equals(status)) {
+        if (NEWFILE.equals(getStatus())) {
             return true;
         }
         return false;
     }
 
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @ToString
-    public static class OneSide {
-        private String hash;
-        private long size = -1;
-        private Date lastModified;
+
+    public void updateSideStatus(String status, String leftStatus, String rightStatus) {
+        setStatus(status);
+        getLeft().setStatus(leftStatus);
+        getRight().setStatus(rightStatus);
     }
 }
 

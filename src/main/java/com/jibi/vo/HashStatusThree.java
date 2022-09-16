@@ -1,34 +1,20 @@
 package com.jibi.vo;
 
-import lombok.*;
-
-import java.util.Date;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
-public class HashStatusThree {
-    public static String MATCHED = "Matched";
-    public static String NOTMATCHED = "Not Matched";
-    public static String MISSINGFILE = "Missing File";
-    public static String NEWFILE = "New File";
-
-
-    private String filename;
-    private String status;
-    private OneSide left;
+public class HashStatusThree extends HashStatusTwo {
     private OneSide center;
-    private OneSide right;
 
     public HashStatusThree() {
-        left = new OneSide();
+        super();
         center = new OneSide();
-        right = new OneSide();
     }
 
     public HashStatusThree(String filename, String status) {
-        super();
-        this.filename = filename;
-        this.status = status;
+        super(filename, status);
     }
 
     public static HashStatusTwo buildWithLeftHash(String filename, String status, FileInfo fileInfoLeft) {
@@ -52,62 +38,33 @@ public class HashStatusThree {
     }
 
     public boolean isMatched() {
-        if (MATCHED.equals(status)) {
+        if (MATCH.equals(getStatus())) {
             return true;
         }
         return false;
     }
 
     public boolean isNotMatched() {
-        if (NOTMATCHED.equals(status)) {
+        if (MISMATCH.equals(getStatus())) {
             return true;
         }
         return false;
     }
 
     public boolean isMissingFile() {
-        if (MISSINGFILE.equals(status)) {
+        if (MISSING.equals(getStatus())) {
             return true;
         }
         return false;
     }
 
     public boolean isNewFile() {
-        if (NEWFILE.equals(status)) {
+        if (NEWFILE.equals(getStatus())) {
             return true;
         }
         return false;
     }
 
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @ToString
-    public static class OneSide {
-        private String status;
-        private String hash;
-        private long size = -1;
-        private Date lastModified;
-
-        public boolean exists() {
-            if (size >= 0 && lastModified != null) {
-                return true;
-            }
-            return false;
-        }
-
-        public boolean compare(OneSide otherSide) {
-            if (!exists() || !otherSide.exists()) {
-                return false;
-            }
-            if (hash.equals(otherSide.getHash()) && size == otherSide.getSize()
-                    && (lastModified != null && lastModified.compareTo(otherSide.getLastModified()) == 0)) {
-                return true;
-            }
-            return false;
-        }
-    }
 
     public void updateSideStatus(String status, String leftStatus, String centerStatus, String rightStatus) {
         setStatus(status);

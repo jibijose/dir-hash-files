@@ -20,6 +20,7 @@ import com.jibi.util.FileUtil;
 import com.jibi.vo.FileInfo;
 import com.jibi.vo.HashStatusThree;
 import com.jibi.vo.HashStatusTwo;
+import com.jibi.vo.OneSide;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -34,37 +35,6 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
 
 @Slf4j
 public class HashService {
-
-    private void commonValidation(String hashAlgoValue, String outFileValue) {
-        if (!StringUtils.isEmpty(hashAlgoValue) && !Algorithm.isValidAlgo(hashAlgoValue)) {
-            throw new RuntimeException(format("incorrect hash algo parameter %s Supported algorithms [MD2, MD5, SHA, SHA224, SHA256, SHA384, SHA512]", hashAlgoValue));
-        }
-        if (StringUtils.isEmpty(outFileValue)) {
-            throw new RuntimeException(format("incorrect out file.xlsx parameter %s", outFileValue));
-        }
-    }
-
-    private void validateCreateHash(String hashAlgoValue, String inDirValue, String outFileValue) {
-        commonValidation(hashAlgoValue, outFileValue);
-        if (StringUtils.isEmpty(inDirValue)) {
-            throw new RuntimeException(format("incorrect in dir/drive parameter %s", inDirValue));
-        }
-    }
-
-    private void validateCompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
-        commonValidation(hashAlgoValue, outFileValue);
-        if (!FileUtil.validDirDriveFileValue(leftSideValue)) {
-            throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));
-        }
-
-        if (centerSideValue != null && !FileUtil.validDirDriveFileValue(centerSideValue)) {
-            throw new RuntimeException(format("incorrect center side dir/drive/file.xlsx parameter %s", centerSideValue));
-        }
-
-        if (!FileUtil.validDirDriveFileValue(rightSideValue)) {
-            throw new RuntimeException(format("incorrect right side dir/drive/file.xlsx parameter %s", rightSideValue));
-        }
-    }
 
     public void startCreateHash(String hashAlgoValue, String dirValue, String outFileValue) {
         validateCreateHash(hashAlgoValue, dirValue, outFileValue);
@@ -230,15 +200,15 @@ public class HashService {
 
     private Map<String, HashStatusThree> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosCenter,
                                                                 Collection<FileInfo> listFileInfosRight) {
-        Map<String, HashStatusThree.OneSide> leftOneSide = listFileInfosLeft.stream()
+        Map<String, OneSide> leftOneSide = listFileInfosLeft.stream()
                 .collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(),
-                        fileInfo -> new HashStatusThree.OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
-        Map<String, HashStatusThree.OneSide> centerOneSide = listFileInfosCenter.stream()
+                        fileInfo -> new OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
+        Map<String, OneSide> centerOneSide = listFileInfosCenter.stream()
                 .collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(),
-                        fileInfo -> new HashStatusThree.OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
-        Map<String, HashStatusThree.OneSide> rightOneSide = listFileInfosRight.stream()
+                        fileInfo -> new OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
+        Map<String, OneSide> rightOneSide = listFileInfosRight.stream()
                 .collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(),
-                        fileInfo -> new HashStatusThree.OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
+                        fileInfo -> new OneSide("", fileInfo.getHash(), fileInfo.getSize(), fileInfo.getLastModified())));
         log.info("HashStatus size left={} center={} right={}", leftOneSide.size(), centerOneSide.size(), rightOneSide.size());
 
         Map<String, HashStatusThree> hashStatusMap = new HashMap<>();
@@ -263,9 +233,9 @@ public class HashService {
                 .forEach(hashStatusThree -> {
                     if (hashStatusThree.getLeft().exists()) {
                         log.trace("With left side file {}", hashStatusThree.getFilename());
-                        HashStatusThree.OneSide leftSide = hashStatusThree.getLeft();
-                        HashStatusThree.OneSide centerSide = hashStatusThree.getCenter();
-                        HashStatusThree.OneSide rightSide = hashStatusThree.getRight();
+                        OneSide leftSide = hashStatusThree.getLeft();
+                        OneSide centerSide = hashStatusThree.getCenter();
+                        OneSide rightSide = hashStatusThree.getRight();
                         if (centerSide.exists() && rightSide.exists()) {
                             if (leftSide.compare(centerSide) && leftSide.compare(rightSide)) {
                                 hashStatusThree.updateSideStatus(INSYNC, MATCH, MATCH, MATCH);
@@ -295,9 +265,9 @@ public class HashService {
                         }
                     } else {
                         log.trace("Without left side file {}", hashStatusThree.getFilename());
-                        HashStatusThree.OneSide leftSide = hashStatusThree.getLeft();
-                        HashStatusThree.OneSide centerSide = hashStatusThree.getCenter();
-                        HashStatusThree.OneSide rightSide = hashStatusThree.getRight();
+                        OneSide leftSide = hashStatusThree.getLeft();
+                        OneSide centerSide = hashStatusThree.getCenter();
+                        OneSide rightSide = hashStatusThree.getRight();
                         if (centerSide.exists() && rightSide.exists()) {
                             if (centerSide.compare(rightSide)) {
                                 hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MATCH, MATCH);
@@ -340,6 +310,37 @@ public class HashService {
             }
         }
         return fileList;
+    }
+
+    private void commonValidation(String hashAlgoValue, String outFileValue) {
+        if (!StringUtils.isEmpty(hashAlgoValue) && !Algorithm.isValidAlgo(hashAlgoValue)) {
+            throw new RuntimeException(format("incorrect hash algo parameter %s Supported algorithms [MD2, MD5, SHA, SHA224, SHA256, SHA384, SHA512]", hashAlgoValue));
+        }
+        if (StringUtils.isEmpty(outFileValue)) {
+            throw new RuntimeException(format("incorrect out file.xlsx parameter %s", outFileValue));
+        }
+    }
+
+    private void validateCreateHash(String hashAlgoValue, String inDirValue, String outFileValue) {
+        commonValidation(hashAlgoValue, outFileValue);
+        if (StringUtils.isEmpty(inDirValue)) {
+            throw new RuntimeException(format("incorrect in dir/drive parameter %s", inDirValue));
+        }
+    }
+
+    private void validateCompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
+        commonValidation(hashAlgoValue, outFileValue);
+        if (!FileUtil.validDirDriveFileValue(leftSideValue)) {
+            throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));
+        }
+
+        if (centerSideValue != null && !FileUtil.validDirDriveFileValue(centerSideValue)) {
+            throw new RuntimeException(format("incorrect center side dir/drive/file.xlsx parameter %s", centerSideValue));
+        }
+
+        if (!FileUtil.validDirDriveFileValue(rightSideValue)) {
+            throw new RuntimeException(format("incorrect right side dir/drive/file.xlsx parameter %s", rightSideValue));
+        }
     }
 
 }
