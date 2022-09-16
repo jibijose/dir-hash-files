@@ -1,7 +1,15 @@
 package com.jibi.util;
 
+import com.jibi.file.ExcelPasswordProtection;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
+import java.util.Scanner;
+
+import static java.lang.String.format;
+
+@Slf4j
 public class FileUtil {
 
     public final static String NEWFILE = "NewFile";
@@ -44,5 +52,18 @@ public class FileUtil {
             return true;
         }
         return false;
+    }
+
+    public static String getUserInputFilePassword(String message) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print(format("Enter %s : ", message));
+        return scanner.nextLine();
+    }
+
+    public static void setExcelPassword(String filename) throws Exception {
+        String excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", filename));
+        ExcelPasswordProtection excelPasswordProtection = new ExcelPasswordProtection();
+        excelPasswordProtection.encryptWorkbook(new File(filename), excelPassword);
+        log.info("File {} encrypted", filename);
     }
 }

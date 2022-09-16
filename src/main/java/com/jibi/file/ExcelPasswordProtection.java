@@ -19,6 +19,7 @@ import java.security.GeneralSecurityException;
 
 @Slf4j
 public class ExcelPasswordProtection {
+
     public void encryptWorkbook(File file, String password) throws IOException, GeneralSecurityException, InvalidFormatException {
         try (POIFSFileSystem fs = new POIFSFileSystem()) {
             try (OPCPackage opc = OPCPackage.open(file, PackageAccess.READ_WRITE);
@@ -33,7 +34,7 @@ public class ExcelPasswordProtection {
         }
     }
 
-    public void decryptWorkbook(File file, String password) throws IOException, GeneralSecurityException{
+    public void decryptWorkbook(File file, String password) throws IOException, GeneralSecurityException {
         try (POIFSFileSystem fs = new POIFSFileSystem(file)) {
             InputStream fis = getDecryptingInputStream(fs, password);
 

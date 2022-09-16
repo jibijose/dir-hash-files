@@ -5,24 +5,28 @@ import static com.jibi.util.FileUtil.MATCH;
 import static com.jibi.util.FileUtil.NEWFILE;
 
 import com.jibi.common.Algorithm;
+import com.jibi.util.FileUtil;
 import com.jibi.vo.HashStatusTwo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class HashStatusTwoExcelWriter extends ExcelWriter {
 
     public HashStatusTwoExcelWriter(String filename) {
         super(filename);
     }
 
-    public void writeExcel(Algorithm algoSelected, Map<String, HashStatusTwo> hashStatusMap) {
+    public void writeExcel(boolean passwordEnabled, Algorithm algoSelected, Map<String, HashStatusTwo> hashStatusMap) {
         int algoLength = 20;
         String algoValue = "NA";
         if (algoSelected != null) {
@@ -31,7 +35,6 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         }
 
         try {
-            FileOutputStream fileStream = new FileOutputStream(filename);
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("HashStatus");
             sheet.createFreezePane(0, 1);
@@ -48,10 +51,13 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
                 addDataCells(dataRow, hashStatusMap.get(hashStatus), cellStyles);
             });
-
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
-            workbook.write(fileStream);
 
+            FileOutputStream fileStream = new FileOutputStream(filename);
+            workbook.write(fileStream);
+            if (passwordEnabled) {
+                FileUtil.setExcelPassword(filename);
+            }
         } catch (Exception exception) {
             exception.printStackTrace();
         }

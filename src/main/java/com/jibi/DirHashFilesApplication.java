@@ -1,6 +1,9 @@
 package com.jibi;
 
+import static java.lang.String.format;
+
 import com.jibi.service.HashService;
+import com.jibi.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 
@@ -26,22 +29,18 @@ public class DirHashFilesApplication {
 
         if ("createhash".equals(modeValue)) {
             String inDirValue = commandLine.getOptionValue("indir");
-            String outFilePassword = null;
-            if (passwordEnabled) {
-                outFilePassword = getUserInputFilePassword();
-            }
-            hashService.startCreateHash(outFilePassword, hashAlgoValue, inDirValue, outFileValue);
+            hashService.startCreateHash(passwordEnabled, hashAlgoValue, inDirValue, outFileValue);
         } else if ("comparehash".equals(modeValue)) {
             String leftSideValue = commandLine.getOptionValue("leftside");
             String centerSideValue = commandLine.getOptionValue("centerside");
             String rightSideValue = commandLine.getOptionValue("rightside");
-            hashService.startCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
+            hashService.startCompareHash(passwordEnabled, hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         }
     }
 
-    private String getUserInputFilePassword() {
+    private String getUserInputFilePassword(String message) {
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter username: ");
+        System.out.print(format("Enter %s : ", message));
         return scanner.nextLine();
     }
 

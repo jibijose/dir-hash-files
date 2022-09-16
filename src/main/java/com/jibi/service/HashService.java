@@ -36,19 +36,19 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
 @Slf4j
 public class HashService {
 
-    public void startCreateHash(String outFilePassword, String hashAlgoValue, String dirValue, String outFileValue) {
+    public void startCreateHash(boolean passwordEnabled, String hashAlgoValue, String dirValue, String outFileValue) {
         validateCreateHash(hashAlgoValue, dirValue, outFileValue);
         try {
             Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
             Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
-            fileInfoExcelWriter.writeExcel(outFilePassword, algoSelected, listFileInfos);
+            fileInfoExcelWriter.writeExcel(passwordEnabled, algoSelected, listFileInfos);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
 
-    public void startCompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
+    public void startCompareHash(boolean passwordEnabled, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
         validateCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         try {
             Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
@@ -89,12 +89,12 @@ public class HashService {
                 Map<String, HashStatusTwo> hashStatusMap;
                 hashStatusMap = compareLeftRight(listFileInfosLeft, listFileInfosRight);
                 HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
-                hashStatusTwoExcelWriter.writeExcel(algoSelected, hashStatusMap);
+                hashStatusTwoExcelWriter.writeExcel(passwordEnabled, algoSelected, hashStatusMap);
             } else {
                 Map<String, HashStatusThree> hashStatusMap;
                 hashStatusMap = compareLeftCenterRight(listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
                 HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
-                hashStatusThreeExcelWriter.writeExcel(algoSelected, hashStatusMap);
+                hashStatusThreeExcelWriter.writeExcel(passwordEnabled, algoSelected, hashStatusMap);
             }
 
         } catch (Exception exception) {

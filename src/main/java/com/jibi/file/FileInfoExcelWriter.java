@@ -3,6 +3,7 @@ package com.jibi.file;
 import static com.jibi.util.DateUtil.format;
 
 import com.jibi.common.Algorithm;
+import com.jibi.util.FileUtil;
 import com.jibi.vo.FileInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -25,7 +26,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
         super(filename);
     }
 
-    public void writeExcel(String filePassword, Algorithm algoSelected, Collection<FileInfo> listFileInfos) {
+    public void writeExcel(boolean passwordEnabled, Algorithm algoSelected, Collection<FileInfo> listFileInfos) {
         int algoLength = 20;
         String algoValue = "NA";
         if (algoSelected != null) {
@@ -34,7 +35,6 @@ public class FileInfoExcelWriter extends ExcelWriter {
         }
 
         try {
-            FileOutputStream fileStream = new FileOutputStream(filename);
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("FileInfo");
             sheet.createFreezePane(0, 1);
@@ -65,17 +65,16 @@ public class FileInfoExcelWriter extends ExcelWriter {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
                 addDataCells(dataRow, fileInfo, dataRowStyle);
             });
-
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
-            workbook.write(fileStream);
 
-            if (filePassword != null) {
-                ExcelPasswordProtection excelPasswordProtection = new ExcelPasswordProtection();
-                excelPasswordProtection.encryptWorkbook(new File(filename), filePassword);
-                log.info("File {} encrypted");
+            FileOutputStream fileOutputStream = new FileOutputStream(filename);
+            workbook.write(fileOutputStream);
+            fileOutputStream.close();
+            if (passwordEnabled) {
+                FileUtil.setExcelPassword(filename);
             }
         } catch (Exception exception) {
-            exception.printStackTrace();
+            log.error("Excel writing error for file {}", filename, exception);
         }
     }
 

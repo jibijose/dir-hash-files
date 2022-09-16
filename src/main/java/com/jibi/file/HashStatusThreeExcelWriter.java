@@ -5,11 +5,14 @@ import static com.jibi.util.FileUtil.NEWFILE;
 import static com.jibi.util.FileUtil.NOTSYNCED;
 
 import com.jibi.common.Algorithm;
+import com.jibi.util.FileUtil;
 import com.jibi.vo.HashStatusThree;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -18,13 +21,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.jibi.util.DateUtil.format;
 
+@Slf4j
 public class HashStatusThreeExcelWriter extends ExcelWriter {
 
     public HashStatusThreeExcelWriter(String filename) {
         super(filename);
     }
 
-    public void writeExcel(Algorithm algoSelected, Map<String, HashStatusThree> hashStatusMap) {
+    public void writeExcel(boolean passwordEnabled, Algorithm algoSelected, Map<String, HashStatusThree> hashStatusMap) {
         int algoLength = 20;
         String algoValue = "NA";
         if (algoSelected != null) {
@@ -56,7 +60,9 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
 
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
             workbook.write(fileStream);
-
+            if (passwordEnabled) {
+                FileUtil.setExcelPassword(filename);
+            }
         } catch (Exception exception) {
             exception.printStackTrace();
         }
