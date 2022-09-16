@@ -7,11 +7,32 @@ import org.apache.commons.cli.*;
 @Slf4j
 public class DirHashFilesApplication {
 
-
-
     public static void main(String[] args) {
-        HashService hashService = new HashService();
         DirHashFilesApplication dirHashFilesApplication = new DirHashFilesApplication();
+        dirHashFilesApplication.startApplication(args);
+    }
+
+    private void startApplication(String[] args) {
+        HashService hashService = new HashService();
+        CommandLine commandLine = formatOptions(args);
+
+        String modeValue = commandLine.getOptionValue("mode");
+
+        String hashAlgoValue = commandLine.getOptionValue("hashalgo");
+        String outFileValue = commandLine.getOptionValue("outfile");
+
+        if ("createhash".equals(modeValue)) {
+            String inDirValue = commandLine.getOptionValue("indir");
+            hashService.startCreateHash(hashAlgoValue, inDirValue, outFileValue);
+        } else if ("comparehash".equals(modeValue)) {
+            String leftSideValue = commandLine.getOptionValue("leftside");
+            String centerSideValue = commandLine.getOptionValue("centerside");
+            String rightSideValue = commandLine.getOptionValue("rightside");
+            hashService.startCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
+        }
+    }
+
+    private CommandLine formatOptions(String[] args) {
         Options options = new Options();
 
         Option mode = new Option("m", "mode", true, "Operation mode");
@@ -44,31 +65,15 @@ public class DirHashFilesApplication {
 
         HelpFormatter formatter = new HelpFormatter();
         CommandLineParser parser = new DefaultParser();
-        CommandLine cmd;
+        CommandLine commandLine;
         try {
-            cmd = parser.parse(options, args);
+            commandLine = parser.parse(options, args);
         } catch (ParseException parseException) {
             log.error("Parseexception", parseException);
             formatter.printHelp("Java directory hasher", options);
-            System.exit(1);
-            return;
+            throw new RuntimeException("Exceution error", parseException);
         }
-
-        String modeValue = cmd.getOptionValue("mode");
-
-        String hashAlgoValue = cmd.getOptionValue("hashalgo");
-        String outFileValue = cmd.getOptionValue("outfile");
-
-        if ("createhash".equals(modeValue)) {
-            String inDirValue = cmd.getOptionValue("indir");
-            hashService.startCreateHash(hashAlgoValue, inDirValue, outFileValue);
-        } else if ("comparehash".equals(modeValue)) {
-            String leftSideValue = cmd.getOptionValue("leftside");
-            String centerSideValue = cmd.getOptionValue("centerside");
-            String rightSideValue = cmd.getOptionValue("rightside");
-            hashService.startCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
-        }
+        return commandLine;
     }
-
 
 }
