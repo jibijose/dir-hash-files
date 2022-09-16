@@ -4,6 +4,8 @@ import com.jibi.service.HashService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 
+import java.util.Scanner;
+
 @Slf4j
 public class DirHashFilesApplication {
 
@@ -17,13 +19,18 @@ public class DirHashFilesApplication {
         CommandLine commandLine = formatOptions(args);
 
         String modeValue = commandLine.getOptionValue("mode");
+        boolean passwordEnabled = Boolean.parseBoolean(commandLine.getOptionValue("passwordEnabled"));
 
         String hashAlgoValue = commandLine.getOptionValue("hashalgo");
         String outFileValue = commandLine.getOptionValue("outfile");
 
         if ("createhash".equals(modeValue)) {
             String inDirValue = commandLine.getOptionValue("indir");
-            hashService.startCreateHash(hashAlgoValue, inDirValue, outFileValue);
+            String outFilePassword = null;
+            if (passwordEnabled) {
+                outFilePassword = getUserInputFilePassword();
+            }
+            hashService.startCreateHash(outFilePassword, hashAlgoValue, inDirValue, outFileValue);
         } else if ("comparehash".equals(modeValue)) {
             String leftSideValue = commandLine.getOptionValue("leftside");
             String centerSideValue = commandLine.getOptionValue("centerside");
@@ -32,12 +39,22 @@ public class DirHashFilesApplication {
         }
     }
 
+    private String getUserInputFilePassword() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter username: ");
+        return scanner.nextLine();
+    }
+
     private CommandLine formatOptions(String[] args) {
         Options options = new Options();
 
         Option mode = new Option("m", "mode", true, "Operation mode");
         mode.setRequired(true);
         options.addOption(mode);
+
+        Option passwordEnabled = new Option("p", "passwordEnabled", true, "Password Enabled");
+        passwordEnabled.setRequired(true);
+        options.addOption(passwordEnabled);
 
         Option inDir = new Option("i", "indir", true, "In drive/dir");
         inDir.setRequired(false);

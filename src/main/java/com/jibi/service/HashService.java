@@ -36,13 +36,13 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
 @Slf4j
 public class HashService {
 
-    public void startCreateHash(String hashAlgoValue, String dirValue, String outFileValue) {
+    public void startCreateHash(String outFilePassword, String hashAlgoValue, String dirValue, String outFileValue) {
         validateCreateHash(hashAlgoValue, dirValue, outFileValue);
         try {
             Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
             Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
-            fileInfoExcelWriter.writeExcel(algoSelected, listFileInfos);
+            fileInfoExcelWriter.writeExcel(outFilePassword, algoSelected, listFileInfos);
         } catch (Exception exception) {
             exception.printStackTrace();
         }

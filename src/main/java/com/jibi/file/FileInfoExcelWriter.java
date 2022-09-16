@@ -4,17 +4,20 @@ import static com.jibi.util.DateUtil.format;
 
 import com.jibi.common.Algorithm;
 import com.jibi.vo.FileInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class FileInfoExcelWriter extends ExcelWriter {
 
 
@@ -22,7 +25,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
         super(filename);
     }
 
-    public void writeExcel(Algorithm algoSelected, Collection<FileInfo> listFileInfos) {
+    public void writeExcel(String filePassword, Algorithm algoSelected, Collection<FileInfo> listFileInfos) {
         int algoLength = 20;
         String algoValue = "NA";
         if (algoSelected != null) {
@@ -66,6 +69,11 @@ public class FileInfoExcelWriter extends ExcelWriter {
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
             workbook.write(fileStream);
 
+            if (filePassword != null) {
+                ExcelPasswordProtection excelPasswordProtection = new ExcelPasswordProtection();
+                excelPasswordProtection.encryptWorkbook(new File(filename), filePassword);
+                log.info("File {} encrypted");
+            }
         } catch (Exception exception) {
             exception.printStackTrace();
         }
