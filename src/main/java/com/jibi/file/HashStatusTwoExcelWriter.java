@@ -26,7 +26,7 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         super(filename);
     }
 
-    public void writeExcel(boolean passwordEnabled, Algorithm algoSelected, Map<String, HashStatusTwo> hashStatusMap) {
+    public void writeExcel(boolean passFlag, Algorithm algoSelected, Map<String, HashStatusTwo> hashStatusMap) {
         int algoLength = 20;
         String algoValue = "NA";
         if (algoSelected != null) {
@@ -55,7 +55,7 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
 
             FileOutputStream fileStream = new FileOutputStream(filename);
             workbook.write(fileStream);
-            if (passwordEnabled) {
+            if (passFlag) {
                 FileUtil.setExcelPassword(filename);
             }
         } catch (Exception exception) {

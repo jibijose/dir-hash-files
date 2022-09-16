@@ -26,7 +26,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
         super(filename);
     }
 
-    public void writeExcel(boolean passwordEnabled, Algorithm algoSelected, Collection<FileInfo> listFileInfos) {
+    public void writeExcel(boolean passFlag, Algorithm algoSelected, Collection<FileInfo> listFileInfos) {
         int algoLength = 20;
         String algoValue = "NA";
         if (algoSelected != null) {
@@ -70,7 +70,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
             FileOutputStream fileOutputStream = new FileOutputStream(filename);
             workbook.write(fileOutputStream);
             fileOutputStream.close();
-            if (passwordEnabled) {
+            if (passFlag) {
                 FileUtil.setExcelPassword(filename);
             }
         } catch (Exception exception) {

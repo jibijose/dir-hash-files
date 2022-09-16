@@ -3,7 +3,6 @@ package com.jibi;
 import static java.lang.String.format;
 
 import com.jibi.service.HashService;
-import com.jibi.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 
@@ -22,19 +21,19 @@ public class DirHashFilesApplication {
         CommandLine commandLine = formatOptions(args);
 
         String modeValue = commandLine.getOptionValue("mode");
-        boolean passwordEnabled = Boolean.parseBoolean(commandLine.getOptionValue("passwordEnabled"));
+        boolean passFlag = Boolean.parseBoolean(commandLine.getOptionValue("passFlag"));
 
         String hashAlgoValue = commandLine.getOptionValue("hashalgo");
         String outFileValue = commandLine.getOptionValue("outfile");
 
         if ("createhash".equals(modeValue)) {
             String inDirValue = commandLine.getOptionValue("indir");
-            hashService.startCreateHash(passwordEnabled, hashAlgoValue, inDirValue, outFileValue);
+            hashService.startCreateHash(passFlag, hashAlgoValue, inDirValue, outFileValue);
         } else if ("comparehash".equals(modeValue)) {
             String leftSideValue = commandLine.getOptionValue("leftside");
             String centerSideValue = commandLine.getOptionValue("centerside");
             String rightSideValue = commandLine.getOptionValue("rightside");
-            hashService.startCompareHash(passwordEnabled, hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
+            hashService.startCompareHash(passFlag, hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         }
     }
 
@@ -51,9 +50,9 @@ public class DirHashFilesApplication {
         mode.setRequired(true);
         options.addOption(mode);
 
-        Option passwordEnabled = new Option("p", "passwordEnabled", true, "Password Enabled");
-        passwordEnabled.setRequired(true);
-        options.addOption(passwordEnabled);
+        Option passFlag = new Option("p", "passFlag", true, "Password Flag");
+        passFlag.setRequired(true);
+        options.addOption(passFlag);
 
         Option inDir = new Option("i", "indir", true, "In drive/dir");
         inDir.setRequired(false);

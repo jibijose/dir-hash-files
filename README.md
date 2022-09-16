@@ -10,6 +10,7 @@
 java -jar dirhashfiles-1.0.0-shaded.jar
 
 -m,--mode <arg>         Operation mode, mandatory [createhash|comparehash]  
+-p,--passFlag <arg>     Operation mode, mandatory [true|false]  
 -h,--hashalgo <arg>     Hash algorithm, optional [MD2|MD5|SHA|SHA224|SHA256|SHA384|SHA512]  
 -i,--indir <arg>        In drive/dir, mandatory for createhash mode  
 -l,--leftside <arg>     Left side, mandatory for comparehash mode  
@@ -27,9 +28,10 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar -m comparehash -l "fileinfo.xlsx"
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m comparehash -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m comparehash -p true -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 
-/**************  three way comparison checks **********************/
+/**************  three way comparison checks **********************/  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m comparehash -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m comparehash -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m comparehash -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 
 ### Build locally
 ./mvnw clean package
