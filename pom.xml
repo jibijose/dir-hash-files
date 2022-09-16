@@ -124,6 +124,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <configuration>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>module-info.class</exclude>
+                                <exclude>META-INF/MANIFEST.MF</exclude>
+                                <exclude>META-INF/LICENSE.txt</exclude>
+                                <exclude>META-INF/NOTICE.txt</exclude>
+                                <exclude>META-INF/LICENSE</exclude>
+                                <exclude>META-INF/NOTICE</exclude>
+                                <exclude>META-INF/DEPENDENCIES</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
@@ -132,8 +149,7 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <transformers>
-                                <transformer implementation=
-                                                     "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.jibi.DirHashFilesApplication</mainClass>
                                 </transformer>
                             </transformers>
