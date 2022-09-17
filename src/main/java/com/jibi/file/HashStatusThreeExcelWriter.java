@@ -7,6 +7,7 @@ import static com.jibi.util.FileUtil.NOTSYNCED;
 import com.jibi.common.Algorithm;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.HashStatusThree;
+import com.jibi.vo.HashStatusTwo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -14,9 +15,7 @@ import org.apache.poi.xssf.usermodel.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.jibi.util.DateUtil.format;
@@ -35,6 +34,8 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
             algoLength = algoSelected.getLength();
             algoValue = algoSelected.getValue();
         }
+        SortedMap<String, HashStatusThree> sortedHashStatusMap = new TreeMap<>();
+        sortedHashStatusMap.putAll(hashStatusMap);
 
         try {
             FileOutputStream fileStream = new FileOutputStream(filename);
@@ -54,11 +55,11 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
-            hashStatusMap.keySet().stream().forEach(hashStatus -> {
+            sortedHashStatusMap.keySet().stream().forEach(hashStatus -> {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
-                addDataCells(dataRow, hashStatusMap.get(hashStatus), cellStyles);
-                if (hashStatusMap.get(hashStatus).getFilename().length() > requiredFileNameWidth.get()) {
-                    requiredFileNameWidth.set(hashStatusMap.get(hashStatus).getFilename().length());
+                addDataCells(dataRow, sortedHashStatusMap.get(hashStatus), cellStyles);
+                if (sortedHashStatusMap.get(hashStatus).getFilename().length() > requiredFileNameWidth.get()) {
+                    requiredFileNameWidth.set(sortedHashStatusMap.get(hashStatus).getFilename().length());
                 }
             });
             sheet.setColumnWidth(13, (requiredFileNameWidth.get() + 3) * 256);

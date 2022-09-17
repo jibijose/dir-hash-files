@@ -12,12 +12,10 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 
-import java.io.File;
 import java.io.FileOutputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class HashStatusTwoExcelWriter extends ExcelWriter {
@@ -26,13 +24,15 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         super(filename);
     }
 
-    public void writeExcel(boolean passFlag, Algorithm algoSelected, Map<String, HashStatusTwo> hashStatusMap) {
+    public void writeExcel(boolean passFlag, Algorithm algoSelected, final Map<String, HashStatusTwo> hashStatusMap) {
         int algoLength = 20;
         String algoValue = "NA";
         if (algoSelected != null) {
             algoLength = algoSelected.getLength();
             algoValue = algoSelected.getValue();
         }
+        SortedMap<String, HashStatusTwo> sortedHashStatusMap = new TreeMap<>();
+        sortedHashStatusMap.putAll(hashStatusMap);
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook();
@@ -48,14 +48,14 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
-            hashStatusMap.keySet().stream().forEach(hashStatus -> {
+            sortedHashStatusMap.keySet().stream().forEach(hashStatus -> {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
-                addDataCells(dataRow, hashStatusMap.get(hashStatus), cellStyles);
-                if (hashStatusMap.get(hashStatus).getFilename().length() > requiredFileNameWidth.get()) {
-                    requiredFileNameWidth.set(hashStatusMap.get(hashStatus).getFilename().length());
+                addDataCells(dataRow, sortedHashStatusMap.get(hashStatus), cellStyles);
+                if (sortedHashStatusMap.get(hashStatus).getFilename().length() > requiredFileNameWidth.get()) {
+                    requiredFileNameWidth.set(sortedHashStatusMap.get(hashStatus).getFilename().length());
                 }
             });
-            sheet.setColumnWidth(4, (requiredFileNameWidth.get() + 3) * 256);
+            sheet.setColumnWidth(7, (requiredFileNameWidth.get() + 3) * 256);
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
 
             FileOutputStream fileStream = new FileOutputStream(filename);

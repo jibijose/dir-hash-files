@@ -48,7 +48,5 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "
 ### TODOs
 junit tests.  
 two drives in two diff thread pools?  
-time left?  
-recalculate hash mode  
+time left?
 filename containing marker + datetime  
-shorten -> create, recreate, compare, recompare
