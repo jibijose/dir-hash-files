@@ -12,15 +12,9 @@ import com.jibi.common.Algorithm;
 import com.jibi.common.HashOperation;
 import com.jibi.concurrent.FileOperationPool;
 import com.jibi.concurrent.MappingStatusPrint;
-import com.jibi.file.FileInfoExcelReader;
-import com.jibi.file.FileInfoExcelWriter;
-import com.jibi.file.HashStatusThreeExcelWriter;
-import com.jibi.file.HashStatusTwoExcelWriter;
+import com.jibi.file.*;
 import com.jibi.util.FileUtil;
-import com.jibi.vo.FileInfo;
-import com.jibi.vo.HashStatusThree;
-import com.jibi.vo.HashStatusTwo;
-import com.jibi.vo.OneSide;
+import com.jibi.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -38,8 +32,8 @@ public class HashService {
 
     public void startCreate(boolean passFlag, String hashAlgoValue, String dirValue, String outFileValue) {
         validateCreateHash(hashAlgoValue, dirValue, outFileValue);
+        Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         try {
-            Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
             Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
             fileInfoExcelWriter.writeExcel(passFlag, algoSelected, listFileInfos);
@@ -49,9 +43,9 @@ public class HashService {
     }
 
     public void startRecreate(boolean passFlag, String hashAlgoValue, String dirValue, String inFileValue, String outFileValue) {
-        validateRecreateHash(inFileValue, outFileValue);
+        validateRecreateHash(inFileValue, inFileValue, outFileValue);
+        Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         try {
-            Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
             Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue, inFileValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
             fileInfoExcelWriter.writeExcel(passFlag, algoSelected, listFileInfos);
@@ -62,8 +56,8 @@ public class HashService {
 
     public void startCompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
         validateCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
+        Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         try {
-            Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
             Collection<FileInfo> listFileInfosLeft = null;
             if (FileUtil.isDriveOrFolder(leftSideValue)) {
                 log.info("Left side {} is drive or folder", leftSideValue);
@@ -114,8 +108,92 @@ public class HashService {
         }
     }
 
-    public void startRecompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
+    public void startRecompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String inFileValue, String outFileValue) {
+        validateRecompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, inFileValue, outFileValue);
+        Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
 
+        HashStatusReader hashStatusReader = new HashStatusReader(inFileValue);
+        Collection<HashStatus> listExistingHashStatus = hashStatusReader.readExcel(algoSelected);
+        Map<String, HashStatus> mapExistingHashStatus = listExistingHashStatus.stream()
+                .collect(Collectors.toMap(hashStatus -> hashStatus.getFilename(), hashStatus -> hashStatus));
+
+        Map<String, OneSide> mapExistingLeftOneSide = mapExistingHashStatus.keySet().stream()
+                .collect(Collectors.toMap(filename -> filename, filename -> {
+                    HashStatus hashStatus = mapExistingHashStatus.get(filename);
+                    if (hashStatus instanceof HashStatusThree) {
+                        return ((HashStatusThree) hashStatus).getLeft();
+                    } else {
+                        return ((HashStatusTwo) hashStatus).getLeft();
+                    }
+                }));
+        Map<String, OneSide> mapExistingCenterOneSide = mapExistingHashStatus.keySet().stream()
+                .collect(Collectors.toMap(filename -> filename, filename -> {
+                    HashStatus hashStatus = mapExistingHashStatus.get(filename);
+                    if (hashStatus instanceof HashStatusThree) {
+                        return ((HashStatusThree) hashStatus).getCenter();
+                    } else {
+                        return new OneSide();
+                    }
+                }));
+        Map<String, OneSide> mapExistingRightOneSide = mapExistingHashStatus.keySet().stream()
+                .collect(Collectors.toMap(filename -> filename, filename -> {
+                    HashStatus hashStatus = mapExistingHashStatus.get(filename);
+                    if (hashStatus instanceof HashStatusThree) {
+                        return ((HashStatusThree) hashStatus).getRight();
+                    } else {
+                        return ((HashStatusTwo) hashStatus).getRight();
+                    }
+                }));
+
+        try {
+            Collection<FileInfo> listFileInfosLeft = null;
+            if (FileUtil.isDriveOrFolder(leftSideValue)) {
+                log.info("Left side {} is drive or folder", leftSideValue);
+                listFileInfosLeft = mapDirFiles(algoSelected, leftSideValue, mapExistingLeftOneSide);
+            } else if (FileUtil.isFileInfoExcel(leftSideValue)) {
+                log.info("Left side {} is FileInfo excel", leftSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue);
+                listFileInfosLeft = fileInfoExcelReader.readExcel(algoSelected);
+            }
+
+            Collection<FileInfo> listFileInfosCenter = null;
+            if (centerSideValue != null) {
+                if (FileUtil.isDriveOrFolder(centerSideValue)) {
+                    log.info("Center side {} is drive or folder", centerSideValue);
+                    listFileInfosCenter = mapDirFiles(algoSelected, centerSideValue, mapExistingCenterOneSide);
+                } else if (FileUtil.isFileInfoExcel(centerSideValue)) {
+                    log.info("Center side {} is FileInfo excel", centerSideValue);
+                    FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue);
+                    listFileInfosCenter = fileInfoExcelReader.readExcel(algoSelected);
+                }
+            }
+
+            Collection<FileInfo> listFileInfosRight = null;
+            if (FileUtil.isDriveOrFolder(rightSideValue)) {
+                log.info("Right side {} is drive or folder", rightSideValue);
+                listFileInfosRight = mapDirFiles(algoSelected, rightSideValue, mapExistingRightOneSide);
+            } else if (FileUtil.isFileInfoExcel(rightSideValue)) {
+                log.info("Right side {} is FileInfo excel", rightSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
+                listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
+            }
+
+
+            if (listFileInfosCenter == null) {
+                Map<String, HashStatusTwo> hashStatusMap;
+                hashStatusMap = compareLeftRight(listFileInfosLeft, listFileInfosRight);
+                HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
+                hashStatusTwoExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
+            } else {
+                Map<String, HashStatusThree> hashStatusMap;
+                hashStatusMap = compareLeftCenterRight(listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
+                HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
+                hashStatusThreeExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
+            }
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
     private Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir) {
@@ -170,6 +248,67 @@ public class HashService {
         FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(inFileInfo);
         Collection<FileInfo> listExistingFileInfos = fileInfoExcelReader.readExcel(algoSelected);
         Map<String, FileInfo> mapExistingFileInfos = listExistingFileInfos.stream().collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(), fileInfo -> fileInfo));
+
+        log.debug("************************************************************************************************************************");
+        Collection<File> files = getFiles(dir);
+        long totalFiles = files.size();
+        long totalFileSize = files.stream().mapToLong(File::length).sum();
+        log.info("Got {} files of total size {} to process", totalFiles, totalFileSize);
+        AtomicLong processedFiles = new AtomicLong(0);
+        AtomicLong processedFileSize = new AtomicLong(0);
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        MappingStatusPrint mappingStatusPrint = new MappingStatusPrint(countDownLatch, totalFiles, totalFileSize);
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.submit(mappingStatusPrint);
+
+        Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
+        String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
+
+        try {
+            FileOperationPool fileOperationPool = new FileOperationPool();
+            HashOperation hashOperation = new HashOperation(algoSelected);
+            fileOperationPool.submit(
+                    () -> files.parallelStream().forEach(file -> {
+                        String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
+                        FileInfo fileInfo;
+                        if (mapExistingFileInfos.containsKey(relativeFilePath)) {
+                            fileInfo = mapExistingFileInfos.get(relativeFilePath);
+                            listFileInfos.add(fileInfo);
+                            log.trace("Copied hash of file {}", relativeFilePath);
+                        } else {
+                            String fileHash = hashOperation.getFileChecksum(file);
+                            fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
+                            listFileInfos.add(fileInfo);
+                            log.trace("Hashed file {}", relativeFilePath);
+                        }
+                        mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
+                        mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
+                    })).get();
+        } catch (InterruptedException interruptedException) {
+            log.warn("Interrupted exception", interruptedException);
+        } catch (ExecutionException executionException) {
+            log.warn("Execution exception", executionException);
+        }
+
+        try {
+            countDownLatch.await();
+            executorService.shutdownNow();
+            executorService.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException interruptedException) {
+            log.warn("Interuppted countdownwatch", interruptedException);
+        }
+
+        log.info("Mapped {} file hashes out of {} files", listFileInfos.size(), totalFiles);
+        return listFileInfos;
+    }
+
+    private Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir, Map<String, OneSide> mapExistingOneSide) {
+        Map<String, FileInfo> mapExistingFileInfos = mapExistingOneSide.keySet().stream()
+                .collect(Collectors.toMap(filename -> filename, filename -> {
+                    OneSide oneSide = mapExistingOneSide.get(filename);
+                    return new FileInfo(filename, oneSide.getSize(), oneSide.getHash(), oneSide.getLastModified());
+                }));
 
         log.debug("************************************************************************************************************************");
         Collection<File> files = getFiles(dir);
@@ -403,11 +542,26 @@ public class HashService {
         }
     }
 
-    private void validateRecreateHash(String inDirValue, String outFileValue) {
+    private void validateRecreateHash(String inDirValue, String inFileValue, String outFileValue) {
 
     }
 
     private void validateCompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
+        commonValidation(hashAlgoValue, outFileValue);
+        if (!FileUtil.validDirDriveFileValue(leftSideValue)) {
+            throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));
+        }
+
+        if (centerSideValue != null && !FileUtil.validDirDriveFileValue(centerSideValue)) {
+            throw new RuntimeException(format("incorrect center side dir/drive/file.xlsx parameter %s", centerSideValue));
+        }
+
+        if (!FileUtil.validDirDriveFileValue(rightSideValue)) {
+            throw new RuntimeException(format("incorrect right side dir/drive/file.xlsx parameter %s", rightSideValue));
+        }
+    }
+
+    private void validateRecompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String inFileValue, String outFileValue) {
         commonValidation(hashAlgoValue, outFileValue);
         if (!FileUtil.validDirDriveFileValue(leftSideValue)) {
             throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));

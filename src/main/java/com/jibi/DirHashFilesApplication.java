@@ -38,7 +38,11 @@ public class DirHashFilesApplication {
             String rightSideValue = commandLine.getOptionValue("rightside");
             hashService.startCompare(passFlag, hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         } else if ("recompare".equals(modeValue)) {
-
+            String leftSideValue = commandLine.getOptionValue("leftside");
+            String centerSideValue = commandLine.getOptionValue("centerside");
+            String rightSideValue = commandLine.getOptionValue("rightside");
+            String inFileValue = commandLine.getOptionValue("infile");
+            hashService.startRecompare(passFlag, hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, inFileValue, outFileValue);
         } else {
             throw new RuntimeException(format("Unknown mode %s", modeValue));
         }

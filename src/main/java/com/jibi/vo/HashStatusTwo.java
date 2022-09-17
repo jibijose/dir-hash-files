@@ -1,10 +1,12 @@
 package com.jibi.vo;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class HashStatusTwo extends HashStatus {
     private OneSide left;
     private OneSide right;

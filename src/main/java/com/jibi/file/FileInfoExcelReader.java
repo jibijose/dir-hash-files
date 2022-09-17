@@ -82,18 +82,6 @@ public class FileInfoExcelReader extends ExcelReader {
         return listFileInfos;
     }
 
-    public boolean isEncrypted(String path) {
 
-        try {
-            try {
-                new POIFSFileSystem(new FileInputStream(path));
-            } catch (IOException ioException) {
-                log.error("IOException with file name {}", filename, ioException);
-            }
-            return true;
-        } catch (OfficeXmlFileException officeXmlFileException) {
-            return false;
-        }
-    }
 
 }

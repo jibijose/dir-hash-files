@@ -34,10 +34,11 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -h MD5 -l "fi
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 
 /**************  recreate hash **********************/  
-java -jar target\dirhashfiles-1.0.0-shaded.jar -m recreate -p true -h MD5 -i ".\src\test\resources\testfiles\leftdir" -f "fileinfo.xlsx" -o "fileinfonew.xlsx"
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m recreate -p false -h MD5 -i ".\src\test\resources\testfiles\leftdir" -f "fileinfo.xlsx" -o "fileinfonew.xlsx"
 
 /**************  recalculate comparison checks **********************/  
-java -jar target\dirhashfiles-1.0.0-shaded.jar -m recalculate -p true -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 
 
 ### Build locally
