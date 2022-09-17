@@ -16,6 +16,7 @@ import java.io.FileOutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class FileInfoExcelWriter extends ExcelWriter {
@@ -32,6 +33,9 @@ public class FileInfoExcelWriter extends ExcelWriter {
             algoLength = algoSelected.getLength();
             algoValue = algoSelected.getValue();
         }
+        listFileInfos = listFileInfos.stream()
+                .sorted((fileInfo1, fileInfo2) -> fileInfo1.getFilename().compareTo(fileInfo2.getFilename()))
+                .collect(Collectors.toList());
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook();
