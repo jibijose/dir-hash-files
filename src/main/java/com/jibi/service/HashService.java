@@ -36,7 +36,7 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
 @Slf4j
 public class HashService {
 
-    public void startCreateHash(boolean passFlag, String hashAlgoValue, String dirValue, String outFileValue) {
+    public void startCreate(boolean passFlag, String hashAlgoValue, String dirValue, String outFileValue) {
         validateCreateHash(hashAlgoValue, dirValue, outFileValue);
         try {
             Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
@@ -48,7 +48,7 @@ public class HashService {
         }
     }
 
-    public void startCompareHash(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
+    public void startCompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
         validateCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         try {
             Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
