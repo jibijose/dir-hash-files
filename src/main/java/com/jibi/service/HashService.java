@@ -196,7 +196,7 @@ public class HashService {
         }
     }
 
-    private Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir) {
+    public Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir) {
         log.debug("************************************************************************************************************************");
         Collection<File> files = getFiles(dir);
         long totalFiles = files.size();
@@ -244,7 +244,7 @@ public class HashService {
         return listFileInfos;
     }
 
-    private Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir, String inFileInfo) {
+    public Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir, String inFileInfo) {
         FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(inFileInfo);
         Collection<FileInfo> listExistingFileInfos = fileInfoExcelReader.readExcel(algoSelected);
         Map<String, FileInfo> mapExistingFileInfos = listExistingFileInfos.stream().collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(), fileInfo -> fileInfo));
