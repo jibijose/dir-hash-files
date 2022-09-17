@@ -6,8 +6,6 @@ import com.jibi.service.HashService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 
-import java.util.Scanner;
-
 @Slf4j
 public class DirHashFilesApplication {
 
@@ -31,7 +29,9 @@ public class DirHashFilesApplication {
             String inDirValue = commandLine.getOptionValue("indir");
             hashService.startCreate(passFlag, hashAlgoValue, inDirValue, outFileValue);
         } else if ("recreate".equals(modeValue)) {
-
+            String inDirValue = commandLine.getOptionValue("indir");
+            String inFileValue = commandLine.getOptionValue("infile");
+            hashService.startRecreate(passFlag, hashAlgoValue, inDirValue, inFileValue, outFileValue);
         } else if ("compare".equals(modeValue)) {
             String leftSideValue = commandLine.getOptionValue("leftside");
             String centerSideValue = commandLine.getOptionValue("centerside");
@@ -42,12 +42,6 @@ public class DirHashFilesApplication {
         } else {
             throw new RuntimeException(format("Unknown mode %s", modeValue));
         }
-    }
-
-    private String getUserInputFilePassword(String message) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print(format("Enter %s : ", message));
-        return scanner.nextLine();
     }
 
     private CommandLine formatOptions(String[] args) {
@@ -64,6 +58,10 @@ public class DirHashFilesApplication {
         Option inDir = new Option("i", "indir", true, "In drive/dir");
         inDir.setRequired(false);
         options.addOption(inDir);
+
+        Option inFile = new Option("f", "infile", true, "In File");
+        inFile.setRequired(false);
+        options.addOption(inFile);
 
         Option hashAlgo = new Option("h", "hashalgo", true, "Hash algorithm");
         hashAlgo.setRequired(false);

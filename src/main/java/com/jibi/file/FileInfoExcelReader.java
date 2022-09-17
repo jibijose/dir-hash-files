@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Scanner;
+import java.util.Collections;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -33,7 +33,7 @@ public class FileInfoExcelReader extends ExcelReader {
     }
 
     public Collection<FileInfo> readExcel(Algorithm algoSelected) {
-        Collection<FileInfo> listFileInfos = new ArrayList<>();
+        Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
         InputStream fileStream = null;
         try {
             if (isEncrypted(filename)) {

@@ -48,6 +48,18 @@ public class HashService {
         }
     }
 
+    public void startRecreate(boolean passFlag, String hashAlgoValue, String dirValue, String inFileValue, String outFileValue) {
+        validateRecreateHash(inFileValue, outFileValue);
+        try {
+            Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+            Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue, inFileValue);
+            FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
+            fileInfoExcelWriter.writeExcel(passFlag, algoSelected, listFileInfos);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
     public void startCompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
         validateCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         try {
@@ -102,6 +114,10 @@ public class HashService {
         }
     }
 
+    public void startRecompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
+
+    }
+
     private Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir) {
         log.debug("************************************************************************************************************************");
         Collection<File> files = getFiles(dir);
@@ -131,6 +147,65 @@ public class HashService {
                         mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
                         mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
                         log.trace("Hashed file {}", fileInfo.getFilename());
+                    })).get();
+        } catch (InterruptedException interruptedException) {
+            log.warn("Interrupted exception", interruptedException);
+        } catch (ExecutionException executionException) {
+            log.warn("Execution exception", executionException);
+        }
+
+        try {
+            countDownLatch.await();
+            executorService.shutdownNow();
+            executorService.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException interruptedException) {
+            log.warn("Interuppted countdownwatch", interruptedException);
+        }
+
+        log.info("Mapped {} file hashes out of {} files", listFileInfos.size(), totalFiles);
+        return listFileInfos;
+    }
+
+    private Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir, String inFileInfo) {
+        FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(inFileInfo);
+        Collection<FileInfo> listExistingFileInfos = fileInfoExcelReader.readExcel(algoSelected);
+        Map<String, FileInfo> mapExistingFileInfos = listExistingFileInfos.stream().collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(), fileInfo -> fileInfo));
+
+        log.debug("************************************************************************************************************************");
+        Collection<File> files = getFiles(dir);
+        long totalFiles = files.size();
+        long totalFileSize = files.stream().mapToLong(File::length).sum();
+        log.info("Got {} files of total size {} to process", totalFiles, totalFileSize);
+        AtomicLong processedFiles = new AtomicLong(0);
+        AtomicLong processedFileSize = new AtomicLong(0);
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        MappingStatusPrint mappingStatusPrint = new MappingStatusPrint(countDownLatch, totalFiles, totalFileSize);
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.submit(mappingStatusPrint);
+
+        Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
+        String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
+
+        try {
+            FileOperationPool fileOperationPool = new FileOperationPool();
+            HashOperation hashOperation = new HashOperation(algoSelected);
+            fileOperationPool.submit(
+                    () -> files.parallelStream().forEach(file -> {
+                        String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
+                        FileInfo fileInfo;
+                        if (mapExistingFileInfos.containsKey(relativeFilePath)) {
+                            fileInfo = mapExistingFileInfos.get(relativeFilePath);
+                            listFileInfos.add(fileInfo);
+                            log.trace("Copied hash of file {}", relativeFilePath);
+                        } else {
+                            String fileHash = hashOperation.getFileChecksum(file);
+                            fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
+                            listFileInfos.add(fileInfo);
+                            log.trace("Hashed file {}", relativeFilePath);
+                        }
+                        mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
+                        mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
                     })).get();
         } catch (InterruptedException interruptedException) {
             log.warn("Interrupted exception", interruptedException);
@@ -326,6 +401,10 @@ public class HashService {
         if (StringUtils.isEmpty(inDirValue)) {
             throw new RuntimeException(format("incorrect in dir/drive parameter %s", inDirValue));
         }
+    }
+
+    private void validateRecreateHash(String inDirValue, String outFileValue) {
+
     }
 
     private void validateCompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
