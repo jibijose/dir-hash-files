@@ -47,10 +47,15 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
                     "Right-Hash (" + algoValue + ")", "Right-Size", "Right-Modified", "filename"), cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
+            AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
             hashStatusMap.keySet().stream().forEach(hashStatus -> {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
                 addDataCells(dataRow, hashStatusMap.get(hashStatus), cellStyles);
+                if (hashStatusMap.get(hashStatus).getFilename().length() > requiredFileNameWidth.get()) {
+                    requiredFileNameWidth.set(hashStatusMap.get(hashStatus).getFilename().length());
+                }
             });
+            sheet.setColumnWidth(4, (requiredFileNameWidth.get() + 3) * 256);
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
 
             FileOutputStream fileStream = new FileOutputStream(filename);

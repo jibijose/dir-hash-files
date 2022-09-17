@@ -507,9 +507,13 @@ public class HashService {
         }
     }
 
-    private static List<File> getFiles(final String directory) {
+    private static List<File> getFiles(String directory) {
         if (directory == null) {
             return Collections.EMPTY_LIST;
+        }
+        if (directory.endsWith(":")) {
+            log.info("Directory {} ends with colon, appending \\ to it", directory);
+            directory = directory + "\\";
         }
         List<File> fileList = new ArrayList<>();
         File[] files = new File(directory).listFiles();

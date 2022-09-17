@@ -60,10 +60,16 @@ public class FileInfoExcelWriter extends ExcelWriter {
             addStringCells(headerRow, List.of(algoValue, "Size", "Date Modified", "File Name"), topRowStyle);
 
             AtomicInteger rowIndex = new AtomicInteger(1);
+            AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
             listFileInfos.stream().forEach(fileInfo -> {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
                 addDataCells(dataRow, fileInfo, dataRowStyle);
+                if (fileInfo.getFilename().length() > requiredFileNameWidth.get()) {
+                    requiredFileNameWidth.set(fileInfo.getFilename().length());
+                }
             });
+            sheet.setColumnWidth(3, (requiredFileNameWidth.get() + 3) * 256);
+            log.info("Fileinfo filename column width adjusted to {}", requiredFileNameWidth.get());
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
 
             FileOutputStream fileOutputStream = new FileOutputStream(filename);

@@ -53,11 +53,15 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
                     "filename"), cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
-            hashStatusMap.keySet().stream().forEach(hashStatusThree -> {
+            AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
+            hashStatusMap.keySet().stream().forEach(hashStatus -> {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
-                addDataCells(dataRow, hashStatusMap.get(hashStatusThree), cellStyles);
+                addDataCells(dataRow, hashStatusMap.get(hashStatus), cellStyles);
+                if (hashStatusMap.get(hashStatus).getFilename().length() > requiredFileNameWidth.get()) {
+                    requiredFileNameWidth.set(hashStatusMap.get(hashStatus).getFilename().length());
+                }
             });
-
+            sheet.setColumnWidth(13, (requiredFileNameWidth.get() + 3) * 256);
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
             workbook.write(fileStream);
             if (passFlag) {
