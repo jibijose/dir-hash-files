@@ -9,7 +9,7 @@
 ### Usage  
 java -jar dirhashfiles-1.0.0-shaded.jar
 
--m,--mode <arg>         Operation mode, mandatory [create|compare]  
+-m,--mode <arg>         Operation mode, mandatory [create|recreate|compare|recompare]  
 -p,--passFlag <arg>     Operation mode, mandatory [true|false]  
 -h,--hashalgo <arg>     Hash algorithm, optional [MD2|MD5|SHA|SHA224|SHA256|SHA384|SHA512]  
 -i,--indir <arg>        In drive/dir, mandatory for createhash mode  

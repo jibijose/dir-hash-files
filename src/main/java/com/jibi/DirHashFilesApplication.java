@@ -26,14 +26,21 @@ public class DirHashFilesApplication {
         String hashAlgoValue = commandLine.getOptionValue("hashalgo");
         String outFileValue = commandLine.getOptionValue("outfile");
 
+        log.info("Started in {} mode", modeValue);
         if ("create".equals(modeValue)) {
             String inDirValue = commandLine.getOptionValue("indir");
             hashService.startCreate(passFlag, hashAlgoValue, inDirValue, outFileValue);
+        } else if ("recreate".equals(modeValue)) {
+
         } else if ("compare".equals(modeValue)) {
             String leftSideValue = commandLine.getOptionValue("leftside");
             String centerSideValue = commandLine.getOptionValue("centerside");
             String rightSideValue = commandLine.getOptionValue("rightside");
             hashService.startCompare(passFlag, hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
+        } else if ("recompare".equals(modeValue)) {
+
+        } else {
+            throw new RuntimeException(format("Unknown mode %s", modeValue));
         }
     }
 
