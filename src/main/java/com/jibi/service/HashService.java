@@ -8,6 +8,7 @@ import static com.jibi.util.FileUtil.INSYNC;
 import static com.jibi.util.FileUtil.NOTSYNCED;
 import static com.jibi.util.FileUtil.PAD_MARK;
 import static com.jibi.util.FileUtil.isValidFileExcel;
+import static com.jibi.util.FileUtil.isValidFileExcelName;
 import static com.jibi.util.FileUtil.isValidDirectoryOrDrive;
 import static com.jibi.util.FileUtil.isValidFileOrDriectoryOrDrive;
 
@@ -514,7 +515,7 @@ public class HashService {
         if (!StringUtils.isEmpty(hashAlgoValue) && !Algorithm.isValidAlgo(hashAlgoValue)) {
             throw new RuntimeException(format("incorrect hash algo parameter %s Supported algorithms [MD2, MD5, SHA, SHA224, SHA256, SHA384, SHA512]", hashAlgoValue));
         }
-        if (!isValidFileExcel(outFileValue)) {
+        if (!isValidFileExcelName(outFileValue)) {
             throw new RuntimeException("Out file excel not correct");
         }
     }

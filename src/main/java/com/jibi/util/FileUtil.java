@@ -38,6 +38,26 @@ public class FileUtil {
         return false;
     }
 
+    public static boolean isValidFileExcelName(String filename) {
+        if (filename == null) {
+            log.warn("Null filename received");
+            return false;
+        }
+        try {
+            if (filename.endsWith(".xlsx")) {
+                File file = new File(filename);
+                if (file.exists()) {
+                    log.warn("File {} will ve overwritten", filename);
+                }
+                return true;
+            }
+            log.warn("{} is not a valid file excel xlsx", filename);
+        } catch (Exception exception) {
+            log.warn("Not able to get file excel {}", filename);
+        }
+        return false;
+    }
+
     public static boolean isValidFileExcel(String filename) {
         if (filename == null) {
             log.warn("Null filename received");
