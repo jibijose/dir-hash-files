@@ -97,7 +97,7 @@ public class HashService {
 
             if (listFileInfosCenter == null) {
                 Map<String, HashStatusTwo> hashStatusMap;
-                hashStatusMap = compareLeftRight(listFileInfosLeft, listFileInfosRight);
+                hashStatusMap = compareLeftRight(algoSelected, listFileInfosLeft, listFileInfosRight);
                 HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
                 hashStatusTwoExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
             } else {
@@ -185,7 +185,7 @@ public class HashService {
 
             if (listFileInfosCenter == null) {
                 Map<String, HashStatusTwo> hashStatusMap;
-                hashStatusMap = compareLeftRight(listFileInfosLeft, listFileInfosRight);
+                hashStatusMap = compareLeftRight(algoSelected, listFileInfosLeft, listFileInfosRight);
                 HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
                 hashStatusTwoExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
             } else {
@@ -368,7 +368,7 @@ public class HashService {
         return listFileInfos;
     }
 
-    private Map<String, HashStatusTwo> compareLeftRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
+    private Map<String, HashStatusTwo> compareLeftRight(Algorithm algoSelected, Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
         Map<String, HashStatusTwo> hashStatusMap = new HashMap<>();
 
         listFileInfosLeft.stream().forEach(fileInfoLeft -> {
@@ -380,11 +380,19 @@ public class HashService {
                 hashStatusMap.get(fileInfoRight.getFilename()).getRight().setHash(fileInfoRight.getHash());
                 hashStatusMap.get(fileInfoRight.getFilename()).getRight().setSize(fileInfoRight.getSize());
                 hashStatusMap.get(fileInfoRight.getFilename()).getRight().setLastModified(fileInfoRight.getLastModified());
-                if (fileInfoLeft.getHash().equals(fileInfoRight.getHash()) && fileInfoLeft.getSize() == fileInfoRight.getSize()
-                        && fileInfoLeft.getLastModified().compareTo(fileInfoRight.getLastModified()) == 0) {
-                    hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MATCH);
+
+                if (algoSelected == null) {
+                    if (fileInfoLeft.getSize() == fileInfoRight.getSize() && fileInfoLeft.getLastModified().compareTo(fileInfoRight.getLastModified()) == 0) {
+                        hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MATCH);
+                    } else {
+                        hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MISMATCH);
+                    }
                 } else {
-                    hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MISMATCH);
+                    if (fileInfoLeft.getHash().equals(fileInfoRight.getHash()) && fileInfoLeft.getSize() == fileInfoRight.getSize()) {
+                        hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MATCH);
+                    } else {
+                        hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MISMATCH);
+                    }
                 }
             } else {
                 hashStatusMap.put(fileInfoRight.getFilename(), HashStatusTwo.buildWithRightHash(fileInfoRight.getFilename(), NEWFILE, fileInfoRight));
