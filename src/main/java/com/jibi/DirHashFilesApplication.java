@@ -3,6 +3,7 @@ package com.jibi;
 import static java.lang.String.format;
 
 import com.jibi.service.HashService;
+import com.jibi.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 
@@ -26,7 +27,7 @@ public class DirHashFilesApplication {
 
         log.info("Started in {} mode", modeValue);
         if ("create".equals(modeValue)) {
-            String inDirValue = commandLine.getOptionValue("indir");
+            String inDirValue = FileUtil.adjustDirectoryOrDrive(commandLine.getOptionValue("indir"));
             hashService.startCreate(passFlag, hashAlgoValue, inDirValue, outFileValue);
         } else if ("recreate".equals(modeValue)) {
             String inDirValue = commandLine.getOptionValue("indir");

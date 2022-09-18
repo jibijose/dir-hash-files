@@ -60,11 +60,24 @@ public class FileUtil {
             log.warn("Null directory received");
             return false;
         }
+        if (SystemUtil.isWindowsSystem()) {
+            if (directory.indexOf('/') >= 0) {
+                log.warn("Windows directory/drive should have back slashes");
+                return false;
+            }
+        } else if (SystemUtil.isUnixSystem()) {
+
+        }
         try {
             File file = new File(directory);
             if (file.exists() && file.isDirectory()) {
                 return true;
             }
+            /*for (File fileDrive : File.listRoots()) {
+                if (fileDrive.equals(file)) {
+                    return true;
+                }
+            }*/
             log.warn("{} is not a valid directory/drive", directory);
         } catch (Exception exception) {
             log.warn("Not able to get file directory/drive {}", directory);
@@ -86,26 +99,17 @@ public class FileUtil {
     }
 
     public static String adjustDirectoryOrDrive(String directory) {
-        if (!isValidDirectoryOrDrive(directory)) {
-            throw new RuntimeException(String.format("Directory {} is not correct", directory));
-        }
-
         String newDirectory = directory;
-        if (SystemUtil.isWindowsSystem()) {
+        if (directory != null && SystemUtil.isWindowsSystem()) {
             if (!directory.endsWith(":\\") && directory.endsWith("\\")) {
                 log.info("Directory {} ends with \\ in windows system, trimming end \\", directory);
                 newDirectory = directory.substring(0, directory.length() - 1);
             }
-            if (!directory.endsWith(":/") && directory.endsWith("/")) {
-                log.info("Directory {} ends with / in windows system, trimming end /", directory);
-                newDirectory = directory.substring(0, directory.length() - 1);
-            }
-
             if (directory.endsWith(":")) {
                 log.info("Directory {} ends with colon, appending \\ to it", directory);
                 newDirectory = directory + "\\";
             }
-        } else if (SystemUtil.isUnixSystem()) {
+        } else if (directory != null && SystemUtil.isUnixSystem()) {
             if (!directory.equals("/") && directory.endsWith("/")) {
                 log.info("Directory {} ends with / in unix system, trimming end /", directory);
                 newDirectory = directory.substring(0, directory.length() - 1);
@@ -113,6 +117,23 @@ public class FileUtil {
         }
         log.info("Directory {} adjusted to {}", directory, newDirectory);
         return newDirectory;
+    }
+
+    public static String getDirValuePrefix(String dir) {
+        if (SystemUtil.isWindowsSystem()) {
+            if (dir.endsWith(":\\")) {
+                return (dir).replaceAll("\\\\", "\\\\\\\\");
+            } else {
+                return (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
+            }
+        } else if (SystemUtil.isUnixSystem()) {
+
+        }
+        return dir;
+    }
+
+    public static String getFileRelativePath(File file, String dirValuePrefix) {
+        return file.toString().replaceFirst(dirValuePrefix, "");
     }
 
     public static List<File> getFiles(String directory) {

@@ -19,7 +19,7 @@ java -jar dirhashfiles-1.0.0-shaded.jar
 -o,--outfile <arg>      Hash output file, mandatory outfile xlsx file name  
 
 ### Run locally 
-java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p true -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
 
@@ -29,9 +29,9 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -h MD5 -l "fi
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 
 /**************  three way comparison checks **********************/  
-java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
-java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
-java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
+java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
+java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
+java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 
 /**************  recreate hash **********************/  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m recreate -p false -h MD5 -i ".\src\test\resources\testfiles\leftdir" -f "fileinfo.xlsx" -o "fileinfonew.xlsx"

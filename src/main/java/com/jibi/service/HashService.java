@@ -214,7 +214,7 @@ public class HashService {
         executorService.submit(mappingStatusPrint);
 
         Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
-        String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
+        String dirValuePrefix = FileUtil.getDirValuePrefix(dir);
 
         try {
             FileOperationPool fileOperationPool = new FileOperationPool();
@@ -222,7 +222,7 @@ public class HashService {
             fileOperationPool.submit(
                     () -> files.parallelStream().forEach(file -> {
                         String fileHash = hashOperation.getFileChecksum(file);
-                        String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
+                        String relativeFilePath = FileUtil.getFileRelativePath(file, dirValuePrefix);
                         FileInfo fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
                         listFileInfos.add(fileInfo);
                         mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
@@ -514,12 +514,16 @@ public class HashService {
         if (!StringUtils.isEmpty(hashAlgoValue) && !Algorithm.isValidAlgo(hashAlgoValue)) {
             throw new RuntimeException(format("incorrect hash algo parameter %s Supported algorithms [MD2, MD5, SHA, SHA224, SHA256, SHA384, SHA512]", hashAlgoValue));
         }
-        isValidFileExcel(outFileValue);
+        if (!isValidFileExcel(outFileValue)) {
+            throw new RuntimeException("Out file excel not correct");
+        }
     }
 
     private void validateCreateHash(String hashAlgoValue, String inDirValue, String outFileValue) {
         commonValidation(hashAlgoValue, outFileValue);
-        isValidDirectoryOrDrive(inDirValue);
+        if (!isValidDirectoryOrDrive(inDirValue)) {
+            throw new RuntimeException("In dir/drive value not correct");
+        }
     }
 
     private void validateRecreateHash(String inDirValue, String inFileValue, String outFileValue) {
