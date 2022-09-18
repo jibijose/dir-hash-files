@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class FileInfoExcelWriter extends ExcelWriter {
 
-
     public FileInfoExcelWriter(String filename) {
         super(filename);
     }
@@ -41,10 +40,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("FileInfo");
             sheet.createFreezePane(0, 1);
-            sheet.setColumnWidth(0, (algoLength + 3) * 256);
-            sheet.setColumnWidth(1, 16 * 256);
-            sheet.setColumnWidth(2, 32 * 256);
-            sheet.setColumnWidth(3, 64 * 256);
+            setSheetWidths(sheet, algoLength);
 
             // Create a header row describing what the columns mean
             CellStyle topRowStyle = workbook.createCellStyle();
@@ -85,6 +81,14 @@ public class FileInfoExcelWriter extends ExcelWriter {
         } catch (Exception exception) {
             log.error("Excel writing error for file {}", filename, exception);
         }
+    }
+
+    protected void setSheetWidths(XSSFSheet sheet, int algoLength) {
+        sheet.createFreezePane(0, 1);
+        sheet.setColumnWidth(0, (algoLength + 3) * 256);
+        sheet.setColumnWidth(1, 16 * 256);
+        sheet.setColumnWidth(2, 32 * 256);
+        sheet.setColumnWidth(3, 64 * 256);
     }
 
     private void addStringCells(Row row, List<String> strings, CellStyle style) {
