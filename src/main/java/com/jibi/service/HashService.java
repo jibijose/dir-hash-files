@@ -102,7 +102,7 @@ public class HashService {
                 hashStatusTwoExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
             } else {
                 Map<String, HashStatusThree> hashStatusMap;
-                hashStatusMap = compareLeftCenterRight(listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
+                hashStatusMap = compareLeftCenterRight(algoSelected, listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
                 HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
                 hashStatusThreeExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
             }
@@ -190,7 +190,7 @@ public class HashService {
                 hashStatusTwoExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
             } else {
                 Map<String, HashStatusThree> hashStatusMap;
-                hashStatusMap = compareLeftCenterRight(listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
+                hashStatusMap = compareLeftCenterRight(algoSelected, listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
                 HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
                 hashStatusThreeExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
             }
@@ -424,7 +424,7 @@ public class HashService {
         return hashStatusMap;
     }
 
-    private Map<String, HashStatusThree> compareLeftCenterRight(Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosCenter,
+    private Map<String, HashStatusThree> compareLeftCenterRight(Algorithm algoSelected, Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosCenter,
                                                                 Collection<FileInfo> listFileInfosRight) {
         Map<String, OneSide> leftOneSide = listFileInfosLeft.stream()
                 .collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(),
@@ -463,28 +463,58 @@ public class HashService {
                         OneSide centerSide = hashStatusThree.getCenter();
                         OneSide rightSide = hashStatusThree.getRight();
                         if (centerSide.exists() && rightSide.exists()) {
-                            if (leftSide.compare(centerSide) && leftSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(INSYNC, MATCH, MATCH, MATCH);
-                            } else if (leftSide.compare(centerSide)) {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MATCH, MISMATCH);
-                            } else if (leftSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MISMATCH, MATCH);
-                            } else if (centerSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MATCH, MATCH);
+                            if (algoSelected == null) {
+                                if (leftSide.compareWithoutHash(centerSide) && leftSide.compareWithoutHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(INSYNC, MATCH, MATCH, MATCH);
+                                } else if (leftSide.compareWithoutHash(centerSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MATCH, MISMATCH);
+                                } else if (leftSide.compareWithoutHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MISMATCH, MATCH);
+                                } else if (centerSide.compareWithoutHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MATCH, MATCH);
+                                } else {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISMATCH, MISMATCH);
+                                }
                             } else {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISMATCH, MISMATCH);
+                                if (leftSide.compareWithHash(centerSide) && leftSide.compareWithHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(INSYNC, MATCH, MATCH, MATCH);
+                                } else if (leftSide.compareWithHash(centerSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MATCH, MISMATCH);
+                                } else if (leftSide.compareWithHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MISMATCH, MATCH);
+                                } else if (centerSide.compareWithHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MATCH, MATCH);
+                                } else {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISMATCH, MISMATCH);
+                                }
                             }
                         } else if (centerSide.exists() && !rightSide.exists()) {
-                            if (leftSide.compare(centerSide)) {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MATCH, MISSING);
+                            if (algoSelected == null) {
+                                if (leftSide.compareWithoutHash(centerSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MATCH, MISSING);
+                                } else {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISMATCH, MISSING);
+                                }
                             } else {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISMATCH, MISSING);
+                                if (leftSide.compareWithHash(centerSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MATCH, MISSING);
+                                } else {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISMATCH, MISSING);
+                                }
                             }
                         } else if (!centerSide.exists() && rightSide.exists()) {
-                            if (leftSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MISSING, MATCH);
+                            if (algoSelected == null) {
+                                if (leftSide.compareWithoutHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MISSING, MATCH);
+                                } else {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISSING, MISMATCH);
+                                }
                             } else {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISSING, MISMATCH);
+                                if (leftSide.compareWithHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MATCH, MISSING, MATCH);
+                                } else {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISMATCH, MISSING, MISMATCH);
+                                }
                             }
                         } else if (!centerSide.exists() && !rightSide.exists()) {
                             hashStatusThree.updateSideStatus(NOTSYNCED, NEWFILE, MISSING, MISSING);
@@ -495,10 +525,18 @@ public class HashService {
                         OneSide centerSide = hashStatusThree.getCenter();
                         OneSide rightSide = hashStatusThree.getRight();
                         if (centerSide.exists() && rightSide.exists()) {
-                            if (centerSide.compare(rightSide)) {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MATCH, MATCH);
+                            if (algoSelected == null) {
+                                if (centerSide.compareWithoutHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MATCH, MATCH);
+                                } else {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MISMATCH, MISMATCH);
+                                }
                             } else {
-                                hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MISMATCH, MISMATCH);
+                                if (centerSide.compareWithHash(rightSide)) {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MATCH, MATCH);
+                                } else {
+                                    hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, MISMATCH, MISMATCH);
+                                }
                             }
                         } else if (centerSide.exists() && !rightSide.exists()) {
                             hashStatusThree.updateSideStatus(NOTSYNCED, MISSING, NEWFILE, MISSING);

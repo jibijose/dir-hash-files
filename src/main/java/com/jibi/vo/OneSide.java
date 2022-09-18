@@ -23,12 +23,21 @@ public class OneSide {
         return false;
     }
 
-    public boolean compare(OneSide otherSide) {
+    public boolean compareWithoutHash(OneSide otherSide) {
         if (!exists() || !otherSide.exists()) {
             return false;
         }
-        if (hash.equals(otherSide.getHash()) && size == otherSide.getSize()
-                && (lastModified != null && lastModified.compareTo(otherSide.getLastModified()) == 0)) {
+        if (size == otherSide.getSize() && (lastModified != null && lastModified.compareTo(otherSide.getLastModified()) == 0)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean compareWithHash(OneSide otherSide) {
+        if (!exists() || !otherSide.exists()) {
+            return false;
+        }
+        if (hash.equals(otherSide.getHash()) && size == otherSide.getSize()) {
             return true;
         }
         return false;
