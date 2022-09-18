@@ -15,7 +15,6 @@ import org.apache.poi.xssf.usermodel.*;
 import java.io.FileOutputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class HashStatusTwoExcelWriter extends ExcelWriter {
@@ -85,6 +84,10 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
     private final static String DATAROWCENTERGREENSTYLE = "DataRowCenterGreenStyle";
     private final static String DATAROWRIGHTGREENSTYLE = "DataRowRightGreenStyle";
 
+    private final static String DATAROWLEFTMAROONSTYLE = "DataRowLeftMaroonStyle";
+    private final static String DATAROWCENTERMAROONSTYLE = "DataRowCenterMaroonStyle";
+    private final static String DATAROWRIGHTMAROONSTYLE = "DataRowRightMaroonStyle";
+
     private Map<String, CellStyle> createCellStyles(XSSFWorkbook workbook) {
         Map<String, CellStyle> cellStyles = new HashMap<>();
         int colorWeight = 255;
@@ -92,6 +95,7 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         XSSFColor colorRed = new XSSFColor(new java.awt.Color(colorWeight, otherWeight, otherWeight), null);
         XSSFColor colorGreen = new XSSFColor(new java.awt.Color(otherWeight, colorWeight, otherWeight), null);
         XSSFColor colorBlue = new XSSFColor(new java.awt.Color(otherWeight, otherWeight, colorWeight), null);
+        XSSFColor colorMaroon = new XSSFColor(new java.awt.Color(255, 127, 127), null);
 
         // Create a header row describing what the columns mean
         XSSFCellStyle topRowStyle = workbook.createCellStyle();
@@ -170,6 +174,24 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         dataRowRightBlueStyle.setAlignment(HorizontalAlignment.RIGHT);
         cellStyles.put(DATAROWRIGHTBLUESTYLE, dataRowRightBlueStyle);
 
+        XSSFCellStyle dataRowLeftMaroonStyle = workbook.createCellStyle();
+        dataRowLeftMaroonStyle.setFillForegroundColor(colorMaroon);
+        dataRowLeftMaroonStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        dataRowLeftMaroonStyle.setAlignment(HorizontalAlignment.LEFT);
+        cellStyles.put(DATAROWLEFTMAROONSTYLE, dataRowLeftMaroonStyle);
+
+        XSSFCellStyle dataRowCenterMaroonStyle = workbook.createCellStyle();
+        dataRowCenterMaroonStyle.setFillForegroundColor(colorMaroon);
+        dataRowCenterMaroonStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        dataRowCenterMaroonStyle.setAlignment(HorizontalAlignment.CENTER);
+        cellStyles.put(DATAROWCENTERMAROONSTYLE, dataRowCenterMaroonStyle);
+
+        XSSFCellStyle dataRowRightMaroonStyle = workbook.createCellStyle();
+        dataRowRightMaroonStyle.setFillForegroundColor(colorMaroon);
+        dataRowRightMaroonStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        dataRowRightMaroonStyle.setAlignment(HorizontalAlignment.RIGHT);
+        cellStyles.put(DATAROWRIGHTMAROONSTYLE, dataRowRightMaroonStyle);
+
         return cellStyles;
     }
 
@@ -210,37 +232,73 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         if (hashStatusTwo.getLeft().getHash() != null) {
             cell.setCellValue(hashStatusTwo.getLeft().getHash());
         }
-        cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        if (hashStatusTwo.getLeft().getHash() == null || hashStatusTwo.getRight().getHash() == null) {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        } else if (hashStatusTwo.getLeft().getHash().equals(hashStatusTwo.getRight().getHash())) {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        } else {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERMAROONSTYLE));
+        }
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatusTwo.getLeft().getSize() >= 0) {
             cell.setCellValue(hashStatusTwo.getLeft().getSize());
         }
-        cell.setCellStyle(cellStyles.get(DATAROWRIGHTSTYLE));
+        if (hashStatusTwo.getLeft().getSize() <= 0 || hashStatusTwo.getRight().getSize() <= 0) {
+            cell.setCellStyle(cellStyles.get(DATAROWRIGHTSTYLE));
+        } else if (hashStatusTwo.getLeft().getSize() == hashStatusTwo.getRight().getSize()) {
+            cell.setCellStyle(cellStyles.get(DATAROWRIGHTSTYLE));
+        } else {
+            cell.setCellStyle(cellStyles.get(DATAROWRIGHTMAROONSTYLE));
+        }
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatusTwo.getLeft().getLastModified() != null) {
             cell.setCellValue(format(hashStatusTwo.getLeft().getLastModified()));
         }
-        cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        if (hashStatusTwo.getLeft().getLastModified() == null || hashStatusTwo.getRight().getLastModified() == null) {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        } else if (hashStatusTwo.getLeft().getLastModified().compareTo(hashStatusTwo.getRight().getLastModified()) == 0) {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        } else {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERMAROONSTYLE));
+        }
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatusTwo.getRight().getHash() != null) {
             cell.setCellValue(hashStatusTwo.getRight().getHash());
         }
-        cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        if (hashStatusTwo.getLeft().getHash() == null || hashStatusTwo.getRight().getHash() == null) {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        } else if (hashStatusTwo.getLeft().getHash().equals(hashStatusTwo.getRight().getHash())) {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        } else {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERMAROONSTYLE));
+        }
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatusTwo.getRight().getSize() >= 0) {
             cell.setCellValue(hashStatusTwo.getRight().getSize());
         }
-        cell.setCellStyle(cellStyles.get(DATAROWRIGHTSTYLE));
+        if (hashStatusTwo.getLeft().getSize() <= 0 || hashStatusTwo.getRight().getSize() <= 0) {
+            cell.setCellStyle(cellStyles.get(DATAROWRIGHTSTYLE));
+        } else if (hashStatusTwo.getLeft().getSize() == hashStatusTwo.getRight().getSize()) {
+            cell.setCellStyle(cellStyles.get(DATAROWRIGHTSTYLE));
+        } else {
+            cell.setCellStyle(cellStyles.get(DATAROWRIGHTMAROONSTYLE));
+        }
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatusTwo.getRight().getLastModified() != null) {
             cell.setCellValue(format(hashStatusTwo.getRight().getLastModified()));
         }
-        cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        if (hashStatusTwo.getLeft().getLastModified() == null || hashStatusTwo.getRight().getLastModified() == null) {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        } else if (hashStatusTwo.getLeft().getLastModified().compareTo(hashStatusTwo.getRight().getLastModified()) == 0) {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        } else {
+            cell.setCellStyle(cellStyles.get(DATAROWCENTERMAROONSTYLE));
+        }
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusTwo.getFilename());
