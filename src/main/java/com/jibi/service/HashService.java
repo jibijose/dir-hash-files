@@ -7,6 +7,9 @@ import static com.jibi.util.FileUtil.NEWFILE;
 import static com.jibi.util.FileUtil.INSYNC;
 import static com.jibi.util.FileUtil.NOTSYNCED;
 import static com.jibi.util.FileUtil.PAD_MARK;
+import static com.jibi.util.FileUtil.isValidFileExcel;
+import static com.jibi.util.FileUtil.isValidDirectoryOrDrive;
+import static com.jibi.util.FileUtil.isValidFileOrDriectoryOrDrive;
 
 import com.jibi.common.Algorithm;
 import com.jibi.common.HashOperation;
@@ -59,10 +62,10 @@ public class HashService {
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         try {
             Collection<FileInfo> listFileInfosLeft = null;
-            if (FileUtil.isDriveOrFolder(leftSideValue)) {
+            if (isValidDirectoryOrDrive(leftSideValue)) {
                 log.info("Left side {} is drive or folder", leftSideValue);
                 listFileInfosLeft = mapDirFiles(algoSelected, leftSideValue);
-            } else if (FileUtil.isFileInfoExcel(leftSideValue)) {
+            } else if (isValidFileExcel(leftSideValue)) {
                 log.info("Left side {} is FileInfo excel", leftSideValue);
                 FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue);
                 listFileInfosLeft = fileInfoExcelReader.readExcel(algoSelected);
@@ -70,10 +73,10 @@ public class HashService {
 
             Collection<FileInfo> listFileInfosCenter = null;
             if (centerSideValue != null) {
-                if (FileUtil.isDriveOrFolder(centerSideValue)) {
+                if (isValidDirectoryOrDrive(centerSideValue)) {
                     log.info("Center side {} is drive or folder", centerSideValue);
                     listFileInfosCenter = mapDirFiles(algoSelected, centerSideValue);
-                } else if (FileUtil.isFileInfoExcel(centerSideValue)) {
+                } else if (isValidFileExcel(centerSideValue)) {
                     log.info("Center side {} is FileInfo excel", centerSideValue);
                     FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue);
                     listFileInfosCenter = fileInfoExcelReader.readExcel(algoSelected);
@@ -81,10 +84,10 @@ public class HashService {
             }
 
             Collection<FileInfo> listFileInfosRight = null;
-            if (FileUtil.isDriveOrFolder(rightSideValue)) {
+            if (isValidDirectoryOrDrive(rightSideValue)) {
                 log.info("Right side {} is drive or folder", rightSideValue);
                 listFileInfosRight = mapDirFiles(algoSelected, rightSideValue);
-            } else if (FileUtil.isFileInfoExcel(rightSideValue)) {
+            } else if (isValidDirectoryOrDrive(rightSideValue)) {
                 log.info("Right side {} is FileInfo excel", rightSideValue);
                 FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
@@ -147,10 +150,10 @@ public class HashService {
 
         try {
             Collection<FileInfo> listFileInfosLeft = null;
-            if (FileUtil.isDriveOrFolder(leftSideValue)) {
+            if (isValidDirectoryOrDrive(leftSideValue)) {
                 log.info("Left side {} is drive or folder", leftSideValue);
                 listFileInfosLeft = mapDirFiles(algoSelected, leftSideValue, mapExistingLeftOneSide);
-            } else if (FileUtil.isFileInfoExcel(leftSideValue)) {
+            } else if (isValidFileExcel(leftSideValue)) {
                 log.info("Left side {} is FileInfo excel", leftSideValue);
                 FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue);
                 listFileInfosLeft = fileInfoExcelReader.readExcel(algoSelected);
@@ -158,10 +161,10 @@ public class HashService {
 
             Collection<FileInfo> listFileInfosCenter = null;
             if (centerSideValue != null) {
-                if (FileUtil.isDriveOrFolder(centerSideValue)) {
+                if (isValidDirectoryOrDrive(centerSideValue)) {
                     log.info("Center side {} is drive or folder", centerSideValue);
                     listFileInfosCenter = mapDirFiles(algoSelected, centerSideValue, mapExistingCenterOneSide);
-                } else if (FileUtil.isFileInfoExcel(centerSideValue)) {
+                } else if (isValidFileExcel(centerSideValue)) {
                     log.info("Center side {} is FileInfo excel", centerSideValue);
                     FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue);
                     listFileInfosCenter = fileInfoExcelReader.readExcel(algoSelected);
@@ -169,10 +172,10 @@ public class HashService {
             }
 
             Collection<FileInfo> listFileInfosRight = null;
-            if (FileUtil.isDriveOrFolder(rightSideValue)) {
+            if (isValidDirectoryOrDrive(rightSideValue)) {
                 log.info("Right side {} is drive or folder", rightSideValue);
                 listFileInfosRight = mapDirFiles(algoSelected, rightSideValue, mapExistingRightOneSide);
-            } else if (FileUtil.isFileInfoExcel(rightSideValue)) {
+            } else if (isValidFileExcel(rightSideValue)) {
                 log.info("Right side {} is FileInfo excel", rightSideValue);
                 FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
@@ -511,16 +514,12 @@ public class HashService {
         if (!StringUtils.isEmpty(hashAlgoValue) && !Algorithm.isValidAlgo(hashAlgoValue)) {
             throw new RuntimeException(format("incorrect hash algo parameter %s Supported algorithms [MD2, MD5, SHA, SHA224, SHA256, SHA384, SHA512]", hashAlgoValue));
         }
-        if (StringUtils.isEmpty(outFileValue)) {
-            throw new RuntimeException(format("incorrect out file.xlsx parameter %s", outFileValue));
-        }
+        isValidFileExcel(outFileValue);
     }
 
     private void validateCreateHash(String hashAlgoValue, String inDirValue, String outFileValue) {
         commonValidation(hashAlgoValue, outFileValue);
-        if (StringUtils.isEmpty(inDirValue)) {
-            throw new RuntimeException(format("incorrect in dir/drive parameter %s", inDirValue));
-        }
+        isValidDirectoryOrDrive(inDirValue);
     }
 
     private void validateRecreateHash(String inDirValue, String inFileValue, String outFileValue) {
@@ -529,30 +528,31 @@ public class HashService {
 
     private void validateCompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
         commonValidation(hashAlgoValue, outFileValue);
-        if (!FileUtil.validDirDriveFileValue(leftSideValue)) {
+
+        if (!isValidFileOrDriectoryOrDrive(leftSideValue)) {
             throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));
         }
 
-        if (centerSideValue != null && !FileUtil.validDirDriveFileValue(centerSideValue)) {
+        if (centerSideValue != null && !isValidFileOrDriectoryOrDrive(centerSideValue)) {
             throw new RuntimeException(format("incorrect center side dir/drive/file.xlsx parameter %s", centerSideValue));
         }
 
-        if (!FileUtil.validDirDriveFileValue(rightSideValue)) {
+        if (!isValidFileOrDriectoryOrDrive(rightSideValue)) {
             throw new RuntimeException(format("incorrect right side dir/drive/file.xlsx parameter %s", rightSideValue));
         }
     }
 
     private void validateRecompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String inFileValue, String outFileValue) {
         commonValidation(hashAlgoValue, outFileValue);
-        if (!FileUtil.validDirDriveFileValue(leftSideValue)) {
+        if (!isValidFileOrDriectoryOrDrive(leftSideValue)) {
             throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));
         }
 
-        if (centerSideValue != null && !FileUtil.validDirDriveFileValue(centerSideValue)) {
+        if (centerSideValue != null && !isValidFileOrDriectoryOrDrive(centerSideValue)) {
             throw new RuntimeException(format("incorrect center side dir/drive/file.xlsx parameter %s", centerSideValue));
         }
 
-        if (!FileUtil.validDirDriveFileValue(rightSideValue)) {
+        if (!isValidFileOrDriectoryOrDrive(rightSideValue)) {
             throw new RuntimeException(format("incorrect right side dir/drive/file.xlsx parameter %s", rightSideValue));
         }
     }

@@ -30,29 +30,44 @@ public class FileUtil {
     private static int FILE_PAD_SIZE = 15;
     private static int FILE_PAD_DATE = 36;
 
-    public static boolean isDriveOrFolder(String sideValue) {
-        if (sideValue != null && !StringUtils.isEmpty(sideValue) && !sideValue.endsWith(".xlsx")) {
+
+    public static boolean isValidFileOrDriectoryOrDrive(String value) {
+        if (isValidFileExcel(value) || isValidDirectoryOrDrive(value)) {
             return true;
         }
         return false;
     }
 
-    public static boolean isFileInfoExcel(String sideValue) {
-        if (sideValue != null && !StringUtils.isEmpty(sideValue) && sideValue.endsWith(".xlsx")) {
-            return true;
-        }
-        return false;
-    }
-
-    public static boolean validDirDriveFileValue(String sideValue) {
-        if (StringUtils.isEmpty(sideValue)) {
+    public static boolean isValidFileExcel(String filename) {
+        if (filename == null) {
+            log.warn("Null filename received");
             return false;
         }
-        if (isDriveOrFolder(sideValue)) {
-            return true;
+        try {
+            File file = new File(filename);
+            if (file.exists() && file.isFile() && filename.endsWith(".xlsx")) {
+                return true;
+            }
+            log.warn("{} is not a valid file excel xlsx", filename);
+        } catch (Exception exception) {
+            log.warn("Not able to get file excel {}", filename);
         }
-        if (isFileInfoExcel(sideValue)) {
-            return true;
+        return false;
+    }
+
+    public static boolean isValidDirectoryOrDrive(String directory) {
+        if (directory == null) {
+            log.warn("Null directory received");
+            return false;
+        }
+        try {
+            File file = new File(directory);
+            if (file.exists() && file.isDirectory()) {
+                return true;
+            }
+            log.warn("{} is not a valid directory/drive", directory);
+        } catch (Exception exception) {
+            log.warn("Not able to get file directory/drive {}", directory);
         }
         return false;
     }
@@ -70,14 +85,54 @@ public class FileUtil {
         log.info("File {} encrypted", filename);
     }
 
+    public static String adjustDirectoryOrDrive(String directory) {
+        if (!isValidDirectoryOrDrive(directory)) {
+            throw new RuntimeException(String.format("Directory {} is not correct", directory));
+        }
+
+        String newDirectory = directory;
+        if (SystemUtil.isWindowsSystem()) {
+            if (!directory.endsWith(":\\") && directory.endsWith("\\")) {
+                log.info("Directory {} ends with \\ in windows system, trimming end \\", directory);
+                newDirectory = directory.substring(0, directory.length() - 1);
+            }
+            if (!directory.endsWith(":/") && directory.endsWith("/")) {
+                log.info("Directory {} ends with / in windows system, trimming end /", directory);
+                newDirectory = directory.substring(0, directory.length() - 1);
+            }
+
+            if (directory.endsWith(":")) {
+                log.info("Directory {} ends with colon, appending \\ to it", directory);
+                newDirectory = directory + "\\";
+            }
+        } else if (SystemUtil.isUnixSystem()) {
+            if (!directory.equals("/") && directory.endsWith("/")) {
+                log.info("Directory {} ends with / in unix system, trimming end /", directory);
+                newDirectory = directory.substring(0, directory.length() - 1);
+            }
+        }
+        log.info("Directory {} adjusted to {}", directory, newDirectory);
+        return newDirectory;
+    }
+
     public static List<File> getFiles(String directory) {
         if (directory == null) {
+            log.warn("Null directory received");
             return Collections.EMPTY_LIST;
+        }
+        if (SystemUtil.isWindowsSystem() && !directory.endsWith(":\\") && directory.endsWith("\\")) {
+            log.info("Directory {} ends with \\ in windows system, trimming end \\", directory);
+            directory = directory.substring(0, directory.length() - 1);
+        }
+        if (SystemUtil.isUnixSystem() && directory.endsWith("/")) {
+            log.info("Directory {} ends with / in unix system, trimming end /", directory);
+            directory = directory.substring(0, directory.length() - 1);
         }
         if (directory.endsWith(":")) {
             log.info("Directory {} ends with colon, appending \\ to it", directory);
             directory = directory + "\\";
         }
+
         List<File> fileList = new ArrayList<>();
         File[] files = new File(directory).listFiles();
         if (files == null) {
@@ -85,11 +140,9 @@ public class FileUtil {
         }
         for (File element : files) {
             if (element.isDirectory()) {
-                //fileList.addAll(getFiles(element.getPath()));
-                log.debug("DIR={}", element.getPath());
+                fileList.addAll(getFiles(element.getPath()));
             } else {
                 fileList.add(element);
-                log.debug("FIL={}", element.getPath());
             }
         }
         return fileList;
