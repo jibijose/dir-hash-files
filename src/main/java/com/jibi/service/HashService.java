@@ -198,7 +198,7 @@ public class HashService {
 
     public Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir) {
         log.debug("************************************************************************************************************************");
-        Collection<File> files = getFiles(dir);
+        Collection<File> files = FileUtil.getFiles(dir);
         long totalFiles = files.size();
         long totalFileSize = files.stream().mapToLong(File::length).sum();
         log.info("Got {} files of total size {} to process", totalFiles, totalFileSize);
@@ -250,7 +250,7 @@ public class HashService {
         Map<String, FileInfo> mapExistingFileInfos = listExistingFileInfos.stream().collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(), fileInfo -> fileInfo));
 
         log.debug("************************************************************************************************************************");
-        Collection<File> files = getFiles(dir);
+        Collection<File> files = FileUtil.getFiles(dir);
         long totalFiles = files.size();
         long totalFileSize = files.stream().mapToLong(File::length).sum();
         log.info("Got {} files of total size {} to process", totalFiles, totalFileSize);
@@ -311,7 +311,7 @@ public class HashService {
                 }));
 
         log.debug("************************************************************************************************************************");
-        Collection<File> files = getFiles(dir);
+        Collection<File> files = FileUtil.getFiles(dir);
         long totalFiles = files.size();
         long totalFileSize = files.stream().mapToLong(File::length).sum();
         log.info("Got {} files of total size {} to process", totalFiles, totalFileSize);
@@ -505,29 +505,6 @@ public class HashService {
             hashStatusThree.setFilename(filename);
             hashStatusMap.put(filename, hashStatusThree);
         }
-    }
-
-    private static List<File> getFiles(String directory) {
-        if (directory == null) {
-            return Collections.EMPTY_LIST;
-        }
-        if (directory.endsWith(":")) {
-            log.info("Directory {} ends with colon, appending \\ to it", directory);
-            directory = directory + "\\";
-        }
-        List<File> fileList = new ArrayList<>();
-        File[] files = new File(directory).listFiles();
-        if (files == null) {
-            return Collections.EMPTY_LIST;
-        }
-        for (File element : files) {
-            if (element.isDirectory()) {
-                fileList.addAll(getFiles(element.getPath()));
-            } else {
-                fileList.add(element);
-            }
-        }
-        return fileList;
     }
 
     private void commonValidation(String hashAlgoValue, String outFileValue) {

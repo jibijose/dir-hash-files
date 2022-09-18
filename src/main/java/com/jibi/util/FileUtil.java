@@ -5,6 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 
 import static java.lang.String.format;
@@ -65,5 +68,30 @@ public class FileUtil {
         ExcelPasswordProtection excelPasswordProtection = new ExcelPasswordProtection();
         excelPasswordProtection.encryptWorkbook(new File(filename), excelPassword);
         log.info("File {} encrypted", filename);
+    }
+
+    public static List<File> getFiles(String directory) {
+        if (directory == null) {
+            return Collections.EMPTY_LIST;
+        }
+        if (directory.endsWith(":")) {
+            log.info("Directory {} ends with colon, appending \\ to it", directory);
+            directory = directory + "\\";
+        }
+        List<File> fileList = new ArrayList<>();
+        File[] files = new File(directory).listFiles();
+        if (files == null) {
+            return Collections.EMPTY_LIST;
+        }
+        for (File element : files) {
+            if (element.isDirectory()) {
+                //fileList.addAll(getFiles(element.getPath()));
+                log.debug("DIR={}", element.getPath());
+            } else {
+                fileList.add(element);
+                log.debug("FIL={}", element.getPath());
+            }
+        }
+        return fileList;
     }
 }

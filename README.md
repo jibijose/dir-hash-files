@@ -19,7 +19,7 @@ java -jar dirhashfiles-1.0.0-shaded.jar
 -o,--outfile <arg>      Hash output file, mandatory outfile xlsx file name  
 
 ### Run locally 
-java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
+java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p true -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
 
@@ -46,7 +46,9 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "
 
 *************
 ### TODOs
-junit tests.  
-two drives in two diff thread pools?  
 time left?
 filename containing marker + datetime  
+check unix file system  
+provide auto script.
+readme details 
+cant mix between windows and linux due to slash+back slash problem  

@@ -55,7 +55,8 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
                     requiredFileNameWidth.set(sortedHashStatusMap.get(hashStatus).getFilename().length());
                 }
             });
-            sheet.setColumnWidth(7, (requiredFileNameWidth.get() + 3) * 256);
+            sheet.setColumnWidth(7, ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)) * 256);
+            log.info("HashStatus filename column width adjusted to {}", ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)));
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
 
             FileOutputStream fileStream = new FileOutputStream(filename);

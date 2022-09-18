@@ -3,6 +3,7 @@ package com.jibi.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.jibi.common.Algorithm;
+import com.jibi.util.FileUtil;
 import com.jibi.vo.FileInfo;
 import org.junit.jupiter.api.Test;
 

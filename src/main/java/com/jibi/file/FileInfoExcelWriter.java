@@ -72,8 +72,8 @@ public class FileInfoExcelWriter extends ExcelWriter {
                     requiredFileNameWidth.set(fileInfo.getFilename().length());
                 }
             });
-            sheet.setColumnWidth(3, (requiredFileNameWidth.get() + 3) * 256);
-            log.info("Fileinfo filename column width adjusted to {}", requiredFileNameWidth.get());
+            sheet.setColumnWidth(3, ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)) * 256);
+            log.info("Fileinfo filename column width adjusted to {}", ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)));
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
 
             FileOutputStream fileOutputStream = new FileOutputStream(filename);
