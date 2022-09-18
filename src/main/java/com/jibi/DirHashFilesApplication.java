@@ -96,7 +96,7 @@ public class DirHashFilesApplication {
         } catch (ParseException parseException) {
             log.error("Parseexception", parseException);
             formatter.printHelp("Java directory hasher", options);
-            throw new RuntimeException("Exceution error", parseException);
+            throw new RuntimeException("Execution error", parseException);
         }
         return commandLine;
     }
