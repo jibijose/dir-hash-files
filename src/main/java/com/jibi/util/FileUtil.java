@@ -147,7 +147,11 @@ public class FileUtil {
                 return (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
             }
         } else if (SystemUtil.isUnixSystem()) {
-
+            if (dir.equals("/")) {
+                return dir;
+            } else {
+                return dir + "/";
+            }
         }
         return dir;
     }
