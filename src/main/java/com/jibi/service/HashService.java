@@ -88,7 +88,7 @@ public class HashService {
             if (isValidDirectoryOrDrive(rightSideValue)) {
                 log.info("Right side {} is drive or folder", rightSideValue);
                 listFileInfosRight = mapDirFiles(algoSelected, rightSideValue);
-            } else if (isValidDirectoryOrDrive(rightSideValue)) {
+            } else if (isValidFileExcel(rightSideValue)) {
                 log.info("Right side {} is FileInfo excel", rightSideValue);
                 FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);

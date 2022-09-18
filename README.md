@@ -52,3 +52,6 @@ check unix file system
 provide auto script.
 readme details 
 cant mix between windows and linux due to slash+back slash problem  
+hash prevails even if date is mismatched...   
+check out file writable or not...  
+works primarily with windows and mounted drives (ntfs/fat/exfat)  
