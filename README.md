@@ -46,7 +46,6 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "
 
 *************
 ### TODOs
-time left?
 filename containing marker + datetime   
 provide auto script.
 readme details
