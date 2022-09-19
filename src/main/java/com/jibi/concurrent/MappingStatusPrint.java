@@ -1,9 +1,13 @@
 package com.jibi.concurrent;
 
+import static java.lang.String.format;
+
+import com.jibi.util.DateUtil;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DecimalFormat;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
@@ -20,12 +24,26 @@ public class MappingStatusPrint implements Runnable {
     private int sleepIntervalMillis = 1000;
     private int numOfPrints = 10;
 
+    private Date dateStartTime;
+    private int digitsTotalFiles;
+    private int digitsTotalFileSize;
+
     DecimalFormat decimalFormat = new DecimalFormat("00.00");
 
     public MappingStatusPrint(CountDownLatch countDownLatch, long totalFiles, long totalFileSize) {
         this.countDownLatch = countDownLatch;
         this.totalFiles = totalFiles;
         this.totalFileSize = totalFileSize;
+        if (totalFiles > 0) {
+            long number = totalFiles;
+            for (; number != 0; number /= 10, ++digitsTotalFiles) {
+            }
+        }
+        if (totalFileSize > 0) {
+            long number = totalFileSize;
+            for (; number != 0; number /= 10, ++digitsTotalFileSize) {
+            }
+        }
 
         int GBs = (int) (totalFileSize / 1024 / 1024 / 1024);
 
@@ -41,11 +59,55 @@ public class MappingStatusPrint implements Runnable {
 
     @Override
     public void run() {
+        dateStartTime = new Date();
         while (true) {
             try {
-                String percentageCompletedByCount = decimalFormat.format(100.0 * processedFiles / totalFiles);
-                String percentageCompletedBySize = decimalFormat.format(100.0 * processedFileSize / totalFileSize);
-                log.info("Progress Count {}% [{}/{}]  Size {}% [{}/{}]", percentageCompletedByCount, processedFiles, totalFiles, percentageCompletedBySize, processedFileSize, totalFileSize);
+                if (totalFiles > 0 && totalFileSize > 0 && processedFiles > 0 && processedFileSize > 0) {
+                    String percentageCompletedByCount = decimalFormat.format(100.0 * processedFiles / totalFiles);
+                    String percentageCompletedBySize = decimalFormat.format(100.0 * processedFileSize / totalFileSize);
+
+                    Date dateNow = new Date();
+                    long timeTakenSoFar = dateNow.getTime() - dateStartTime.getTime();
+                    long expectedTimeNeededByFiles = timeTakenSoFar * totalFiles / processedFiles;
+                    long expectedTimeNeededByFileSizes = timeTakenSoFar * totalFileSize / processedFileSize;
+                    long expectedMaxTimeLeftSeconds = ((expectedTimeNeededByFileSizes > expectedTimeNeededByFiles) ? expectedTimeNeededByFileSizes : expectedTimeNeededByFiles) / 1000;
+
+                    long hours = 0;
+                    long minutes = 0;
+                    long seconds = 0;
+                    long countDownSeconds = 0;
+
+                    countDownSeconds = timeTakenSoFar / 1000;
+                    if (countDownSeconds / 60 / 60 > 0) {
+                        hours = countDownSeconds / 60 / 60;
+                        countDownSeconds = countDownSeconds - (hours * 60 * 60);
+                    }
+                    if (countDownSeconds / 60 > 0) {
+                        minutes = countDownSeconds / 60;
+                        countDownSeconds = countDownSeconds - (minutes * 60);
+                    }
+                    seconds = countDownSeconds;
+                    String formattedTimeSpent = format("%02d:%02d:%02d", hours, minutes, seconds);
+
+                    countDownSeconds = expectedMaxTimeLeftSeconds;
+                    if (countDownSeconds / 60 / 60 > 0) {
+                        hours = countDownSeconds / 60 / 60;
+                        countDownSeconds = countDownSeconds - (hours * 60 * 60);
+                    }
+                    if (countDownSeconds / 60 > 0) {
+                        minutes = countDownSeconds / 60;
+                        countDownSeconds = countDownSeconds - (minutes * 60);
+                    }
+                    seconds = countDownSeconds;
+                    String formattedTimeLeft = format("%02d:%02d:%02d", hours, minutes, seconds);
+
+                    String formattedDateEtc = DateUtil.displayTimeFormatted(new Date(dateNow.getTime() + expectedMaxTimeLeftSeconds * 1000));
+
+                    log.info("Progress: File {}% [{}/{}]  Size {}% [{}/{}]   Spent [{}]   Left [{}]   ETC [{}]",
+                            percentageCompletedByCount, format("%0" + digitsTotalFiles + "d", processedFiles), totalFiles,
+                            percentageCompletedBySize, format("%0" + digitsTotalFileSize + "d", processedFileSize), totalFileSize,
+                            formattedTimeSpent, formattedTimeLeft, formattedDateEtc);
+                }
                 if (totalFiles <= processedFiles) {
                     break;
                 }

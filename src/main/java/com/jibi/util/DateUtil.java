@@ -10,7 +10,9 @@ import java.util.Date;
 public class DateUtil {
 
     private static String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss SSS zzz";
+    private static String TIME_FORMAT = "HH:mm:ss";
     private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT);
+    private static SimpleDateFormat simpleTimeFormat = new SimpleDateFormat(TIME_FORMAT);
 
     public static String format(Date date) {
         return simpleDateFormat.format(date);
@@ -25,4 +27,7 @@ public class DateUtil {
         }
     }
 
+    public static String displayTimeFormatted(Date date) {
+        return simpleTimeFormat.format(date);
+    }
 }
