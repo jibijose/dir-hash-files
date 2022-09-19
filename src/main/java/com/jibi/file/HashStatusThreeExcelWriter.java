@@ -10,6 +10,8 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,7 +36,6 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         sortedHashStatusMap.putAll(hashStatusMap);
 
         try {
-            FileOutputStream fileStream = new FileOutputStream(filename);
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("HashStatus");
             sheet.createFreezePane(0, 1);
@@ -61,6 +62,8 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
             sheet.setColumnWidth(13, ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)) * 256);
             log.info("HashStatus filename column width adjusted to {}", ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)));
             sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
+            Files.isWritable(Paths.get(filename));
+            FileOutputStream fileStream = new FileOutputStream(filename);
             workbook.write(fileStream);
             if (passFlag) {
                 FileUtil.setExcelPassword(filename);

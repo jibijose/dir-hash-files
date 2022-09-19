@@ -47,11 +47,7 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "
 *************
 ### TODOs
 time left?
-filename containing marker + datetime  
-check unix file system  
+filename containing marker + datetime   
 provide auto script.
-readme details 
-cant mix between windows and linux due to slash+back slash problem  
-three way hash/size/datetime highlight diffs like two way
-check out file writable or not...  
+readme details
 works primarily with windows and mounted drives (ntfs/fat/exfat)  

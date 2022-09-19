@@ -564,6 +564,9 @@ public class HashService {
         if (!isValidFileExcelName(outFileValue)) {
             throw new RuntimeException("Out file excel not correct");
         }
+        if (!FileUtil.ifFileWritable(outFileValue)) {
+            throw new RuntimeException("Out file excel not writable");
+        }
     }
 
     private void validateCreateHash(String hashAlgoValue, String inDirValue, String outFileValue) {

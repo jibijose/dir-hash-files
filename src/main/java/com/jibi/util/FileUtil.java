@@ -4,6 +4,9 @@ import com.jibi.file.ExcelPasswordProtection;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -190,5 +193,14 @@ public class FileUtil {
             }
         }
         return fileList;
+    }
+
+    public static boolean ifFileWritable(String filename) {
+        File file = new File(filename);
+        try (FileOutputStream fileOutputStream = new FileOutputStream(file);) {
+            return true;
+        } catch (IOException anyException) {
+            return false;
+        }
     }
 }
