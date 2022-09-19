@@ -1,5 +1,10 @@
 package com.jibi.vo;
 
+import static com.jibi.util.FileUtil.MATCH;
+import static com.jibi.util.FileUtil.MISMATCH;
+import static com.jibi.util.FileUtil.NEWFILE;
+import static com.jibi.util.FileUtil.MISSING;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
