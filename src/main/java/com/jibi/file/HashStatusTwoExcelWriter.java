@@ -39,7 +39,7 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
             sheet.createFreezePane(0, 1);
 
             setSheetWidths(sheet, algoLength);
-            Map<String, CellStyle> cellStyles = createCellStyles(workbook);
+            setCellStyles(workbook);
 
             XSSFRow headerRow = sheet.createRow(0);
             addStringCells(headerRow, List.of("Status", "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
@@ -49,7 +49,7 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
             sortedHashStatusMap.keySet().stream().forEach(hashStatus -> {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
-                addDataCells(dataRow, sortedHashStatusMap.get(hashStatus), cellStyles);
+                addDataCells(dataRow, sortedHashStatusMap.get(hashStatus));
                 if (sortedHashStatusMap.get(hashStatus).getFilename().length() > requiredFileNameWidth.get()) {
                     requiredFileNameWidth.set(sortedHashStatusMap.get(hashStatus).getFilename().length());
                 }
@@ -67,9 +67,6 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
             exception.printStackTrace();
         }
     }
-
-
-
 
 
     protected void setSheetWidths(XSSFSheet sheet, int algoLength) {
@@ -91,7 +88,7 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         }
     }
 
-    private void addDataCells(Row row, HashStatusTwo hashStatusTwo, Map<String, CellStyle> cellStyles) {
+    private void addDataCells(Row row, HashStatusTwo hashStatusTwo) {
         int colIndex = 0;
         Cell cell = null;
 
@@ -110,11 +107,11 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
             cell.setCellValue(hashStatusTwo.getLeft().getHash());
         }
         if (hashStatusTwo.getLeft().getHash() == null || hashStatusTwo.getRight().getHash() == null) {
-            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+            cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
         } else if (hashStatusTwo.getLeft().getHash().equals(hashStatusTwo.getRight().getHash())) {
-            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+            cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
         } else {
-            cell.setCellStyle(cellStyles.get(DATAROWCENTERMAROONSTYLE));
+            cell.setCellStyle(cellStyles.get(DATAROWLEFTMAROONSTYLE));
         }
 
         cell = row.createCell(colIndex++, CellType.STRING);
@@ -146,11 +143,11 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
             cell.setCellValue(hashStatusTwo.getRight().getHash());
         }
         if (hashStatusTwo.getLeft().getHash() == null || hashStatusTwo.getRight().getHash() == null) {
-            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+            cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
         } else if (hashStatusTwo.getLeft().getHash().equals(hashStatusTwo.getRight().getHash())) {
-            cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+            cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
         } else {
-            cell.setCellStyle(cellStyles.get(DATAROWCENTERMAROONSTYLE));
+            cell.setCellStyle(cellStyles.get(DATAROWLEFTMAROONSTYLE));
         }
 
         cell = row.createCell(colIndex++, CellType.STRING);
@@ -180,5 +177,15 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(hashStatusTwo.getFilename());
         cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
+    }
+
+    private CellStyle findHashCellStyle(HashStatusTwo hashStatusTwo) {
+        if (hashStatusTwo.getLeft().getHash() == null || hashStatusTwo.getRight().getHash() == null) {
+            return cellStyles.get(DATAROWCENTERSTYLE);
+        } else if (hashStatusTwo.getLeft().getHash().equals(hashStatusTwo.getRight().getHash())) {
+            return cellStyles.get(DATAROWCENTERSTYLE);
+        } else {
+            return cellStyles.get(DATAROWCENTERMAROONSTYLE);
+        }
     }
 }

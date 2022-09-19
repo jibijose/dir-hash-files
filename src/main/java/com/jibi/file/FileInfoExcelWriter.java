@@ -41,6 +41,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
             XSSFSheet sheet = workbook.createSheet("FileInfo");
             sheet.createFreezePane(0, 1);
             setSheetWidths(sheet, algoLength);
+            setCellStyles(workbook);
 
             // Create a header row describing what the columns mean
             CellStyle topRowStyle = workbook.createCellStyle();
@@ -57,13 +58,13 @@ public class FileInfoExcelWriter extends ExcelWriter {
             dataRowStyle.setFont(fontData);
 
             XSSFRow headerRow = sheet.createRow(0);
-            addStringCells(headerRow, List.of(algoValue, "Size", "Date Modified", "File Name"), topRowStyle);
+            addStringCells(headerRow, List.of(algoValue, "Size", "Date Modified", "File Name"), cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
             listFileInfos.stream().forEach(fileInfo -> {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
-                addDataCells(dataRow, fileInfo, dataRowStyle);
+                addDataCells(dataRow, fileInfo);
                 if (fileInfo.getFilename().length() > requiredFileNameWidth.get()) {
                     requiredFileNameWidth.set(fileInfo.getFilename().length());
                 }
@@ -99,25 +100,25 @@ public class FileInfoExcelWriter extends ExcelWriter {
         }
     }
 
-    private void addDataCells(Row row, FileInfo fileInfo, CellStyle style) {
+    private void addDataCells(Row row, FileInfo fileInfo) {
         int colIndex = 0;
         Cell cell = null;
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(fileInfo.getHash());
-        cell.setCellStyle(style);
+        cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(fileInfo.getSize());
-        cell.setCellStyle(style);
+        cell.setCellStyle(cellStyles.get(DATAROWRIGHTSTYLE));
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(format(fileInfo.getLastModified()));
-        cell.setCellStyle(style);
+        cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(fileInfo.getFilename());
-        cell.setCellStyle(style);
+        cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
     }
 
 }

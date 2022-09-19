@@ -11,7 +11,7 @@ import java.util.Map;
 
 public abstract class ExcelWriter {
 
-    public  final static String TOPROWSTYLE = "TopRowStyle";
+    public final static String TOPROWSTYLE = "TopRowStyle";
     public final static String DATAROWLEFTSTYLE = "DataRowLeftStyle";
     public final static String DATAROWCENTERSTYLE = "DataRowCenterStyle";
     public final static String DATAROWRIGHTSTYLE = "DataRowRightStyle";
@@ -32,12 +32,13 @@ public abstract class ExcelWriter {
     public final static String DATAROWRIGHTMAROONSTYLE = "DataRowRightMaroonStyle";
 
     protected String filename;
+    protected Map<String, CellStyle> cellStyles;
 
     public ExcelWriter(String filename) {
         this.filename = filename;
     }
 
-    protected Map<String, CellStyle> createCellStyles(XSSFWorkbook workbook) {
+    protected void setCellStyles(XSSFWorkbook workbook) {
         Map<String, CellStyle> cellStyles = new HashMap<>();
         int colorWeight = 255;
         int otherWeight = 50;
@@ -141,7 +142,7 @@ public abstract class ExcelWriter {
         dataRowRightMaroonStyle.setAlignment(HorizontalAlignment.RIGHT);
         cellStyles.put(DATAROWRIGHTMAROONSTYLE, dataRowRightMaroonStyle);
 
-        return cellStyles;
+        this.cellStyles = cellStyles;
     }
 
     protected abstract void setSheetWidths(XSSFSheet sheet, int algoLength);

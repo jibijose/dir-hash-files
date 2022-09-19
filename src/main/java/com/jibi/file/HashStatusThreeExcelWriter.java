@@ -42,7 +42,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
             sheet.createFreezePane(0, 1);
 
             setSheetWidths(sheet, algoLength);
-            Map<String, CellStyle> cellStyles = createCellStyles(workbook);
+            setCellStyles(workbook);
 
             XSSFRow headerRow = sheet.createRow(0);
             addStringCells(headerRow, List.of("Status", "Left", "Center", "Right",
@@ -55,7 +55,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
             sortedHashStatusMap.keySet().stream().forEach(hashStatus -> {
                 XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
-                addDataCells(dataRow, sortedHashStatusMap.get(hashStatus), cellStyles);
+                addDataCells(dataRow, sortedHashStatusMap.get(hashStatus));
                 if (sortedHashStatusMap.get(hashStatus).getFilename().length() > requiredFileNameWidth.get()) {
                     requiredFileNameWidth.set(sortedHashStatusMap.get(hashStatus).getFilename().length());
                 }
@@ -101,7 +101,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         }
     }
 
-    private void addDataCells(Row row, HashStatusThree hashStatusThree, Map<String, CellStyle> cellStyles) {
+    private void addDataCells(Row row, HashStatusThree hashStatusThree) {
         int colIndex = 0;
         Cell cell = null;
 
@@ -147,7 +147,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         if (hashStatusThree.getLeft().getHash() != null) {
             cell.setCellValue(hashStatusThree.getLeft().getHash());
         }
-        cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatusThree.getLeft().getSize() >= 0) {
@@ -165,7 +165,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         if (hashStatusThree.getCenter().getHash() != null) {
             cell.setCellValue(hashStatusThree.getCenter().getHash());
         }
-        cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatusThree.getCenter().getSize() >= 0) {
@@ -183,7 +183,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         if (hashStatusThree.getRight().getHash() != null) {
             cell.setCellValue(hashStatusThree.getRight().getHash());
         }
-        cell.setCellStyle(cellStyles.get(DATAROWCENTERSTYLE));
+        cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
 
         cell = row.createCell(colIndex++, CellType.STRING);
         if (hashStatusThree.getRight().getSize() >= 0) {
