@@ -6,6 +6,7 @@ import com.jibi.util.DateUtil;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
@@ -44,6 +45,7 @@ public class MappingStatusPrint implements Runnable {
             for (; number != 0; number /= 10, ++digitsTotalFileSize) {
             }
         }
+        decimalFormat.setRoundingMode(RoundingMode.DOWN);
 
         int GBs = (int) (totalFileSize / 1024 / 1024 / 1024);
 
@@ -63,8 +65,8 @@ public class MappingStatusPrint implements Runnable {
         while (true) {
             try {
                 if (totalFiles > 0 && totalFileSize > 0 && processedFiles > 0 && processedFileSize > 0) {
-                    String percentageCompletedByCount = decimalFormat.format(100.0 * processedFiles / totalFiles);
-                    String percentageCompletedBySize = decimalFormat.format(100.0 * processedFileSize / totalFileSize);
+                    String percentageCompletedByCount = format("%1$6s", decimalFormat.format(100.0 * processedFiles / totalFiles));
+                    String percentageCompletedBySize = format("%1$6s", decimalFormat.format(100.0 * processedFileSize / totalFileSize));
 
                     Date dateNow = new Date();
                     long timeTakenSoFar = dateNow.getTime() - dateStartTime.getTime();
@@ -101,7 +103,7 @@ public class MappingStatusPrint implements Runnable {
                     seconds = countDownSeconds;
                     String formattedTimeLeft = format("%02d:%02d:%02d", hours, minutes, seconds);
 
-                    String formattedDateEtc = DateUtil.displayTimeFormatted(new Date(dateNow.getTime() + expectedMaxTimeLeftSeconds * 1000));
+                    String formattedDateEtc = DateUtil.displayTimeFormatted(new Date(dateStartTime.getTime() + expectedMaxTimeLeftSeconds * 1000));
 
                     log.info("Progress: File {}% [{}/{}]  Size {}% [{}/{}]   Spent [{}]   Left [{}]   ETC [{}]",
                             percentageCompletedByCount, format("%0" + digitsTotalFiles + "d", processedFiles), totalFiles,
