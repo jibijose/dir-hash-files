@@ -4,7 +4,6 @@ import com.jibi.file.ExcelPasswordProtection;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -163,23 +162,6 @@ public class FileUtil {
     }
 
     public static List<File> getFiles(String directory) {
-        if (directory == null) {
-            log.warn("Null directory received");
-            return Collections.EMPTY_LIST;
-        }
-        if (SystemUtil.isWindowsSystem() && !directory.endsWith(":\\") && directory.endsWith("\\")) {
-            log.info("Directory {} ends with \\ in windows system, trimming end \\", directory);
-            directory = directory.substring(0, directory.length() - 1);
-        }
-        if (SystemUtil.isUnixSystem() && directory.endsWith("/")) {
-            log.info("Directory {} ends with / in unix system, trimming end /", directory);
-            directory = directory.substring(0, directory.length() - 1);
-        }
-        if (directory.endsWith(":")) {
-            log.info("Directory {} ends with colon, appending \\ to it", directory);
-            directory = directory + "\\";
-        }
-
         List<File> fileList = new ArrayList<>();
         File[] files = new File(directory).listFiles();
         if (files == null) {
@@ -187,7 +169,9 @@ public class FileUtil {
         }
         for (File element : files) {
             if (element.isDirectory()) {
-                fileList.addAll(getFiles(element.getPath()));
+                if (!isTempFile(element.getPath())) {
+                    fileList.addAll(getFiles(element.getPath()));
+                }
             } else {
                 fileList.add(element);
             }
@@ -202,5 +186,21 @@ public class FileUtil {
         } catch (IOException anyException) {
             return false;
         }
+    }
+
+    public static boolean isTempFile(String filename) {
+        boolean fileTempStatus = false;
+        String upperFileName = filename.toUpperCase();
+        if (SystemUtil.isWindowsSystem()) {
+            if (upperFileName.matches(".:\\\\\\$RECYCLE\\.BIN")) {
+                fileTempStatus = true;
+            } else if (upperFileName.matches(".:\\\\SYSTEM VOLUME INFORMATION")) {
+                fileTempStatus = true;
+            }
+        }
+        if (fileTempStatus) {
+            log.info("Temp file/directory {}", filename);
+        }
+        return fileTempStatus;
     }
 }

@@ -1,6 +1,7 @@
 package com.jibi.concurrent;
 
 import static java.lang.String.format;
+import static com.jibi.util.NumberUtil.formatCommasInNumber;
 
 import com.jibi.util.DateUtil;
 import lombok.Setter;
@@ -106,8 +107,8 @@ public class MappingStatusPrint implements Runnable {
                     String formattedDateEtc = DateUtil.displayTimeFormatted(new Date(dateStartTime.getTime() + expectedMaxTimeLeftSeconds * 1000));
 
                     log.info("Progress: File {}% [{}/{}]  Size {}% [{}/{}]   Spent [{}]   Left [{}]   ETC [{}]",
-                            percentageCompletedByCount, format("%0" + digitsTotalFiles + "d", processedFiles), totalFiles,
-                            percentageCompletedBySize, format("%0" + digitsTotalFileSize + "d", processedFileSize), totalFileSize,
+                            percentageCompletedByCount, formatCommasInNumber(format("%0" + digitsTotalFiles + "d", processedFiles)), formatCommasInNumber(totalFiles),
+                            percentageCompletedBySize, formatCommasInNumber(format("%0" + digitsTotalFileSize + "d", processedFileSize)), formatCommasInNumber(totalFileSize),
                             formattedTimeSpent, formattedTimeLeft, formattedDateEtc);
                 }
                 if (totalFiles <= processedFiles) {

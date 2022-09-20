@@ -1,5 +1,7 @@
 package com.jibi.service;
 
+import static com.jibi.util.NumberUtil.formatCommasInNumber;
+
 import static com.jibi.util.FileUtil.MATCH;
 import static com.jibi.util.FileUtil.MISMATCH;
 import static com.jibi.util.FileUtil.MISSING;
@@ -18,6 +20,7 @@ import com.jibi.concurrent.FileOperationPool;
 import com.jibi.concurrent.MappingStatusPrint;
 import com.jibi.file.*;
 import com.jibi.util.FileUtil;
+import com.jibi.util.SystemUtil;
 import com.jibi.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +29,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -205,7 +209,7 @@ public class HashService {
         Collection<File> files = FileUtil.getFiles(dir);
         long totalFiles = files.size();
         long totalFileSize = files.stream().mapToLong(File::length).sum();
-        log.info("Got {} files of total size {} to process", totalFiles, totalFileSize);
+        log.info("Got {} files of total size {} to process", formatCommasInNumber(totalFiles), formatCommasInNumber(totalFileSize));
         AtomicLong processedFiles = new AtomicLong(0);
         AtomicLong processedFileSize = new AtomicLong(0);
 
@@ -257,7 +261,7 @@ public class HashService {
         Collection<File> files = FileUtil.getFiles(dir);
         long totalFiles = files.size();
         long totalFileSize = files.stream().mapToLong(File::length).sum();
-        log.info("Got {} files of total size {} to process", totalFiles, totalFileSize);
+        log.info("Got {} files of total size {} to process", formatCommasInNumber(totalFiles), formatCommasInNumber(totalFileSize));
         AtomicLong processedFiles = new AtomicLong(0);
         AtomicLong processedFileSize = new AtomicLong(0);
 
@@ -318,7 +322,7 @@ public class HashService {
         Collection<File> files = FileUtil.getFiles(dir);
         long totalFiles = files.size();
         long totalFileSize = files.stream().mapToLong(File::length).sum();
-        log.info("Got {} files of total size {} to process", totalFiles, totalFileSize);
+        log.info("Got {} files of total size {} to process", formatCommasInNumber(totalFiles), formatCommasInNumber(totalFileSize));
         AtomicLong processedFiles = new AtomicLong(0);
         AtomicLong processedFileSize = new AtomicLong(0);
 
