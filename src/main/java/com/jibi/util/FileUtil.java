@@ -52,7 +52,6 @@ public class FileUtil {
                 }
                 return true;
             }
-            log.warn("{} is not a valid file excel xlsx", filename);
         } catch (Exception exception) {
             log.warn("Not able to get file excel {}", filename);
         }
@@ -69,7 +68,6 @@ public class FileUtil {
             if (file.exists() && file.isFile() && filename.endsWith(".xlsx")) {
                 return true;
             }
-            log.warn("{} is not a valid file excel xlsx", filename);
         } catch (Exception exception) {
             log.warn("Not able to get file excel {}", filename);
         }
@@ -99,7 +97,6 @@ public class FileUtil {
                     return true;
                 }
             }*/
-            log.warn("{} is not a valid directory/drive", directory);
         } catch (Exception exception) {
             log.warn("Not able to get file directory/drive {}", directory);
         }

@@ -37,6 +37,7 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
 public class HashService {
 
     public void startCreate(boolean passFlag, String hashAlgoValue, String dirValue, String outFileValue) {
+        dirValue = FileUtil.adjustDirectoryOrDrive(dirValue);
         validateCreateHash(hashAlgoValue, dirValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         String excelPassword = null;
@@ -53,7 +54,8 @@ public class HashService {
     }
 
     public void startRecreate(boolean passFlag, String hashAlgoValue, String dirValue, String inFileValue, String outFileValue) {
-        validateRecreateHash(inFileValue, inFileValue, outFileValue);
+        dirValue = FileUtil.adjustDirectoryOrDrive(dirValue);
+        validateRecreateHash(dirValue, inFileValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         String excelPassword = null;
         if (passFlag) {
@@ -69,6 +71,9 @@ public class HashService {
     }
 
     public void startCompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
+        leftSideValue = FileUtil.adjustDirectoryOrDrive(leftSideValue);
+        centerSideValue = FileUtil.adjustDirectoryOrDrive(centerSideValue);
+        rightSideValue = FileUtil.adjustDirectoryOrDrive(rightSideValue);
         validateCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         String excelPassword = null;
@@ -126,6 +131,9 @@ public class HashService {
     }
 
     public void startRecompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String inFileValue, String outFileValue) {
+        leftSideValue = FileUtil.adjustDirectoryOrDrive(leftSideValue);
+        centerSideValue = FileUtil.adjustDirectoryOrDrive(centerSideValue);
+        rightSideValue = FileUtil.adjustDirectoryOrDrive(rightSideValue);
         validateRecompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, inFileValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         String excelPassword = null;

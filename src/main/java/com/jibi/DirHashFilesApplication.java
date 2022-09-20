@@ -27,7 +27,7 @@ public class DirHashFilesApplication {
 
         log.info("Started in {} mode", modeValue);
         if ("create".equals(modeValue)) {
-            String inDirValue = FileUtil.adjustDirectoryOrDrive(commandLine.getOptionValue("indir"));
+            String inDirValue = commandLine.getOptionValue("indir");
             hashService.startCreate(passFlag, hashAlgoValue, inDirValue, outFileValue);
         } else if ("recreate".equals(modeValue)) {
             String inDirValue = commandLine.getOptionValue("indir");
