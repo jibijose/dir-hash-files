@@ -20,7 +20,6 @@ import com.jibi.concurrent.FileOperationPool;
 import com.jibi.concurrent.MappingStatusPrint;
 import com.jibi.file.*;
 import com.jibi.util.FileUtil;
-import com.jibi.util.SystemUtil;
 import com.jibi.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +28,6 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -41,10 +39,14 @@ public class HashService {
     public void startCreate(boolean passFlag, String hashAlgoValue, String dirValue, String outFileValue) {
         validateCreateHash(hashAlgoValue, dirValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+        String excelPassword = null;
+        if (passFlag) {
+            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
+        }
         try {
             Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
-            fileInfoExcelWriter.writeExcel(passFlag, algoSelected, listFileInfos);
+            fileInfoExcelWriter.writeExcel(excelPassword, algoSelected, listFileInfos);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -53,10 +55,14 @@ public class HashService {
     public void startRecreate(boolean passFlag, String hashAlgoValue, String dirValue, String inFileValue, String outFileValue) {
         validateRecreateHash(inFileValue, inFileValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+        String excelPassword = null;
+        if (passFlag) {
+            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
+        }
         try {
             Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue, inFileValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
-            fileInfoExcelWriter.writeExcel(passFlag, algoSelected, listFileInfos);
+            fileInfoExcelWriter.writeExcel(excelPassword, algoSelected, listFileInfos);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -98,17 +104,20 @@ public class HashService {
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
 
-
+            String excelPassword = null;
+            if (passFlag) {
+                excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
+            }
             if (listFileInfosCenter == null) {
                 Map<String, HashStatusTwo> hashStatusMap;
                 hashStatusMap = compareLeftRight(algoSelected, listFileInfosLeft, listFileInfosRight);
                 HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
-                hashStatusTwoExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
+                hashStatusTwoExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
             } else {
                 Map<String, HashStatusThree> hashStatusMap;
                 hashStatusMap = compareLeftCenterRight(algoSelected, listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
                 HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
-                hashStatusThreeExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
+                hashStatusThreeExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
             }
 
         } catch (Exception exception) {
@@ -186,17 +195,20 @@ public class HashService {
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
 
-
+            String excelPassword = null;
+            if (passFlag) {
+                excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
+            }
             if (listFileInfosCenter == null) {
                 Map<String, HashStatusTwo> hashStatusMap;
                 hashStatusMap = compareLeftRight(algoSelected, listFileInfosLeft, listFileInfosRight);
                 HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
-                hashStatusTwoExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
+                hashStatusTwoExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
             } else {
                 Map<String, HashStatusThree> hashStatusMap;
                 hashStatusMap = compareLeftCenterRight(algoSelected, listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
                 HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
-                hashStatusThreeExcelWriter.writeExcel(passFlag, algoSelected, hashStatusMap);
+                hashStatusThreeExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
             }
 
         } catch (Exception exception) {

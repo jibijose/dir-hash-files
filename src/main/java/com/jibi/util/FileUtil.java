@@ -112,8 +112,7 @@ public class FileUtil {
         return scanner.nextLine();
     }
 
-    public static void setExcelPassword(String filename) throws Exception {
-        String excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", filename));
+    public static void setExcelPassword(String filename, String excelPassword) throws Exception {
         ExcelPasswordProtection excelPasswordProtection = new ExcelPasswordProtection();
         excelPasswordProtection.encryptWorkbook(new File(filename), excelPassword);
         log.info("File {} encrypted", filename);

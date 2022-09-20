@@ -46,9 +46,7 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "
 
 *************
 ### TODOs
-ask password in the beginning for output file...
 filename containing marker + datetime   
 provide auto script.
 readme details
-works primarily with windows and mounted drives (ntfs/fat/exfat)  
-Exclude $RECYCLE and System Volume Information  
+works primarily with windows and mounted drives (ntfs/fat/exfat)

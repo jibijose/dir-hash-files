@@ -25,7 +25,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         super(filename);
     }
 
-    public void writeExcel(boolean passFlag, Algorithm algoSelected, Map<String, HashStatusThree> hashStatusMap) {
+    public void writeExcel(String excelPassword, Algorithm algoSelected, Map<String, HashStatusThree> hashStatusMap) {
         int algoLength = 20;
         String algoValue = "NA";
         if (algoSelected != null) {
@@ -65,8 +65,8 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
             Files.isWritable(Paths.get(filename));
             FileOutputStream fileStream = new FileOutputStream(filename);
             workbook.write(fileStream);
-            if (passFlag) {
-                FileUtil.setExcelPassword(filename);
+            if (excelPassword != null) {
+                FileUtil.setExcelPassword(filename, excelPassword);
             }
         } catch (Exception exception) {
             exception.printStackTrace();
