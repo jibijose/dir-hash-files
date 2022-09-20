@@ -50,3 +50,6 @@ filename containing marker + datetime
 provide auto script.
 readme details
 works primarily with windows and mounted drives (ntfs/fat/exfat)
+
+handle corrupt/unreadable files. If reading status is not changing for minutes/hours?  
+

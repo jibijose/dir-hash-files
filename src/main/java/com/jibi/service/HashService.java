@@ -198,7 +198,7 @@ public class HashService {
                 FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
-            
+
             if (listFileInfosCenter == null) {
                 Map<String, HashStatusTwo> hashStatusMap;
                 hashStatusMap = compareLeftRight(algoSelected, listFileInfosLeft, listFileInfosRight);
