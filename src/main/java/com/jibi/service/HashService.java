@@ -71,6 +71,10 @@ public class HashService {
     public void startCompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
         validateCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+        String excelPassword = null;
+        if (passFlag) {
+            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
+        }
         try {
             Collection<FileInfo> listFileInfosLeft = null;
             if (isValidDirectoryOrDrive(leftSideValue)) {
@@ -104,10 +108,6 @@ public class HashService {
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
 
-            String excelPassword = null;
-            if (passFlag) {
-                excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
-            }
             if (listFileInfosCenter == null) {
                 Map<String, HashStatusTwo> hashStatusMap;
                 hashStatusMap = compareLeftRight(algoSelected, listFileInfosLeft, listFileInfosRight);
@@ -128,6 +128,10 @@ public class HashService {
     public void startRecompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String inFileValue, String outFileValue) {
         validateRecompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, inFileValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+        String excelPassword = null;
+        if (passFlag) {
+            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
+        }
 
         HashStatusReader hashStatusReader = new HashStatusReader(inFileValue);
         Collection<HashStatus> listExistingHashStatus = hashStatusReader.readExcel(algoSelected);
@@ -194,11 +198,7 @@ public class HashService {
                 FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
-
-            String excelPassword = null;
-            if (passFlag) {
-                excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
-            }
+            
             if (listFileInfosCenter == null) {
                 Map<String, HashStatusTwo> hashStatusMap;
                 hashStatusMap = compareLeftRight(algoSelected, listFileInfosLeft, listFileInfosRight);
