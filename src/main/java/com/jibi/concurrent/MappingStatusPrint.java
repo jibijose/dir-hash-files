@@ -92,6 +92,9 @@ public class MappingStatusPrint implements Runnable {
                     seconds = countDownSeconds;
                     String formattedTimeSpent = format("%02d:%02d:%02d", hours, minutes, seconds);
 
+                    hours = 0;
+                    minutes = 0;
+                    seconds = 0;
                     countDownSeconds = expectedMaxTimeLeftSeconds - timeTakenSoFar / 1000;
                     if (countDownSeconds / 60 / 60 > 0) {
                         hours = countDownSeconds / 60 / 60;
