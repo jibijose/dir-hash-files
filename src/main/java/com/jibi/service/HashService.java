@@ -276,6 +276,8 @@ public class HashService {
         FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(inFileInfo);
         Collection<FileInfo> listExistingFileInfos = fileInfoExcelReader.readExcel(algoSelected);
         Map<String, FileInfo> mapExistingFileInfos = listExistingFileInfos.stream().collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(), fileInfo -> fileInfo));
+        long existingFileSize = mapExistingFileInfos.keySet().stream().mapToLong(filename -> mapExistingFileInfos.get(filename).getSize()).sum();
+        log.info("Input fileinfo has {} files with total size {}", formatCommasInNumber(mapExistingFileInfos.size()), formatCommasInNumber(existingFileSize));
 
         log.debug("************************************************************************************************************************");
         Collection<File> files = FileUtil.getFiles(dir);
@@ -291,14 +293,14 @@ public class HashService {
         executorService.submit(mappingStatusPrint);
 
         Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
-        String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
+        String dirValuePrefix = FileUtil.getDirValuePrefix(dir);
 
         try {
             FileOperationPool fileOperationPool = new FileOperationPool();
             HashOperation hashOperation = new HashOperation(algoSelected);
             fileOperationPool.submit(
                     () -> files.parallelStream().forEach(file -> {
-                        String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
+                        String relativeFilePath = FileUtil.getFileRelativePath(file, dirValuePrefix);
                         FileInfo fileInfo;
                         if (mapExistingFileInfos.containsKey(relativeFilePath)) {
                             fileInfo = mapExistingFileInfos.get(relativeFilePath);
