@@ -145,6 +145,7 @@ public class HashService {
         Collection<HashStatus> listExistingHashStatus = hashStatusReader.readExcel(algoSelected);
         Map<String, HashStatus> mapExistingHashStatus = listExistingHashStatus.stream()
                 .collect(Collectors.toMap(hashStatus -> hashStatus.getFilename(), hashStatus -> hashStatus));
+        log.info("Existing hashstatus files {}", mapExistingHashStatus.size());
 
         Map<String, OneSide> mapExistingLeftOneSide = mapExistingHashStatus.keySet().stream()
                 .collect(Collectors.toMap(filename -> filename, filename -> {
@@ -218,7 +219,6 @@ public class HashService {
                 HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
                 hashStatusThreeExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
             }
-
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -302,7 +302,9 @@ public class HashService {
                     () -> files.parallelStream().forEach(file -> {
                         String relativeFilePath = FileUtil.getFileRelativePath(file, dirValuePrefix);
                         FileInfo fileInfo;
-                        if (mapExistingFileInfos.containsKey(relativeFilePath)) {
+                        if (mapExistingFileInfos.containsKey(relativeFilePath)
+                                && file.length() == mapExistingFileInfos.get(relativeFilePath).getSize()
+                                && file.lastModified() == mapExistingFileInfos.get(relativeFilePath).getLastModified().getTime()) {
                             fileInfo = mapExistingFileInfos.get(relativeFilePath);
                             listFileInfos.add(fileInfo);
                             log.trace("Copied hash of file {}", relativeFilePath);
@@ -310,7 +312,7 @@ public class HashService {
                             String fileHash = hashOperation.getFileChecksum(file);
                             fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
                             listFileInfos.add(fileInfo);
-                            log.trace("Hashed file {}", relativeFilePath);
+                            log.debug("Hashed file {}", relativeFilePath);
                         }
                         mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
                         mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
