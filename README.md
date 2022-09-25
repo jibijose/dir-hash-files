@@ -1,7 +1,10 @@
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/jibijose/dir-hash-files?branch=master&svg=true)](https://ci.appveyor.com/project/jibijose/dir-hash-files) 
 
 # Introduction
-TODO
+I searched for a trustable windows/linux application to hash my files in a directory/drive and later (after weeks/months/years) check whether files are corrupted or not. I couldn't find any and then went on with writing one in java.  
+It also compares two/three sources and report misatches. Sources could be hash signature or directory or drive.  
+  
+Assuming you have two or three backups of your files in drives/directories, with the output you can easily figure out which file got corrupted and do the corrections manually. If I get time I will add one more mode to auto-sync files.  
 
 # Build setup
 
@@ -70,12 +73,12 @@ Compares left, center (optional) and right directory/drive/fileinfo. Hashing sho
 | right input  |  r   |   true    | Directory or Drive or fileinfo file  | Any directory or disk drive or fileinfo file |
 | output file  |  o   |   true    | xlsx file                            | Writable xlsx output hashstatus file         |
 ```
-/**************  two way comparison checks **********************/
+/**************  two way comparisons **********************/
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 
-/**************  three way comparison checks **********************/  
+/**************  three way comparisons **********************/  
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
@@ -92,12 +95,12 @@ Recompares left, center (optional) and right directory/drive/fileinfo starting w
 | hashstatus   |  f   |   true    | xlsx file                           | Readable xlsx input hashstatus file          |
 | output file  |  o   |   true    | xlsx file                           | Writable xlsx output hashstatus file         |
 ```
-/**************  two way comparison checks **********************/
+/**************  two way recomparisons **********************/
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p true -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 
-/**************  three way comparison checks **********************/  
+/**************  three way recomparisons **********************/  
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx 
@@ -112,6 +115,7 @@ java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p tru
 | 1        |      bug      |         behaviour when disk/drive not readable |
 | 1        |  functional   |                                    merge files |
 | 1        |  functional   |    create/recreate and compare/recompare merge |
+| 3        |  functional   |                          manual/auto sync mode |
 
 ### Usage  
 java -jar dirhashfiles-1.0.0-shaded.jar
