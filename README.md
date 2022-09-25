@@ -18,12 +18,12 @@ TODO
 
 ## Modes 
 
-| Mode      | description                                                                                   |
-|-----------|:----------------------------------------------------------------------------------------------|
-| create    | Create new fileInfo file from directory/drive                                                 |
-| recreate  | Create new fileInfo file from directory/drive and another fileinfo file                       |
-| compare   | Create new hashstatus file from directory(s)/drive(s)/fileinfo(s)                             |
-| recompare | Create new hashstatus file from directory(s)/drive(s)/fileinfo(s) and another hashstatus file |
+| Mode                    | description                                                                                   |
+|-------------------------|:----------------------------------------------------------------------------------------------|
+| [create](#create)       | Create new fileInfo file from directory/drive                                                 |
+| [recreate](#recreate)   | Create new fileInfo file from directory/drive and another fileinfo file                       |
+| [compare](#compare)     | Create new hashstatus file from directory(s)/drive(s)/fileinfo(s)                             |
+| [recompare](#recompare) | Create new hashstatus file from directory(s)/drive(s)/fileinfo(s) and another hashstatus file |
 
 ## Common parameters
 | parameter | flag | mandatory | values                                    | description                       |
