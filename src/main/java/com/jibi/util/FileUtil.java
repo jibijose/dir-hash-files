@@ -106,7 +106,7 @@ public class FileUtil {
     public static String getUserPasswordHidden(boolean passFlag, String filename) {
         String excelPassword = null;
         if (passFlag) {
-            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", filename));
+            excelPassword = getUserInputFilePassword(String.format("password for %s", filename));
         }
         return excelPassword;
     }

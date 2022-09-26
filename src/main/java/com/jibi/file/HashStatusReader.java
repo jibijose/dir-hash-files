@@ -43,7 +43,7 @@ public class HashStatusReader extends ExcelReader {
 
                 String excelPassword;
                 do {
-                    excelPassword = FileUtil.getUserInputFilePassword(format("password for %s", filename));
+                    excelPassword = FileUtil.getUserPasswordHidden(true, filename);
                 } while (!decryptor.verifyPassword(excelPassword));
                 log.info("Verified password for file {}", filename);
 
