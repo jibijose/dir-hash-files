@@ -1,10 +1,7 @@
 package com.jibi.file;
 
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +46,7 @@ public abstract class ExcelWriter {
 
         // Create a header row describing what the columns mean
         XSSFCellStyle topRowStyle = workbook.createCellStyle();
-        var fontTop = workbook.createFont();
+        XSSFFont fontTop = workbook.createFont();
         fontTop.setBold(true);
         topRowStyle.setFont(fontTop);
         topRowStyle.setAlignment(HorizontalAlignment.CENTER);

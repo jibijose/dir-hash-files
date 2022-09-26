@@ -8,11 +8,13 @@ import com.jibi.vo.FileInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,7 +47,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
 
             // Create a header row describing what the columns mean
             CellStyle topRowStyle = workbook.createCellStyle();
-            var fontTop = workbook.createFont();
+            XSSFFont fontTop = workbook.createFont();
             fontTop.setBold(true);
             topRowStyle.setFont(fontTop);
             topRowStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -54,11 +56,11 @@ public class FileInfoExcelWriter extends ExcelWriter {
             topRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
             CellStyle dataRowStyle = workbook.createCellStyle();
-            var fontData = workbook.createFont();
+            XSSFFont fontData = workbook.createFont();
             dataRowStyle.setFont(fontData);
 
             XSSFRow headerRow = sheet.createRow(0);
-            addStringCells(headerRow, List.of(algoValue, "Size", "Date Modified", "File Name"), cellStyles.get(TOPROWSTYLE));
+            addStringCells(headerRow, Arrays.asList(algoValue, "Size", "Date Modified", "File Name"), cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
