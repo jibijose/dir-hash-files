@@ -3,6 +3,7 @@ package com.jibi.util;
 import com.jibi.file.ExcelPasswordProtection;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Console;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -106,7 +107,12 @@ public class FileUtil {
     public static String getUserPasswordHidden(boolean passFlag, String filename) {
         String excelPassword = null;
         if (passFlag) {
-            excelPassword = getUserInputFilePassword(String.format("password for %s", filename));
+            if (System.console() == null) {
+                excelPassword = getUserInputFilePassword(String.format("password for %s", filename));
+            } else {
+                System.out.print(String.format("password for %s : ", filename));
+                excelPassword = new String(System.console().readPassword());
+            }
         }
         return excelPassword;
     }
