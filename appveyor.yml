@@ -3,6 +3,7 @@
 #      general configuration      #
 #---------------------------------#
 version: '{build}'
+image: Visual Studio 2022
 skip_tags: true
 max_jobs: 1
 #---------------------------------#
