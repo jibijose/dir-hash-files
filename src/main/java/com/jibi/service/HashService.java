@@ -10,9 +10,11 @@ import static com.jibi.util.FileUtil.INSYNC;
 import static com.jibi.util.FileUtil.NOTSYNCED;
 import static com.jibi.util.FileUtil.PAD_MARK;
 import static com.jibi.util.FileUtil.isValidFileExcel;
-import static com.jibi.util.FileUtil.isValidFileExcelName;
 import static com.jibi.util.FileUtil.isValidDirectoryOrDrive;
-import static com.jibi.util.FileUtil.isValidFileOrDriectoryOrDrive;
+import static com.jibi.util.ValidationUtil.validateCreateHash;
+import static com.jibi.util.ValidationUtil.validateRecreateHash;
+import static com.jibi.util.ValidationUtil.validateCompareHash;
+import static com.jibi.util.ValidationUtil.validateRecompareHash;
 
 import com.jibi.common.Algorithm;
 import com.jibi.common.HashOperation;
@@ -22,7 +24,6 @@ import com.jibi.file.*;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.*;
@@ -30,7 +31,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
 @Slf4j
@@ -55,7 +55,7 @@ public class HashService {
 
     public void startRecreate(boolean passFlag, String hashAlgoValue, String dirValue, String inFileValue, String outFileValue) {
         dirValue = FileUtil.adjustDirectoryOrDrive(dirValue);
-        validateRecreateHash(dirValue, inFileValue, outFileValue);
+        validateRecreateHash(hashAlgoValue, dirValue, inFileValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         String excelPassword = null;
         if (passFlag) {
@@ -494,59 +494,4 @@ public class HashService {
             hashStatusMap.put(filename, hashStatusThree);
         }
     }
-
-    private void commonValidation(String hashAlgoValue, String outFileValue) {
-        if (!StringUtils.isEmpty(hashAlgoValue) && !Algorithm.isValidAlgo(hashAlgoValue)) {
-            throw new RuntimeException(format("incorrect hash algo parameter %s Supported algorithms [MD2, MD5, SHA, SHA224, SHA256, SHA384, SHA512]", hashAlgoValue));
-        }
-        if (!isValidFileExcelName(outFileValue)) {
-            throw new RuntimeException("Out file excel not correct");
-        }
-        if (!FileUtil.ifFileWritable(outFileValue)) {
-            throw new RuntimeException("Out file excel not writable");
-        }
-    }
-
-    private void validateCreateHash(String hashAlgoValue, String inDirValue, String outFileValue) {
-        commonValidation(hashAlgoValue, outFileValue);
-        if (!isValidDirectoryOrDrive(inDirValue)) {
-            throw new RuntimeException("In dir/drive value not correct");
-        }
-    }
-
-    private void validateRecreateHash(String inDirValue, String inFileValue, String outFileValue) {
-
-    }
-
-    private void validateCompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
-        commonValidation(hashAlgoValue, outFileValue);
-
-        if (!isValidFileOrDriectoryOrDrive(leftSideValue)) {
-            throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));
-        }
-
-        if (centerSideValue != null && !isValidFileOrDriectoryOrDrive(centerSideValue)) {
-            throw new RuntimeException(format("incorrect center side dir/drive/file.xlsx parameter %s", centerSideValue));
-        }
-
-        if (!isValidFileOrDriectoryOrDrive(rightSideValue)) {
-            throw new RuntimeException(format("incorrect right side dir/drive/file.xlsx parameter %s", rightSideValue));
-        }
-    }
-
-    private void validateRecompareHash(String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String inFileValue, String outFileValue) {
-        commonValidation(hashAlgoValue, outFileValue);
-        if (!isValidFileOrDriectoryOrDrive(leftSideValue)) {
-            throw new RuntimeException(format("incorrect left side dir/drive/file.xlsx parameter %s", leftSideValue));
-        }
-
-        if (centerSideValue != null && !isValidFileOrDriectoryOrDrive(centerSideValue)) {
-            throw new RuntimeException(format("incorrect center side dir/drive/file.xlsx parameter %s", centerSideValue));
-        }
-
-        if (!isValidFileOrDriectoryOrDrive(rightSideValue)) {
-            throw new RuntimeException(format("incorrect right side dir/drive/file.xlsx parameter %s", rightSideValue));
-        }
-    }
-
 }
