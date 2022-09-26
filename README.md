@@ -9,15 +9,28 @@ Assuming you have two or three backups of your files in drives/directories, with
 # Build setup
 
 ## Requirements
-| Software      | Version  |        Verify |                                            Comments |
-|---------------|:--------:|--------------:|----------------------------------------------------:|
-| java          |    11    | java -version | Shoud work with java 8 by downgrading it in pom.xml |
+| Software      | Version |        Verify |               Comments |
+|---------------|:-------:|--------------:|-----------------------:|
+| java          |   8+    | java -version | Any version 8 or above |
 
 ## Build locally
-`
+```
 ./mvnw clean package
-`
+```
+Runnable jar target\dirhashfiles-1.0.0-shaded.jar is created.  
+
 # Usage
+java -jar target\dirhashfiles-1.0.0-shaded.jar
+
+-m,--mode <arg>         Operation mode, mandatory [create|recreate|compare|recompare]  
+-p,--passFlag <arg>     Password mode, mandatory [true|false]  
+-h,--hashalgo <arg>     Hash algorithm, optional [MD2|MD5|SHA|SHA224|SHA256|SHA384|SHA512]  
+-i,--indir <arg>        In drive/dir, mandatory for createhash mode  
+-l,--leftside <arg>     Left side, mandatory for comparehash mode  
+-c,--centerside <arg>   Center side, optional for comparehash mode  
+-r,--rightside <arg>    Right side, mandatory for comparehash mode  
+-f,--infile <arg>       In file xlsx, mandatory for recreate and recompare modes  
+-o,--outfile <arg>      Hash output file, mandatory outfile xlsx file name
 
 ## Modes 
 
@@ -146,25 +159,13 @@ java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p tru
 ```
 
 # TODO
-| Priority |     Type      |                                    Description |
-|----------|:-------------:|-----------------------------------------------:|
-| 2        |  functional   | file names should contain markers and datetime |
-| 2        |  automation   |                            Auto script samples |
-| 1        | documentation |                                 readme updates |
-| 1        |      bug      |         behaviour when disk/drive not readable |
-| 1        |  functional   |                                    merge files |
-| 1        |  functional   |    create/recreate and compare/recompare merge |
-| 3        |  functional   |                          manual/auto sync mode |
-
-### Usage  
-java -jar dirhashfiles-1.0.0-shaded.jar
-
--m,--mode <arg>         Operation mode, mandatory [create|recreate|compare|recompare]  
--p,--passFlag <arg>     Operation mode, mandatory [true|false]  
--h,--hashalgo <arg>     Hash algorithm, optional [MD2|MD5|SHA|SHA224|SHA256|SHA384|SHA512]  
--i,--indir <arg>        In drive/dir, mandatory for createhash mode  
--l,--leftside <arg>     Left side, mandatory for comparehash mode  
--c,--centerside <arg>   Center side, optional for comparehash mode  
--r,--rightside <arg>    Right side, mandatory for comparehash mode  
--f,--infile <arg>       In file xlsx, mandatory for recreate and recompare modes  
--o,--outfile <arg>      Hash output file, mandatory outfile xlsx file name  
+| Priority | Type          | Description                                    |
+|----------|:--------------|------------------------------------------------|
+| 1        | documentation | readme updates                                 |
+| 1        | bug           | behaviour when disk/drive not readable         |
+| 1        | functional    | merge files                                    |
+| 1        | functional    | create/recreate and compare/recompare merge    |
+| 2        | functional    | file names should contain markers and datetime |
+| 2        | automation    | Auto script samples                            |
+| 3        | functional    | manual/auto sync mode                          |
+ 
