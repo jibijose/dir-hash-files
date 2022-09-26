@@ -225,51 +225,8 @@ public class HashService {
     }
 
     public Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir) {
-        log.debug("************************************************************************************************************************");
-        Collection<File> files = FileUtil.getFiles(dir);
-        long totalFiles = files.size();
-        long totalFileSize = files.stream().mapToLong(File::length).sum();
-        log.info("Got {} files of total size {} to process", formatCommasInNumber(totalFiles), formatCommasInNumber(totalFileSize));
-        AtomicLong processedFiles = new AtomicLong(0);
-        AtomicLong processedFileSize = new AtomicLong(0);
-
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        MappingStatusPrint mappingStatusPrint = new MappingStatusPrint(countDownLatch, totalFiles, totalFileSize);
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.submit(mappingStatusPrint);
-
-        Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
-        String dirValuePrefix = FileUtil.getDirValuePrefix(dir);
-
-        try {
-            FileOperationPool fileOperationPool = new FileOperationPool();
-            HashOperation hashOperation = new HashOperation(algoSelected);
-            fileOperationPool.submit(
-                    () -> files.parallelStream().forEach(file -> {
-                        String fileHash = hashOperation.getFileChecksum(file);
-                        String relativeFilePath = FileUtil.getFileRelativePath(file, dirValuePrefix);
-                        FileInfo fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
-                        listFileInfos.add(fileInfo);
-                        mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
-                        mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
-                        log.trace("Hashed file {}", fileInfo.getFilename());
-                    })).get();
-        } catch (InterruptedException interruptedException) {
-            log.warn("Interrupted exception", interruptedException);
-        } catch (ExecutionException executionException) {
-            log.warn("Execution exception", executionException);
-        }
-
-        try {
-            countDownLatch.await();
-            executorService.shutdownNow();
-            executorService.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException interruptedException) {
-            log.warn("Interuppted countdownwatch", interruptedException);
-        }
-
-        log.info("Mapped {} file hashes out of {} files", listFileInfos.size(), totalFiles);
-        return listFileInfos;
+        Map<String, FileInfo> mapExistingFileInfos = Collections.EMPTY_MAP;
+        return mapDirFilesInternal(algoSelected, dir, mapExistingFileInfos);
     }
 
     public Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir, String inFileInfo) {
@@ -278,7 +235,21 @@ public class HashService {
         Map<String, FileInfo> mapExistingFileInfos = listExistingFileInfos.stream().collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(), fileInfo -> fileInfo));
         long existingFileSize = mapExistingFileInfos.keySet().stream().mapToLong(filename -> mapExistingFileInfos.get(filename).getSize()).sum();
         log.info("Input fileinfo has {} files with total size {}", formatCommasInNumber(mapExistingFileInfos.size()), formatCommasInNumber(existingFileSize));
+        return mapDirFilesInternal(algoSelected, dir, mapExistingFileInfos);
+    }
 
+    public Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir, Map<String, OneSide> mapExistingOneSide) {
+        Map<String, FileInfo> mapExistingFileInfos = mapExistingOneSide.keySet().stream()
+                .collect(Collectors.toMap(filename -> filename, filename -> {
+                    OneSide oneSide = mapExistingOneSide.get(filename);
+                    return new FileInfo(filename, oneSide.getSize(), oneSide.getHash(), oneSide.getLastModified());
+                }));
+        long existingFileSize = mapExistingFileInfos.keySet().stream().mapToLong(filename -> mapExistingFileInfos.get(filename).getSize()).sum();
+        log.info("Input fileinfo has {} files with total size {}", formatCommasInNumber(mapExistingFileInfos.size()), formatCommasInNumber(existingFileSize));
+        return mapDirFilesInternal(algoSelected, dir, mapExistingFileInfos);
+    }
+
+    private Collection<FileInfo> mapDirFilesInternal(Algorithm algoSelected, String dir, Map<String, FileInfo> mapExistingFileInfos) {
         log.debug("************************************************************************************************************************");
         Collection<File> files = FileUtil.getFiles(dir);
         long totalFiles = files.size();
@@ -305,67 +276,6 @@ public class HashService {
                         if (mapExistingFileInfos.containsKey(relativeFilePath)
                                 && file.length() == mapExistingFileInfos.get(relativeFilePath).getSize()
                                 && file.lastModified() == mapExistingFileInfos.get(relativeFilePath).getLastModified().getTime()) {
-                            fileInfo = mapExistingFileInfos.get(relativeFilePath);
-                            listFileInfos.add(fileInfo);
-                            log.trace("Copied hash of file {}", relativeFilePath);
-                        } else {
-                            String fileHash = hashOperation.getFileChecksum(file);
-                            fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
-                            listFileInfos.add(fileInfo);
-                            log.debug("Hashed file {}", relativeFilePath);
-                        }
-                        mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
-                        mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
-                    })).get();
-        } catch (InterruptedException interruptedException) {
-            log.warn("Interrupted exception", interruptedException);
-        } catch (ExecutionException executionException) {
-            log.warn("Execution exception", executionException);
-        }
-
-        try {
-            countDownLatch.await();
-            executorService.shutdownNow();
-            executorService.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException interruptedException) {
-            log.warn("Interuppted countdownwatch", interruptedException);
-        }
-
-        log.info("Mapped {} file hashes out of {} files", listFileInfos.size(), totalFiles);
-        return listFileInfos;
-    }
-
-    private Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir, Map<String, OneSide> mapExistingOneSide) {
-        Map<String, FileInfo> mapExistingFileInfos = mapExistingOneSide.keySet().stream()
-                .collect(Collectors.toMap(filename -> filename, filename -> {
-                    OneSide oneSide = mapExistingOneSide.get(filename);
-                    return new FileInfo(filename, oneSide.getSize(), oneSide.getHash(), oneSide.getLastModified());
-                }));
-
-        log.debug("************************************************************************************************************************");
-        Collection<File> files = FileUtil.getFiles(dir);
-        long totalFiles = files.size();
-        long totalFileSize = files.stream().mapToLong(File::length).sum();
-        log.info("Got {} files of total size {} to process", formatCommasInNumber(totalFiles), formatCommasInNumber(totalFileSize));
-        AtomicLong processedFiles = new AtomicLong(0);
-        AtomicLong processedFileSize = new AtomicLong(0);
-
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        MappingStatusPrint mappingStatusPrint = new MappingStatusPrint(countDownLatch, totalFiles, totalFileSize);
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.submit(mappingStatusPrint);
-
-        Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
-        String dirValuePrefix = (dir + "\\").replaceAll("\\\\", "\\\\\\\\");
-
-        try {
-            FileOperationPool fileOperationPool = new FileOperationPool();
-            HashOperation hashOperation = new HashOperation(algoSelected);
-            fileOperationPool.submit(
-                    () -> files.parallelStream().forEach(file -> {
-                        String relativeFilePath = file.toString().replaceFirst(dirValuePrefix, "");
-                        FileInfo fileInfo;
-                        if (mapExistingFileInfos.containsKey(relativeFilePath)) {
                             fileInfo = mapExistingFileInfos.get(relativeFilePath);
                             listFileInfos.add(fileInfo);
                             log.trace("Copied hash of file {}", relativeFilePath);

@@ -7,6 +7,7 @@ import com.jibi.common.Algorithm;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.FileInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.poifs.crypt.Decryptor;
 import org.apache.poi.poifs.crypt.EncryptionInfo;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
@@ -32,6 +33,9 @@ public class FileInfoExcelReader extends ExcelReader {
     }
 
     public Collection<FileInfo> readExcel(Algorithm algoSelected) {
+        if (filename == null || StringUtils.isEmpty(filename)) {
+            return Collections.EMPTY_LIST;
+        }
         Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
         InputStream fileStream = null;
         try {
