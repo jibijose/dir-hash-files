@@ -44,7 +44,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
             setCellStyles(workbook);
 
             XSSFRow headerRow = sheet.createRow(0);
-            addStringCells(headerRow, List.of("Status", "Left", "Center", "Right",
+            addStringCells(headerRow, Arrays.asList("Status", "Left", "Center", "Right",
                     "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
                     "Center-Hash (" + algoValue + ")", "Center-Size", "Center-Modified",
                     "Right-Hash (" + algoValue + ")", "Right-Size", "Right-Modified",

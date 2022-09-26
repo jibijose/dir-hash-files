@@ -13,6 +13,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.io.FileOutputStream;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,7 +43,7 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
             setCellStyles(workbook);
 
             XSSFRow headerRow = sheet.createRow(0);
-            addStringCells(headerRow, List.of("Status", "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
+            addStringCells(headerRow, Arrays.asList("Status", "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
                     "Right-Hash (" + algoValue + ")", "Right-Size", "Right-Modified", "filename"), cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
