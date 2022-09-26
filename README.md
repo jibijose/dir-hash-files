@@ -9,9 +9,9 @@ Assuming you have two or three backups of your files in drives/directories, with
 # Build setup
 
 ## Requirements
-| Software      | Version |        Verify |               Comments |
-|---------------|:-------:|--------------:|-----------------------:|
-| java          |   8+    | java -version | Any version 8 or above |
+| Software      | Version |        Verify |                                               Comments |
+|---------------|:-------:|--------------:|-------------------------------------------------------:|
+| java          |   8+    | java -version | Any version 8 or above<br/>Check appveyor build status |
 
 ## Build locally
 ```
