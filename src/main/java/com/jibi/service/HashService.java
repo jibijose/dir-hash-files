@@ -40,10 +40,8 @@ public class HashService {
         dirValue = FileUtil.adjustDirectoryOrDrive(dirValue);
         validateCreateHash(hashAlgoValue, dirValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
-        String excelPassword = null;
-        if (passFlag) {
-            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
-        }
+        String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
+
         try {
             Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
@@ -57,10 +55,8 @@ public class HashService {
         dirValue = FileUtil.adjustDirectoryOrDrive(dirValue);
         validateRecreateHash(hashAlgoValue, dirValue, inFileValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
-        String excelPassword = null;
-        if (passFlag) {
-            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
-        }
+        String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
+
         try {
             Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue, inFileValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
@@ -76,10 +72,8 @@ public class HashService {
         rightSideValue = FileUtil.adjustDirectoryOrDrive(rightSideValue);
         validateCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
-        String excelPassword = null;
-        if (passFlag) {
-            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
-        }
+        String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
+
         try {
             Collection<FileInfo> listFileInfosLeft = null;
             if (isValidDirectoryOrDrive(leftSideValue)) {
@@ -136,10 +130,7 @@ public class HashService {
         rightSideValue = FileUtil.adjustDirectoryOrDrive(rightSideValue);
         validateRecompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, inFileValue, outFileValue);
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
-        String excelPassword = null;
-        if (passFlag) {
-            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", outFileValue));
-        }
+        String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
 
         HashStatusReader hashStatusReader = new HashStatusReader(inFileValue);
         Collection<HashStatus> listExistingHashStatus = hashStatusReader.readExcel(algoSelected);

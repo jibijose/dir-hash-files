@@ -103,7 +103,15 @@ public class FileUtil {
         return false;
     }
 
-    public static String getUserInputFilePassword(String message) {
+    public static String getUserPasswordHidden(boolean passFlag, String filename) {
+        String excelPassword = null;
+        if (passFlag) {
+            excelPassword = FileUtil.getUserInputFilePassword(String.format("password for %s", filename));
+        }
+        return excelPassword;
+    }
+
+    private static String getUserInputFilePassword(String message) {
         Scanner scanner = new Scanner(System.in);
         System.out.print(format("Enter %s : ", message));
         return scanner.nextLine();
