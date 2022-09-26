@@ -46,12 +46,15 @@ Creates signature of all files in a directory or drive. Hashing and setting outp
 | output    |  o   |   true    | xlsx file          | Writable xlsx output fileinfo file |
 
 ```
+############ create fileinfo file without hash or password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx
 ```
 ```
+############ create fileinfo file with hash and without password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
 ```
 ```
+############ create fileinfo file with hash and password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p true -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx
 ```
 
@@ -64,6 +67,7 @@ Recreates signature of all files starting with a base file xlsx file. Hashing as
 | fileinfo    |  f   |   true    | xlsx file          | Readable xlsx input fileinfo file  |
 | output file |  o   |   true    | xlsx file          | Writable xlsx output fileinfo file |
 ``` 
+############ recreate fileinfo file with hash and without password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m recreate -p false -h MD5 -i ".\src\test\resources\testfiles\leftdir" -f "fileinfo.xlsx" -o "fileinfonew.xlsx"
 ```
 
@@ -77,25 +81,29 @@ Compares left, center (optional) and right directory/drive/fileinfo. Hashing sho
 | right input  |  r   |   true    | Directory or Drive or fileinfo file  | Any directory or disk drive or fileinfo file |
 | output file  |  o   |   true    | xlsx file                            | Writable xlsx output hashstatus file         |
 
-/**************  two way comparisons **********************/  
 ```
+############ two way comparison without hash or password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 ```
 ```
+############ two way comparison with hash and without password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 ```
 ```
+############ two way comparison with hash and password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 ```
-
-/**************  three way comparisons **********************/  
+<br></br>
 ```
+############ three way comparison without hash or password ###########################
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 ```
 ```
+############ three way comparison with hash and without password ###########################
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 ```
 ```
+############ three way comparison with hash and password ###########################
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 ```
 
@@ -112,23 +120,28 @@ Recompares left, center (optional) and right directory/drive/fileinfo starting w
 
 /**************  two way recomparisons **********************/  
 ```
+############ two way recomparison without hash or password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 ```
 ```
+############ two way recomparison with hash and without password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 ```
 ```
+############ two way recomparison with hash and password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p true -h MD5 -l "fileinfo.xlsx" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 ```
-
-/**************  three way recomparisons **********************/  
+<br></br>
 ```
+############ three way recomparison without hash or password ###########################
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 ```
 ```
+############ three way recomparison with hash and without password ###########################
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p false -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx  
 ```
 ```
+############ three way recomparison with hash and password ###########################
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx 
 ```
 
