@@ -20,6 +20,10 @@ public class ValidationUtilTest {
     private static String INCORRECT_OUT_FILE_2 = "C:\\fileinfoxlsx";
     private static String INCORRECT_OUT_FILE_3 = "C:\\";
 
+    private static String CORRECT_OUT_FILE_NEW = "C:\\fileinfonew.xlsx";
+
+    private static String CORRECT_IN_DIR = "C:\\";
+
     @Before
     public void setup() {
         PowerMockito.mockStatic(ValidationUtil.class);
@@ -28,7 +32,8 @@ public class ValidationUtilTest {
 
     @Test
     public void test_validations_success() throws IOException {
-        assertDoesNotThrow(() -> ValidationUtil.validateCreateHash("MD5", "C:\\", CORRECT_OUT_FILE));
+        assertDoesNotThrow(() -> ValidationUtil.validateCreateHash("MD5", CORRECT_IN_DIR, CORRECT_OUT_FILE));
+        assertDoesNotThrow(() -> ValidationUtil.validateRecreateHash("MD5", CORRECT_IN_DIR, CORRECT_OUT_FILE, CORRECT_OUT_FILE_NEW));
     }
 
 }
