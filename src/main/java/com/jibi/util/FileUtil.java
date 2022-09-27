@@ -3,7 +3,6 @@ package com.jibi.util;
 import com.jibi.file.ExcelPasswordProtection;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Console;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -86,18 +85,16 @@ public class FileUtil {
                 return false;
             }
         } else if (SystemUtil.isUnixSystem()) {
-
+            if (directory.indexOf('\\') >= 0) {
+                log.warn("Unix directory/drive should have back slashes");
+                return false;
+            }
         }
         try {
             File file = new File(directory);
             if (file.exists() && file.isDirectory()) {
                 return true;
             }
-            /*for (File fileDrive : File.listRoots()) {
-                if (fileDrive.equals(file)) {
-                    return true;
-                }
-            }*/
         } catch (Exception exception) {
             log.warn("Not able to get file directory/drive {}", directory);
         }
