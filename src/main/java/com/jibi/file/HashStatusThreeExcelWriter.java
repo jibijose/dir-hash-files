@@ -10,8 +10,6 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,11 +42,12 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
             setCellStyles(workbook);
 
             XSSFRow headerRow = sheet.createRow(0);
-            addStringCells(headerRow, Arrays.asList("Status", "Left", "Center", "Right",
+            List<String> rowHeaders = Arrays.asList("Status", "Left", "Center", "Right",
                     "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
                     "Center-Hash (" + algoValue + ")", "Center-Size", "Center-Modified",
                     "Right-Hash (" + algoValue + ")", "Right-Size", "Right-Modified",
-                    "filename"), cellStyles.get(TOPROWSTYLE));
+                    "filename");
+            addStringCells(headerRow, rowHeaders, cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
@@ -61,13 +60,14 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
             });
             sheet.setColumnWidth(13, ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)) * 256);
             log.info("HashStatus filename column width adjusted to {}", ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)));
-            sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
-            Files.isWritable(Paths.get(filename));
-            FileOutputStream fileStream = new FileOutputStream(filename);
-            workbook.write(fileStream);
+            sheet.setAutoFilter(new CellRangeAddress(0, rowIndex.get() - 1, 0, rowHeaders.size() - 1));
+            FileOutputStream fileOutputStream = new FileOutputStream(filename);
+            workbook.write(fileOutputStream);
             if (excelPassword != null) {
                 FileUtil.setExcelPassword(filename, excelPassword);
             }
+            fileOutputStream.close();
+            workbook.close();
         } catch (Exception exception) {
             exception.printStackTrace();
         }

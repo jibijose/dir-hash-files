@@ -10,11 +10,11 @@ import com.jibi.vo.HashStatusTwo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.io.FileOutputStream;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -41,17 +41,22 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
             workbook.setCompressTempFiles(true);
 
             Sheet sheet = workbook.createSheet("HashStatus");
+            ((SXSSFSheet) sheet).setRandomAccessWindowSize(100);
             sheet.createFreezePane(0, 1);
 
             setSheetWidths(sheet, algoLength);
             setCellStyles(workbook);
 
             Row headerRow = sheet.createRow(0);
-            addStringCells(headerRow, Arrays.asList("Status", "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
-                    "Right-Hash (" + algoValue + ")", "Right-Size", "Right-Modified", "filename"), cellStyles.get(TOPROWSTYLE));
+            List<String> rowHeaders = Arrays.asList("Status",
+                    "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
+                    "Right-Hash (" + algoValue + ")", "Right-Size", "Right-Modified", "filename");
+            addStringCells(headerRow, rowHeaders, cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
+
+
             sortedHashStatusMap.keySet().stream().forEach(hashStatus -> {
                 Row dataRow = sheet.createRow(rowIndex.getAndIncrement());
                 addDataCells(dataRow, sortedHashStatusMap.get(hashStatus));
@@ -61,13 +66,14 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
             });
             sheet.setColumnWidth(7, ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)) * 256);
             log.info("HashStatus filename column width adjusted to {}", ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)));
-            sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
-
-            FileOutputStream fileStream = new FileOutputStream(filename);
-            workbook.write(fileStream);
+            sheet.setAutoFilter(new CellRangeAddress(0, rowIndex.get() - 1, 0, rowHeaders.size() - 1));
+            FileOutputStream fileOutputStream = new FileOutputStream(filename);
+            workbook.write(fileOutputStream);
             if (excelPassword != null) {
                 FileUtil.setExcelPassword(filename, excelPassword);
             }
+            fileOutputStream.close();
+            workbook.close();
         } catch (Exception exception) {
             exception.printStackTrace();
         }

@@ -60,7 +60,8 @@ public class FileInfoExcelWriter extends ExcelWriter {
             dataRowStyle.setFont(fontData);
 
             XSSFRow headerRow = sheet.createRow(0);
-            addStringCells(headerRow, Arrays.asList(algoValue, "Size", "Date Modified", "File Name"), cellStyles.get(TOPROWSTYLE));
+            List<String> rowHeaders = Arrays.asList(algoValue, "Size", "Date Modified", "File Name");
+            addStringCells(headerRow, rowHeaders, cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
@@ -73,7 +74,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
             });
             sheet.setColumnWidth(3, ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)) * 256);
             log.info("Fileinfo filename column width adjusted to {}", ((requiredFileNameWidth.get() + 3) > 255 ? 255 : (requiredFileNameWidth.get() + 3)));
-            sheet.setAutoFilter(new CellRangeAddress(0, sheet.getLastRowNum(), 0, sheet.getRow(0).getLastCellNum()));
+            sheet.setAutoFilter(new CellRangeAddress(0, rowIndex.get() - 1, 0, rowHeaders.size() - 1));
 
             FileOutputStream fileOutputStream = new FileOutputStream(filename);
             workbook.write(fileOutputStream);
@@ -81,6 +82,8 @@ public class FileInfoExcelWriter extends ExcelWriter {
             if (excelPassword != null) {
                 FileUtil.setExcelPassword(filename, excelPassword);
             }
+            fileOutputStream.close();
+            workbook.close();
         } catch (Exception exception) {
             log.error("Excel writing error for file {}", filename, exception);
         }
