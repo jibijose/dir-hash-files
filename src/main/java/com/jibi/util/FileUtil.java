@@ -177,11 +177,13 @@ public class FileUtil {
         }
         for (File element : files) {
             if (element.isDirectory() && !Files.isSymbolicLink(element.toPath())) {
-                if (!isTempFile(element.getPath())) {
+                if (!isTempDirectory(element.getPath())) {
                     fileList.addAll(getFiles(element.getPath()));
                 }
             } else if (Files.isRegularFile(element.toPath()) && !Files.isSymbolicLink(element.toPath())) {
-                fileList.add(element);
+                if (!isTempFile(element.getPath())) {
+                    fileList.add(element);
+                }
             } else {
                 log.trace("Not Dir/File {} ", element.toString());
             }
@@ -198,7 +200,7 @@ public class FileUtil {
         }
     }
 
-    public static boolean isTempFile(String filename) {
+    public static boolean isTempDirectory(String filename) {
         boolean fileTempStatus = false;
         String upperFileName = filename.toUpperCase();
         if (SystemUtil.isWindowsSystem()) {
@@ -208,7 +210,25 @@ public class FileUtil {
                 fileTempStatus = true;
             }
         } else if (SystemUtil.isUnixSystem()) {
-            
+            if (upperFileName.matches("\\/SYS\\/KERNEL")) {
+                fileTempStatus = true;
+            } else if (upperFileName.matches("\\/PROC")) {
+                fileTempStatus = true;
+            }
+        }
+        if (fileTempStatus) {
+            log.info("Temp file/directory {}", filename);
+        }
+        return fileTempStatus;
+    }
+
+    public static boolean isTempFile(String filename) {
+        boolean fileTempStatus = false;
+        String upperFileName = filename.toUpperCase();
+        if (SystemUtil.isWindowsSystem()) {
+
+        } else if (SystemUtil.isUnixSystem()) {
+
         }
         if (fileTempStatus) {
             log.info("Temp file/directory {}", filename);
