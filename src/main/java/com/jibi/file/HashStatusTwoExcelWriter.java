@@ -10,6 +10,7 @@ import com.jibi.vo.HashStatusTwo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.io.FileOutputStream;
@@ -35,21 +36,24 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         sortedHashStatusMap.putAll(hashStatusMap);
 
         try {
-            XSSFWorkbook workbook = new XSSFWorkbook();
-            XSSFSheet sheet = workbook.createSheet("HashStatus");
+            XSSFWorkbook workbookTemplate = new XSSFWorkbook();
+            SXSSFWorkbook workbook = new SXSSFWorkbook(workbookTemplate);
+            workbook.setCompressTempFiles(true);
+
+            Sheet sheet = workbook.createSheet("HashStatus");
             sheet.createFreezePane(0, 1);
 
             setSheetWidths(sheet, algoLength);
             setCellStyles(workbook);
 
-            XSSFRow headerRow = sheet.createRow(0);
+            Row headerRow = sheet.createRow(0);
             addStringCells(headerRow, Arrays.asList("Status", "Left-Hash (" + algoValue + ")", "Left-Size", "Left-Modified",
                     "Right-Hash (" + algoValue + ")", "Right-Size", "Right-Modified", "filename"), cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
             sortedHashStatusMap.keySet().stream().forEach(hashStatus -> {
-                XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
+                Row dataRow = sheet.createRow(rowIndex.getAndIncrement());
                 addDataCells(dataRow, sortedHashStatusMap.get(hashStatus));
                 if (sortedHashStatusMap.get(hashStatus).getFilename().length() > requiredFileNameWidth.get()) {
                     requiredFileNameWidth.set(sortedHashStatusMap.get(hashStatus).getFilename().length());
