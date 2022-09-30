@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -175,12 +176,14 @@ public class FileUtil {
             return Collections.EMPTY_LIST;
         }
         for (File element : files) {
-            if (element.isDirectory()) {
+            if (element.isDirectory() && !Files.isSymbolicLink(element.toPath())) {
                 if (!isTempFile(element.getPath())) {
                     fileList.addAll(getFiles(element.getPath()));
                 }
-            } else {
+            } else if (Files.isRegularFile(element.toPath()) && !Files.isSymbolicLink(element.toPath())) {
                 fileList.add(element);
+            } else {
+                log.trace("Not Dir/File {} ", element.toString());
             }
         }
         return fileList;
@@ -204,6 +207,8 @@ public class FileUtil {
             } else if (upperFileName.matches(".:\\\\SYSTEM VOLUME INFORMATION")) {
                 fileTempStatus = true;
             }
+        } else if (SystemUtil.isUnixSystem()) {
+            
         }
         if (fileTempStatus) {
             log.info("Temp file/directory {}", filename);
