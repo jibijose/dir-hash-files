@@ -2,38 +2,27 @@ package com.jibi.util;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
-@PrepareForTest(ValidationUtil.class)
-@RunWith(PowerMockRunner.class)
 public class ValidationUtilTest {
 
-    private static String CORRECT_OUT_FILE = "C:\\fileinfo.xlsx";
-    private static String INCORRECT_OUT_FILE_1 = "C:\\fileinfo.xls";
-    private static String INCORRECT_OUT_FILE_2 = "C:\\fileinfoxlsx";
-    private static String INCORRECT_OUT_FILE_3 = "C:\\";
+    private static String UNIX_TEMP = "/tmp";
+    private static String WINDOWS_TEMP = System.getProperty("java.io.tmpdir");
+    private static String CORRECT_WINDOWS_OUT_FILE = "fileinfo.xlsx";
+    private static String CORRECT_WINDOWS_OUT_FILE_NEW = "fileinfonew.xlsx";
 
-    private static String CORRECT_OUT_FILE_NEW = "C:\\fileinfonew.xlsx";
-
-    private static String CORRECT_IN_DIR = "C:\\";
-
-    @Before
-    public void setup() {
-        PowerMockito.mockStatic(ValidationUtil.class);
-    }
-
+    private static String CORRECT_UNIX_OUT_FILE = "fileinfo.xlsx";
+    private static String CORRECT_UNIX_OUT_FILE_NEW = "fileinfonew.xlsx";
 
     @Test
-    public void test_validations_success() throws IOException {
-        assertDoesNotThrow(() -> ValidationUtil.validateCreateHash("MD5", CORRECT_IN_DIR, CORRECT_OUT_FILE));
-        assertDoesNotThrow(() -> ValidationUtil.validateRecreateHash("MD5", CORRECT_IN_DIR, CORRECT_OUT_FILE, CORRECT_OUT_FILE_NEW));
+    public void test_validations_success() {
+        if (SystemUtil.isWindowsSystem()) {
+            assertDoesNotThrow(() -> ValidationUtil.validateCreateHash("MD5", WINDOWS_TEMP, CORRECT_WINDOWS_OUT_FILE));
+            assertDoesNotThrow(() -> ValidationUtil.validateRecreateHash("MD5", WINDOWS_TEMP, CORRECT_WINDOWS_OUT_FILE, CORRECT_WINDOWS_OUT_FILE_NEW));
+        } else {
+            assertDoesNotThrow(() -> ValidationUtil.validateCreateHash("MD5", UNIX_TEMP, CORRECT_UNIX_OUT_FILE));
+            assertDoesNotThrow(() -> ValidationUtil.validateRecreateHash("MD5", UNIX_TEMP, CORRECT_UNIX_OUT_FILE, CORRECT_UNIX_OUT_FILE_NEW));
+        }
     }
 
 }
