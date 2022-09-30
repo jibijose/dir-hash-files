@@ -86,7 +86,7 @@ public class FileInfoExcelWriter extends ExcelWriter {
         }
     }
 
-    protected void setSheetWidths(XSSFSheet sheet, int algoLength) {
+    protected void setSheetWidths(Sheet sheet, int algoLength) {
         sheet.createFreezePane(0, 1);
         sheet.setColumnWidth(0, (algoLength + 3) * 256);
         sheet.setColumnWidth(1, 16 * 256);

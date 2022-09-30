@@ -73,7 +73,7 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         }
     }
 
-    protected void setSheetWidths(XSSFSheet sheet, int algoLength) {
+    protected void setSheetWidths(Sheet sheet, int algoLength) {
         sheet.setColumnWidth(0, 16 * 256);
         sheet.setColumnWidth(1, 16 * 256);
         sheet.setColumnWidth(2, 16 * 256);

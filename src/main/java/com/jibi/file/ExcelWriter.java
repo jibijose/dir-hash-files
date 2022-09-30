@@ -142,5 +142,5 @@ public abstract class ExcelWriter {
         this.cellStyles = cellStyles;
     }
 
-    protected abstract void setSheetWidths(XSSFSheet sheet, int algoLength);
+    protected abstract void setSheetWidths(Sheet sheet, int algoLength);
 }
