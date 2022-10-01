@@ -3,6 +3,9 @@ package com.jibi.util;
 import com.jibi.common.Algorithm;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static com.jibi.util.FileUtil.*;
 import static com.jibi.util.FileUtil.isValidFileOrDriectoryOrDrive;
 import static java.lang.String.format;
@@ -18,6 +21,19 @@ public class ValidationUtil {
         if (!FileUtil.ifFileWritable(outFileValue)) {
             throw new RuntimeException("Out file excel not writable");
         }
+    }
+
+    public static void validateMergeFiles(String hashAlgoValue, String files, String outFileValue) {
+        commonValidation(hashAlgoValue, outFileValue);
+        if (files == null || files.isEmpty()) {
+            throw new RuntimeException(String.format("Inavalid files %s", files));
+        }
+        List<String> listFiles = Arrays.asList(files.split(",", -1));
+        listFiles.stream().forEach(file -> {
+            if (!isValidFileExcelName(file)) {
+                throw new RuntimeException(String.format("File %s is not valid excel file", file));
+            }
+        });
     }
 
     public static void validateCreateHash(String hashAlgoValue, String inDirValue, String outFileValue) {

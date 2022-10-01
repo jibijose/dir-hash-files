@@ -3,7 +3,6 @@ package com.jibi;
 import static java.lang.String.format;
 
 import com.jibi.service.HashService;
-import com.jibi.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 
@@ -26,7 +25,10 @@ public class DirHashFilesApplication {
         String outFileValue = commandLine.getOptionValue("outfile");
 
         log.info("Started in {} mode", modeValue);
-        if ("create".equals(modeValue)) {
+        if ("merge".equals(modeValue)) {
+            String files = commandLine.getOptionValue("files");
+            hashService.startMerge(passFlag, hashAlgoValue, files, outFileValue);
+        } else if ("create".equals(modeValue)) {
             String inDirValue = commandLine.getOptionValue("indir");
             hashService.startCreate(passFlag, hashAlgoValue, inDirValue, outFileValue);
         } else if ("recreate".equals(modeValue)) {
@@ -59,6 +61,10 @@ public class DirHashFilesApplication {
         Option passFlag = new Option("p", "passFlag", true, "Password Flag");
         passFlag.setRequired(true);
         options.addOption(passFlag);
+
+        Option files = new Option("s", "files", true, "Files to merge");
+        files.setRequired(false);
+        options.addOption(files);
 
         Option inDir = new Option("i", "indir", true, "In drive/dir");
         inDir.setRequired(false);

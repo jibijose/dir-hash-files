@@ -11,6 +11,7 @@ import static com.jibi.util.FileUtil.NOTSYNCED;
 import static com.jibi.util.FileUtil.PAD_MARK;
 import static com.jibi.util.FileUtil.isValidFileExcel;
 import static com.jibi.util.FileUtil.isValidDirectoryOrDrive;
+import static com.jibi.util.ValidationUtil.validateMergeFiles;
 import static com.jibi.util.ValidationUtil.validateCreateHash;
 import static com.jibi.util.ValidationUtil.validateRecreateHash;
 import static com.jibi.util.ValidationUtil.validateCompareHash;
@@ -24,7 +25,6 @@ import com.jibi.file.*;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.time.StopWatch;
 
 import java.io.File;
 import java.util.*;
@@ -36,6 +36,10 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
 
 @Slf4j
 public class HashService {
+
+    public void startMerge(boolean passFlag, String hashAlgoValue, String files, String outFileValue) {
+        validateMergeFiles(hashAlgoValue, files, outFileValue);
+    }
 
     public void startCreate(boolean passFlag, String hashAlgoValue, String dirValue, String outFileValue) {
         dirValue = FileUtil.adjustDirectoryOrDrive(dirValue);
