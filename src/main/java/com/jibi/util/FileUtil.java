@@ -128,8 +128,11 @@ public class FileUtil {
     }
 
     public static String adjustDirectoryOrDrive(String directory) {
+        if (directory == null) {
+            return directory;
+        }
         String newDirectory = directory;
-        if (directory != null && SystemUtil.isWindowsSystem()) {
+        if (SystemUtil.isWindowsSystem()) {
             if (!directory.endsWith(":\\") && directory.endsWith("\\")) {
                 log.info("Directory {} ends with \\ in windows system, trimming end \\", directory);
                 newDirectory = directory.substring(0, directory.length() - 1);
@@ -138,7 +141,7 @@ public class FileUtil {
                 log.info("Directory {} ends with colon, appending \\ to it", directory);
                 newDirectory = directory + "\\";
             }
-        } else if (directory != null && SystemUtil.isUnixSystem()) {
+        } else if (SystemUtil.isUnixSystem()) {
             if (!directory.equals("/") && directory.endsWith("/")) {
                 log.info("Directory {} ends with / in unix system, trimming end /", directory);
                 newDirectory = directory.substring(0, directory.length() - 1);
@@ -146,6 +149,14 @@ public class FileUtil {
         }
         log.info("Directory {} adjusted to {}", directory, newDirectory);
         return newDirectory;
+    }
+
+    public static String replaceFileName(String filename) {
+        if (SystemUtil.isWindowsSystem()) {
+            return filename.replaceAll("/", "\\\\");
+        } else {
+            return filename.replaceAll("\\\\", "/");
+        }
     }
 
     public static String getDirValuePrefix(String dir) {
@@ -177,11 +188,13 @@ public class FileUtil {
         }
         for (File element : files) {
             if (element.isDirectory() && !Files.isSymbolicLink(element.toPath())) {
-                if (!isTempFile(element.getPath())) {
+                if (!isTempDirectory(element.getPath())) {
                     fileList.addAll(getFiles(element.getPath()));
                 }
             } else if (Files.isRegularFile(element.toPath()) && !Files.isSymbolicLink(element.toPath())) {
-                fileList.add(element);
+                if (!isTempFile(element.getPath())) {
+                    fileList.add(element);
+                }
             } else {
                 log.trace("Not Dir/File {} ", element.toString());
             }
@@ -198,7 +211,7 @@ public class FileUtil {
         }
     }
 
-    public static boolean isTempFile(String filename) {
+    public static boolean isTempDirectory(String filename) {
         boolean fileTempStatus = false;
         String upperFileName = filename.toUpperCase();
         if (SystemUtil.isWindowsSystem()) {
@@ -208,7 +221,25 @@ public class FileUtil {
                 fileTempStatus = true;
             }
         } else if (SystemUtil.isUnixSystem()) {
-            
+            if (upperFileName.matches("\\/SYS\\/KERNEL")) {
+                fileTempStatus = true;
+            } else if (upperFileName.matches("\\/PROC")) {
+                fileTempStatus = true;
+            }
+        }
+        if (fileTempStatus) {
+            log.info("Temp file/directory {}", filename);
+        }
+        return fileTempStatus;
+    }
+
+    public static boolean isTempFile(String filename) {
+        boolean fileTempStatus = false;
+        String upperFileName = filename.toUpperCase();
+        if (SystemUtil.isWindowsSystem()) {
+
+        } else if (SystemUtil.isUnixSystem()) {
+
         }
         if (fileTempStatus) {
             log.info("Temp file/directory {}", filename);
