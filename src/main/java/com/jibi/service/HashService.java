@@ -24,6 +24,7 @@ import com.jibi.file.*;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.StopWatch;
 
 import java.io.File;
 import java.util.*;
@@ -298,29 +299,32 @@ public class HashService {
     }
 
     private Map<String, HashStatusTwo> compareLeftRight(Algorithm algoSelected, Collection<FileInfo> listFileInfosLeft, Collection<FileInfo> listFileInfosRight) {
-        Map<String, HashStatusTwo> hashStatusMap = new HashMap<>();
+        int expectedMaxSizeMap = listFileInfosLeft.size() + listFileInfosRight.size();
+        Map<String, HashStatusTwo> hashStatusMap = new HashMap<>(expectedMaxSizeMap);
 
         listFileInfosLeft.stream().forEach(fileInfoLeft -> {
             hashStatusMap.put(fileInfoLeft.getFilename(), HashStatusTwo.buildWithLeftHash(fileInfoLeft.getFilename(), MISSING, fileInfoLeft));
         });
+        Map<String, FileInfo> hashFileInfosLeft = listFileInfosLeft.stream().collect(Collectors.toMap(fileInfoLeft -> fileInfoLeft.getFilename(), fileInfoLeft -> fileInfoLeft));
         listFileInfosRight.stream().forEach(fileInfoRight -> {
-            if (listFileInfosLeft.contains(fileInfoRight)) {
-                FileInfo fileInfoLeft = listFileInfosLeft.stream().filter(fileInfo -> fileInfo.equals(fileInfoRight)).findFirst().get();
-                hashStatusMap.get(fileInfoRight.getFilename()).getRight().setHash(fileInfoRight.getHash());
-                hashStatusMap.get(fileInfoRight.getFilename()).getRight().setSize(fileInfoRight.getSize());
-                hashStatusMap.get(fileInfoRight.getFilename()).getRight().setLastModified(fileInfoRight.getLastModified());
+            if (hashFileInfosLeft.containsKey(fileInfoRight.getFilename())) {
+                FileInfo fileInfoLeft = hashFileInfosLeft.get(fileInfoRight.getFilename());
+                HashStatusTwo hashStatusTwo = hashStatusMap.get(fileInfoRight.getFilename());
+                hashStatusTwo.getRight().setHash(fileInfoRight.getHash());
+                hashStatusTwo.getRight().setSize(fileInfoRight.getSize());
+                hashStatusTwo.getRight().setLastModified(fileInfoRight.getLastModified());
 
                 if (algoSelected == null) {
                     if (fileInfoLeft.getSize() == fileInfoRight.getSize() && fileInfoLeft.getLastModified().compareTo(fileInfoRight.getLastModified()) == 0) {
-                        hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MATCH);
+                        hashStatusTwo.setStatus(MATCH);
                     } else {
-                        hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MISMATCH);
+                        hashStatusTwo.setStatus(MISMATCH);
                     }
                 } else {
                     if (fileInfoLeft.getHash().equals(fileInfoRight.getHash()) && fileInfoLeft.getSize() == fileInfoRight.getSize()) {
-                        hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MATCH);
+                        hashStatusTwo.setStatus(MATCH);
                     } else {
-                        hashStatusMap.get(fileInfoRight.getFilename()).setStatus(MISMATCH);
+                        hashStatusTwo.setStatus(MISMATCH);
                     }
                 }
             } else {
