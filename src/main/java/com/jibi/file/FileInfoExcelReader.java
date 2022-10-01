@@ -68,7 +68,7 @@ public class FileInfoExcelReader extends ExcelReader {
             IntStream.rangeClosed(1, numOfRows).forEach(rowNum -> {
                 Row row = sheet.getRow(rowNum);
                 String filename = row.getCell(3).getStringCellValue();
-                filename = filename.replaceAll("/", "\\\\");
+                filename = FileUtil.replaceFileName(filename);
                 FileInfo fileInfo = new FileInfo(filename,
                         (long) row.getCell(1).getNumericCellValue(),
                         row.getCell(0).getStringCellValue(),
