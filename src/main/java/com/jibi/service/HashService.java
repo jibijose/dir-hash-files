@@ -90,9 +90,9 @@ public class HashService {
                     throw new RuntimeException("Unknown HashStatus object");
                 }
                 listMergedHashStatus.addAll(hashStatusReader.readExcel(algoSelected));
-                //if (findDuplicatesHashStatus(listMergedHashStatus).size() > 0) {
-                //     throw new RuntimeException(String.format("Duplicate hash status filenames found in %s with another", filename));
-                //}
+                if (findDuplicatesHashStatus(listMergedHashStatus).size() > 0) {
+                    throw new RuntimeException(String.format("Duplicate hash status filenames found in %s with another", filename));
+                }
             });
             if (mapHashStatusReaders.size() == numOfHashStatusTwoFiles.get()) {
                 HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
