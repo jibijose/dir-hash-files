@@ -14,8 +14,6 @@ import java.util.concurrent.CountDownLatch;
 
 @Slf4j
 public class MappingStatusPrint implements Runnable {
-
-    private CountDownLatch countDownLatch;
     private long totalFiles;
     private long totalFileSize;
     @Setter
@@ -32,8 +30,7 @@ public class MappingStatusPrint implements Runnable {
 
     DecimalFormat decimalFormat = new DecimalFormat("00.00");
 
-    public MappingStatusPrint(CountDownLatch countDownLatch, long totalFiles, long totalFileSize) {
-        this.countDownLatch = countDownLatch;
+    public MappingStatusPrint(long totalFiles, long totalFileSize) {
         this.totalFiles = totalFiles;
         this.totalFileSize = totalFileSize;
         if (totalFiles > 0) {
@@ -63,6 +60,7 @@ public class MappingStatusPrint implements Runnable {
     @Override
     public void run() {
         dateStartTime = new Date();
+        boolean exitNow = false;
         while (true) {
             try {
                 if (totalFiles > 0 && totalFileSize > 0 && processedFiles > 0 && processedFileSize > 0) {
@@ -114,16 +112,15 @@ public class MappingStatusPrint implements Runnable {
                             percentageCompletedBySize, formatCommasInNumber(format("%0" + digitsTotalFileSize + "d", processedFileSize)), formatCommasInNumber(totalFileSize),
                             formattedTimeSpent, formattedTimeLeft, formattedDateEtc);
                 }
-                if (totalFiles <= processedFiles) {
+                if (exitNow) {
                     break;
                 }
-                if (totalFiles > processedFiles) {
+                if (!exitNow) {
                     Thread.sleep(sleepIntervalMillis);
                 }
             } catch (InterruptedException interruptedException) {
-                log.warn("Interrupted", interruptedException);
+                exitNow = true;
             }
         }
-        countDownLatch.countDown();
     }
 }

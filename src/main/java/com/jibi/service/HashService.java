@@ -20,6 +20,7 @@ import static com.jibi.util.ValidationUtil.validateRecompareHash;
 import com.jibi.common.Algorithm;
 import com.jibi.common.HashOperation;
 import com.jibi.concurrent.FileOperationPool;
+import com.jibi.concurrent.HashingTaskExecutor;
 import com.jibi.concurrent.MappingStatusPrint;
 import com.jibi.file.*;
 import com.jibi.util.FileUtil;
@@ -323,48 +324,28 @@ public class HashService {
         AtomicLong processedFiles = new AtomicLong(0);
         AtomicLong processedFileSize = new AtomicLong(0);
 
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        MappingStatusPrint mappingStatusPrint = new MappingStatusPrint(countDownLatch, totalFiles, totalFileSize);
+        final Phaser phaser = new Phaser();
+        log.debug("MAIN Registered = {}, Arrived = {}, Unarrived = {}", phaser.getRegisteredParties(), phaser.getArrivedParties(), phaser.getUnarrivedParties());
+        phaser.register();
+        log.debug("MAIN Registered = {}, Arrived = {}, Unarrived = {}", phaser.getRegisteredParties(), phaser.getArrivedParties(), phaser.getUnarrivedParties());
+        MappingStatusPrint mappingStatusPrint = new MappingStatusPrint(totalFiles, totalFileSize);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.submit(mappingStatusPrint);
 
         Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
         String dirValuePrefix = FileUtil.getDirValuePrefix(dir);
 
-        try {
-            FileOperationPool fileOperationPool = new FileOperationPool();
-            HashOperation hashOperation = new HashOperation(algoSelected);
-            fileOperationPool.submit(
-                    () -> files.parallelStream().forEach(file -> {
-                        String relativeFilePath = FileUtil.getFileRelativePath(file, dirValuePrefix);
-                        FileInfo fileInfo;
-                        if (mapExistingFileInfos.containsKey(relativeFilePath)
-                                && file.length() == mapExistingFileInfos.get(relativeFilePath).getSize()
-                                && file.lastModified() == mapExistingFileInfos.get(relativeFilePath).getLastModified().getTime()) {
-                            fileInfo = mapExistingFileInfos.get(relativeFilePath);
-                            listFileInfos.add(fileInfo);
-                            log.trace("Copied hash of file {}", relativeFilePath);
-                        } else {
-                            String fileHash = hashOperation.getFileChecksum(file);
-                            fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
-                            listFileInfos.add(fileInfo);
-                            log.trace("Hashed file {}", relativeFilePath);
-                        }
-                        mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
-                        mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
-                    })).get();
-        } catch (InterruptedException interruptedException) {
-            log.warn("Interrupted exception", interruptedException);
-        } catch (ExecutionException executionException) {
-            log.warn("Execution exception", executionException);
-        }
+        FileOperationPool fileOperationPool = new FileOperationPool();
+        HashOperation hashOperation = new HashOperation(algoSelected);
 
+        HashingTaskExecutor.getFiles(fileOperationPool, phaser, dir, dirValuePrefix, mappingStatusPrint, processedFiles, processedFileSize,
+                mapExistingFileInfos, listFileInfos, hashOperation);
         try {
-            countDownLatch.await();
+            phaser.arriveAndAwaitAdvance();
             executorService.shutdownNow();
             executorService.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException interruptedException) {
-            log.warn("Interuppted countdownwatch", interruptedException);
+            log.warn("Interuppted phaser", interruptedException);
         }
 
         log.info("Mapped {} file hashes out of {} files", listFileInfos.size(), totalFiles);
