@@ -59,16 +59,16 @@ Creates signature of all files in a directory or drive. Hashing and setting outp
 | files     |  s   |   true    | files list to merge | comma separated list of fileinfo/hashstatus[two/three] files  |
 
 ```
-############ create fileinfo file without hash or password ###########################
-java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx
+############ merge fileinfo files ##########################################################
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m merge -p false -h MD5 -s "fileinfo1.xlsx,fileinfo2.xlsx" -o fileinfomerged.xlsx
 ```
 ```
-############ create fileinfo file with hash and without password ###########################
-java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
+############ merge hashstatus two files ##########################################################
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m merge -p false -h MD5 -s "hashstatustwo1.xlsx,hashstatustwo2.xlsx" -o hashstatustwomerged.xlsx 
 ```
 ```
-############ create fileinfo file with hash and password ###########################
-java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p true -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx
+############ merge hashstatus three files ##########################################################
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m merge -p false -h MD5 -s "hashstatusthree1.xlsx,hashstatusthree2.xlsx" -o hashstatusthreemerged.xlsx
 ```
 
 
