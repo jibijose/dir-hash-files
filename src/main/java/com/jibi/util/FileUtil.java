@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
 
@@ -73,6 +75,54 @@ public class FileUtil {
             log.warn("Not able to get file excel {}", filename);
         }
         return false;
+    }
+
+    public static boolean hasFileInfoFilesOnly(List<String> listFiles) {
+        AtomicInteger numOfFileInfoFiles = new AtomicInteger(0);
+        listFiles.stream().forEach(file -> {
+            if (isValidFileInfoExcel(file)) {
+                numOfFileInfoFiles.incrementAndGet();
+            }
+        });
+        if (listFiles.size() == numOfFileInfoFiles.get()) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean hasHashStatusFilesOnly(List<String> listFiles) {
+        AtomicInteger numOfHashStatusFiles = new AtomicInteger(0);
+        listFiles.stream().forEach(file -> {
+            if (isValidHashStatusExcel(file)) {
+                numOfHashStatusFiles.incrementAndGet();
+            }
+        });
+        if (listFiles.size() == numOfHashStatusFiles.get()) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isAllEitherFileInfoOrHashStatusFiles(List<String> listFiles) {
+        if (hasFileInfoFilesOnly(listFiles) || hasHashStatusFilesOnly(listFiles)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isValidFileInfoOrHashStatusExcel(String filename) {
+        if (isValidFileInfoExcel(filename) || isValidHashStatusExcel(filename)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isValidFileInfoExcel(String filename) {
+        return true;
+    }
+
+    public static boolean isValidHashStatusExcel(String filename) {
+        return true;
     }
 
     public static boolean isValidDirectoryOrDrive(String directory) {

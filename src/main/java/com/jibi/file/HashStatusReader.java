@@ -1,21 +1,14 @@
 package com.jibi.file;
 
 import com.jibi.common.Algorithm;
-import com.jibi.util.DateUtil;
-import com.jibi.util.FileUtil;
 import com.jibi.vo.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.poifs.crypt.Decryptor;
-import org.apache.poi.poifs.crypt.EncryptionInfo;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,47 +16,19 @@ import java.util.stream.IntStream;
 
 import static com.jibi.util.DateUtil.parse;
 import static java.lang.String.format;
-import static java.lang.Long.parseLong;
 
 @Slf4j
 public class HashStatusReader extends ExcelReader {
 
-    public HashStatusReader(String filename) {
-        super(filename);
+    public HashStatusReader(String filename, String excelPassword) {
+        super(filename, excelPassword);
     }
 
     public Collection<HashStatus> readExcel(Algorithm algoSelected) {
         Collection<HashStatus> listFileInfos = Collections.synchronizedList(new ArrayList<>());
-        InputStream fileStream = null;
-        try {
-            if (isEncrypted(filename)) {
-                POIFSFileSystem filesystem = new POIFSFileSystem(new FileInputStream(filename));
-                EncryptionInfo info = new EncryptionInfo(filesystem);
-                Decryptor decryptor = Decryptor.getInstance(info);
-
-                String excelPassword;
-                do {
-                    excelPassword = FileUtil.getUserPasswordHidden(true, filename);
-                } while (!decryptor.verifyPassword(excelPassword));
-                log.info("Verified password for file {}", filename);
-
-                fileStream = decryptor.getDataStream(filesystem);
-            } else {
-                fileStream = new FileInputStream(filename);
-            }
-
-            XSSFWorkbook workbook = new XSSFWorkbook(fileStream);
+        try (InputStream fileStream = getExcelInputStream(filename, excelPassword); XSSFWorkbook workbook = new XSSFWorkbook(fileStream);) {
             XSSFSheet sheet = workbook.getSheet("HashStatus");
-            boolean containsHashStatusTwo = false;
-            if (sheet.getRow(0).getLastCellNum() == 8) {
-                log.info("File {} contains hash status two data", filename);
-                containsHashStatusTwo = true;
-            } else if (sheet.getRow(0).getLastCellNum() == 14) {
-                log.info("File {} contains hash status three data", filename);
-                containsHashStatusTwo = false;
-            } else {
-                throw new RuntimeException("Sheet not correct");
-            }
+            boolean containsHashStatusTwo = hasHashStatusTwoOnly(filename, workbook);
 
             if (containsHashStatusTwo) {
                 String fileInfoAlgorithmFull = sheet.getRow(0).getCell(1).getStringCellValue();
@@ -136,11 +101,26 @@ public class HashStatusReader extends ExcelReader {
                 });
             }
 
-        } catch (IOException | GeneralSecurityException fileException) {
+        } catch (IOException fileException) {
             log.warn("file exception for file {}", filename, fileException);
             throw new RuntimeException(format("file exception for file %s", filename));
         }
 
         return listFileInfos;
+    }
+
+    public static boolean hasHashStatusTwoOnly(String filename, XSSFWorkbook workbook) {
+        XSSFSheet sheet = workbook.getSheet("HashStatus");
+        boolean containsHashStatusTwo = false;
+        if (sheet.getRow(0).getLastCellNum() == 8) {
+            log.info("File {} contains hash status two data", filename);
+            containsHashStatusTwo = true;
+        } else if (sheet.getRow(0).getLastCellNum() == 14) {
+            log.info("File {} contains hash status three data", filename);
+            containsHashStatusTwo = false;
+        } else {
+            throw new RuntimeException("Sheet not correct");
+        }
+        return containsHashStatusTwo;
     }
 }

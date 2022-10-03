@@ -22,7 +22,7 @@ Runnable jar target\dirhashfiles-1.0.0-shaded.jar is created.
 # Usage
 java -jar target\dirhashfiles-1.0.0-shaded.jar
 
--m,--mode <arg>         Operation mode, mandatory [create|recreate|compare|recompare]  
+-m,--mode <arg>         Operation mode, mandatory [merge|create|recreate|compare|recompare]  
 -p,--passFlag <arg>     Password mode, mandatory [true|false]  
 -h,--hashalgo <arg>     Hash algorithm, optional [MD2|MD5|SHA|SHA224|SHA256|SHA384|SHA512]  
 -i,--indir <arg>        In drive/dir, mandatory for createhash mode  
@@ -36,19 +36,41 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar
 
 | Mode                    | description                                                                                   |
 |-------------------------|:----------------------------------------------------------------------------------------------|
+| [merge](#merge)         | Merge new fileInfo/hashstatus[two/three] files                                                |
 | [create](#create)       | Create new fileInfo file from directory/drive                                                 |
 | [recreate](#recreate)   | Create new fileInfo file from directory/drive and another fileinfo file                       |
 | [compare](#compare)     | Create new hashstatus file from directory(s)/drive(s)/fileinfo(s)                             |
 | [recompare](#recompare) | Create new hashstatus file from directory(s)/drive(s)/fileinfo(s) and another hashstatus file |
 
 ## Common parameters
-| parameter | flag | mandatory | values                                    | description                       |
-|-----------|:----:|:---------:|:------------------------------------------|:----------------------------------|
-| mode      |  m   |   true    | [create/recreate/compare/recompare]       | mode of application run           |
-| hash      |  h   |   false   | [MD2,MD5,SHA,SHA224,SHA256,SHA384,SHA512] | Hash not calculated if not passed |
-| password  |  p   |   false   | string                                    | Output file encryption password   |
-
+| parameter   | flag | mandatory | values                                    | description                                     |
+|-------------|:----:|:---------:|:------------------------------------------|:------------------------------------------------|
+| mode        |  m   |   true    | [merge/create/recreate/compare/recompare] | mode of application run                         |
+| hash        |  h   |   false   | [MD2,MD5,SHA,SHA224,SHA256,SHA384,SHA512] | Hash not calculated if not passed               |
+| password    |  p   |   false   | string                                    | Output file encryption password                 |
+| output file |  o   |   true    | xlsx file                                 | Writable xlsx output file [fileinfo/hashstatus] |
 ## Mode based parameters
+
+### merge
+Creates signature of all files in a directory or drive. Hashing and setting output file pasword are optional.
+
+| parameter | flag | mandatory | values              | description                                                   |
+|-----------|:----:|:---------:|:--------------------|:--------------------------------------------------------------|
+| files     |  s   |   true    | files list to merge | comma separated list of fileinfo/hashstatus[two/three] files  |
+
+```
+############ create fileinfo file without hash or password ###########################
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx
+```
+```
+############ create fileinfo file with hash and without password ###########################
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx  
+```
+```
+############ create fileinfo file with hash and password ###########################
+java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p true -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx
+```
+
 
 ### create
 Creates signature of all files in a directory or drive. Hashing and setting output file pasword are optional.  
@@ -56,7 +78,6 @@ Creates signature of all files in a directory or drive. Hashing and setting outp
 | parameter | flag | mandatory | values             | description                        |
 |-----------|:----:|:---------:|:-------------------|:-----------------------------------|
 | input     |  i   |   true    | Directory or Drive | Any directory or disk drive        |
-| output    |  o   |   true    | xlsx file          | Writable xlsx output fileinfo file |
 
 ```
 ############ create fileinfo file without hash or password ###########################
@@ -78,7 +99,6 @@ Recreates signature of all files starting with a base file xlsx file. Hashing as
 |-------------|:----:|:---------:|:-------------------|:-----------------------------------|
 | input       |  i   |   true    | Directory or Drive | Any directory or disk drive        |
 | fileinfo    |  f   |   true    | xlsx file          | Readable xlsx input fileinfo file  |
-| output file |  o   |   true    | xlsx file          | Writable xlsx output fileinfo file |
 ``` 
 ############ recreate fileinfo file with hash and without password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m recreate -p false -h MD5 -i ".\src\test\resources\testfiles\leftdir" -f "fileinfo.xlsx" -o "fileinfonew.xlsx"
@@ -92,7 +112,6 @@ Compares left, center (optional) and right directory/drive/fileinfo. Hashing sho
 | left input   |  l   |   true    | Directory or Drive or fileinfo file  | Any directory or disk drive or fileinfo file |
 | center input |  c   |   false   | Directory or Drive or fileinfo file  | Any directory or disk drive or fileinfo file |
 | right input  |  r   |   true    | Directory or Drive or fileinfo file  | Any directory or disk drive or fileinfo file |
-| output file  |  o   |   true    | xlsx file                            | Writable xlsx output hashstatus file         |
 
 ```
 ############ two way comparison without hash or password ###########################
@@ -129,7 +148,6 @@ Recompares left, center (optional) and right directory/drive/fileinfo starting w
 | center input |  c   |   false   | Directory or Drive or fileinfo file | Any directory or disk drive or fileinfo file |
 | right input  |  r   |   true    | Directory or Drive or fileinfo file | Any directory or disk drive or fileinfo file |
 | hashstatus   |  f   |   true    | xlsx file                           | Readable xlsx input hashstatus file          |
-| output file  |  o   |   true    | xlsx file                           | Writable xlsx output hashstatus file         |
 
 /**************  two way recomparisons **********************/  
 ```
@@ -163,7 +181,6 @@ java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p tru
 |----------|:--------------|------------------------------------------------|
 | 1        | documentation | readme updates                                 |
 | 1        | bug           | behaviour when disk/drive not readable         |
-| 1        | functional    | merge files                                    |
 | 1        | functional    | create/recreate and compare/recompare merge    |
 | 2        | functional    | file names should contain markers and datetime |
 | 2        | automation    | Auto script samples                            |

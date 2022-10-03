@@ -7,17 +7,12 @@ import com.jibi.common.Algorithm;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.FileInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.poifs.crypt.Decryptor;
-import org.apache.poi.poifs.crypt.EncryptionInfo;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,33 +22,14 @@ import java.util.stream.IntStream;
 public class FileInfoExcelReader extends ExcelReader {
 
 
-    public FileInfoExcelReader(String filename) {
-        super(filename);
+    public FileInfoExcelReader(String filename, String excelPassword) {
+        super(filename, excelPassword);
     }
 
     public Collection<FileInfo> readExcel(Algorithm algoSelected) {
         Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
-        InputStream fileStream = null;
-        try {
-            if (isEncrypted(filename)) {
-                POIFSFileSystem filesystem = new POIFSFileSystem(new FileInputStream(filename));
-                EncryptionInfo info = new EncryptionInfo(filesystem);
-                Decryptor decryptor = Decryptor.getInstance(info);
-
-                String excelPassword;
-                do {
-                    excelPassword = FileUtil.getUserPasswordHidden(true, filename);
-                } while (!decryptor.verifyPassword(excelPassword));
-                log.info("Verified password for file {}", filename);
-
-                fileStream = decryptor.getDataStream(filesystem);
-            } else {
-                fileStream = new FileInputStream(filename);
-            }
-
-            XSSFWorkbook workbook = new XSSFWorkbook(fileStream);
+        try (InputStream fileStream = getExcelInputStream(filename, excelPassword); XSSFWorkbook workbook = new XSSFWorkbook(fileStream);) {
             XSSFSheet sheet = workbook.getSheet("FileInfo");
-
             String fileInfoAlgorithm = sheet.getRow(0).getCell(0).getStringCellValue();
             if (algoSelected == null && fileInfoAlgorithm.equals("NA")) {
                 log.info("File has no hash and no algorithm specified");
@@ -63,7 +39,6 @@ public class FileInfoExcelReader extends ExcelReader {
                 throw new RuntimeException(format("FileInfo hash %s not matching with hash %s",
                         fileInfoAlgorithm, algoSelected == null ? algoSelected : algoSelected.getValue()));
             }
-
             int numOfRows = sheet.getLastRowNum();
             IntStream.rangeClosed(1, numOfRows).forEach(rowNum -> {
                 Row row = sheet.getRow(rowNum);
@@ -75,13 +50,10 @@ public class FileInfoExcelReader extends ExcelReader {
                         parse(row.getCell(2).getStringCellValue()));
                 listFileInfos.add(fileInfo);
             });
-        } catch (IOException | GeneralSecurityException fileException) {
+        } catch (IOException fileException) {
             log.warn("file exception for file {}", filename, fileException);
             throw new RuntimeException(format("file exception for file %s", filename));
         }
-
         return listFileInfos;
     }
-
-
 }

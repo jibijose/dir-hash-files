@@ -30,10 +30,13 @@ public class ValidationUtil {
         }
         List<String> listFiles = Arrays.asList(files.split(",", -1));
         listFiles.stream().forEach(file -> {
-            if (!isValidFileExcelName(file)) {
+            if (!isValidFileExcelName(file) || !isValidFileInfoOrHashStatusExcel(file)) {
                 throw new RuntimeException(String.format("File %s is not valid excel file", file));
             }
         });
+        if (!isAllEitherFileInfoOrHashStatusFiles(listFiles)) {
+            throw new RuntimeException(String.format("Files are mixed up %s", files));
+        }
     }
 
     public static void validateCreateHash(String hashAlgoValue, String inDirValue, String outFileValue) {

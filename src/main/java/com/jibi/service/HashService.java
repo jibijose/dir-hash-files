@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,74 @@ public class HashService {
 
     public void startMerge(boolean passFlag, String hashAlgoValue, String files, String outFileValue) {
         validateMergeFiles(hashAlgoValue, files, outFileValue);
+        Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+        List<String> listFiles = Arrays.asList(files.split(",", -1));
+        Map<String, FileInfoExcelReader> mapFileInfoReaders = Collections.synchronizedMap(new HashMap<>());
+        Map<String, HashStatusReader> mapHashStatusReaders = Collections.synchronizedMap(new HashMap<>());
+        try {
+            listFiles.stream().forEach(filename -> {
+                String excelPasswword = ExcelReader.getExcelPassword(filename);
+                if (ExcelReader.hasSheet("FileInfo", filename, excelPasswword)) {
+                    FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(filename, excelPasswword);
+                    mapFileInfoReaders.put(filename, fileInfoExcelReader);
+                }
+                if (ExcelReader.hasSheet("HashStatus", filename, excelPasswword)) {
+                    HashStatusReader hashStatusReader = new HashStatusReader(filename, excelPasswword);
+                    mapHashStatusReaders.put(filename, hashStatusReader);
+                }
+            });
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        if (listFiles.size() == mapFileInfoReaders.size()) {
+            String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
+            Collection<FileInfo> listMergedFileInfos = Collections.synchronizedList(new ArrayList<>());
+            mapFileInfoReaders.keySet().stream().forEach(filename -> {
+                FileInfoExcelReader fileInfoExcelReader = mapFileInfoReaders.get(filename);
+                listMergedFileInfos.addAll(fileInfoExcelReader.readExcel(algoSelected));
+                if (findDuplicatesFileInfo(listMergedFileInfos).size() > 0) {
+                    throw new RuntimeException(String.format("Duplicate file info filenames found in %s with another", filename));
+                }
+            });
+            FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
+            fileInfoExcelWriter.writeExcel(excelPassword, algoSelected, listMergedFileInfos);
+        } else if (listFiles.size() == mapHashStatusReaders.size()) {
+            String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
+            Collection<HashStatus> listMergedHashStatus = Collections.synchronizedList(new ArrayList<>());
+            AtomicInteger numOfHashStatusTwoFiles = new AtomicInteger(0);
+            AtomicInteger numOfHashStatusThreeFiles = new AtomicInteger(0);
+            mapHashStatusReaders.keySet().stream().forEach(filename -> {
+                HashStatusReader hashStatusReader = mapHashStatusReaders.get(filename);
+                Collection<HashStatus> listHashStatusRead = hashStatusReader.readExcel(algoSelected);
+                if (listHashStatusRead.isEmpty()) {
+                    numOfHashStatusTwoFiles.incrementAndGet();
+                    numOfHashStatusThreeFiles.incrementAndGet();
+                } else if (listHashStatusRead.stream().findFirst().get() instanceof HashStatusThree) {
+                    numOfHashStatusThreeFiles.incrementAndGet();
+                } else if (listHashStatusRead.stream().findFirst().get() instanceof HashStatusTwo) {
+                    numOfHashStatusTwoFiles.incrementAndGet();
+                } else {
+                    throw new RuntimeException("Unknown HashStatus object");
+                }
+                listMergedHashStatus.addAll(hashStatusReader.readExcel(algoSelected));
+                //if (findDuplicatesHashStatus(listMergedHashStatus).size() > 0) {
+                //     throw new RuntimeException(String.format("Duplicate hash status filenames found in %s with another", filename));
+                //}
+            });
+            if (mapHashStatusReaders.size() == numOfHashStatusTwoFiles.get()) {
+                HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
+                Map<String, HashStatusTwo> hashStatusMap = listMergedHashStatus.stream().collect(Collectors.toMap(hashStatus -> hashStatus.getFilename(), hashStatus -> (HashStatusTwo) hashStatus));
+                hashStatusTwoExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
+            } else if (mapHashStatusReaders.size() == numOfHashStatusThreeFiles.get()) {
+                HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
+                Map<String, HashStatusThree> hashStatusMap = listMergedHashStatus.stream().collect(Collectors.toMap(hashStatus -> hashStatus.getFilename(), hashStatus -> (HashStatusThree) hashStatus));
+                hashStatusThreeExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
+            } else {
+                throw new RuntimeException("HashStatus two and three files mixed");
+            }
+        } else {
+            log.warn("All files should be either fileinfo or hash status excel files.");
+        }
     }
 
     public void startCreate(boolean passFlag, String hashAlgoValue, String dirValue, String outFileValue) {
@@ -86,7 +155,7 @@ public class HashService {
                 listFileInfosLeft = mapDirFiles(algoSelected, leftSideValue);
             } else if (isValidFileExcel(leftSideValue)) {
                 log.info("Left side {} is FileInfo excel", leftSideValue);
-                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue, ExcelReader.getExcelPassword(leftSideValue));
                 listFileInfosLeft = fileInfoExcelReader.readExcel(algoSelected);
             }
 
@@ -97,7 +166,7 @@ public class HashService {
                     listFileInfosCenter = mapDirFiles(algoSelected, centerSideValue);
                 } else if (isValidFileExcel(centerSideValue)) {
                     log.info("Center side {} is FileInfo excel", centerSideValue);
-                    FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue);
+                    FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue, ExcelReader.getExcelPassword(centerSideValue));
                     listFileInfosCenter = fileInfoExcelReader.readExcel(algoSelected);
                 }
             }
@@ -108,7 +177,7 @@ public class HashService {
                 listFileInfosRight = mapDirFiles(algoSelected, rightSideValue);
             } else if (isValidFileExcel(rightSideValue)) {
                 log.info("Right side {} is FileInfo excel", rightSideValue);
-                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue, ExcelReader.getExcelPassword(rightSideValue));
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
 
@@ -137,7 +206,7 @@ public class HashService {
         Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
         String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
 
-        HashStatusReader hashStatusReader = new HashStatusReader(inFileValue);
+        HashStatusReader hashStatusReader = new HashStatusReader(inFileValue, ExcelReader.getExcelPassword(inFileValue));
         Collection<HashStatus> listExistingHashStatus = hashStatusReader.readExcel(algoSelected);
         Map<String, HashStatus> mapExistingHashStatus = listExistingHashStatus.stream()
                 .collect(Collectors.toMap(hashStatus -> hashStatus.getFilename(), hashStatus -> hashStatus));
@@ -178,7 +247,7 @@ public class HashService {
                 listFileInfosLeft = mapDirFiles(algoSelected, leftSideValue, mapExistingLeftOneSide);
             } else if (isValidFileExcel(leftSideValue)) {
                 log.info("Left side {} is FileInfo excel", leftSideValue);
-                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue, ExcelReader.getExcelPassword(leftSideValue));
                 listFileInfosLeft = fileInfoExcelReader.readExcel(algoSelected);
             }
 
@@ -189,7 +258,7 @@ public class HashService {
                     listFileInfosCenter = mapDirFiles(algoSelected, centerSideValue, mapExistingCenterOneSide);
                 } else if (isValidFileExcel(centerSideValue)) {
                     log.info("Center side {} is FileInfo excel", centerSideValue);
-                    FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue);
+                    FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue, ExcelReader.getExcelPassword(centerSideValue));
                     listFileInfosCenter = fileInfoExcelReader.readExcel(algoSelected);
                 }
             }
@@ -200,7 +269,7 @@ public class HashService {
                 listFileInfosRight = mapDirFiles(algoSelected, rightSideValue, mapExistingRightOneSide);
             } else if (isValidFileExcel(rightSideValue)) {
                 log.info("Right side {} is FileInfo excel", rightSideValue);
-                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue, ExcelReader.getExcelPassword(rightSideValue));
                 listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
             }
 
@@ -226,7 +295,7 @@ public class HashService {
     }
 
     public Collection<FileInfo> mapDirFiles(Algorithm algoSelected, String dir, String inFileInfo) {
-        FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(inFileInfo);
+        FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(inFileInfo, ExcelReader.getExcelPassword(inFileInfo));
         Collection<FileInfo> listExistingFileInfos = fileInfoExcelReader.readExcel(algoSelected);
         Map<String, FileInfo> mapExistingFileInfos = listExistingFileInfos.stream().collect(Collectors.toMap(fileInfo -> fileInfo.getFilename(), fileInfo -> fileInfo));
         long existingFileSize = mapExistingFileInfos.keySet().stream().mapToLong(filename -> mapExistingFileInfos.get(filename).getSize()).sum();
@@ -484,6 +553,34 @@ public class HashService {
                 });
 
         return hashStatusMap;
+    }
+
+    private Set<String> findDuplicatesFileInfo(Collection<FileInfo> collection) {
+        Collection<String> collectionFilenames = collection.stream()
+                .map(fileInfo -> fileInfo.getFilename())
+                .collect(Collectors.toList());
+        Set<String> duplicates = new LinkedHashSet<>();
+        Set<String> uniques = new HashSet<>();
+        for (String str : collectionFilenames) {
+            if (!uniques.add(str)) {
+                duplicates.add(str);
+            }
+        }
+        return duplicates;
+    }
+
+    private Set<String> findDuplicatesHashStatus(Collection<HashStatus> collection) {
+        Collection<String> collectionFilenames = collection.stream()
+                .map(hashStatus -> hashStatus.getFilename())
+                .collect(Collectors.toList());
+        Set<String> duplicates = new LinkedHashSet<>();
+        Set<String> uniques = new HashSet<>();
+        for (String str : collectionFilenames) {
+            if (!uniques.add(str)) {
+                duplicates.add(str);
+            }
+        }
+        return duplicates;
     }
 
     private void updateMapNewElement(Map<String, HashStatusThree> hashStatusMap, String filename) {
