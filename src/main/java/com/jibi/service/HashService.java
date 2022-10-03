@@ -36,6 +36,78 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
 
 @Slf4j
 public class HashService {
+    public void startCreate(boolean passFlag, String hashAlgoValue, String dirValue, String outFileValue) {
+        dirValue = FileUtil.adjustDirectoryOrDrive(dirValue);
+        validateCreateHash(hashAlgoValue, dirValue, outFileValue);
+        Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+        String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
+
+        try {
+            Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue);
+            FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
+            fileInfoExcelWriter.writeExcel(excelPassword, algoSelected, listFileInfos);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    public void startCompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
+        leftSideValue = FileUtil.adjustDirectoryOrDrive(leftSideValue);
+        centerSideValue = FileUtil.adjustDirectoryOrDrive(centerSideValue);
+        rightSideValue = FileUtil.adjustDirectoryOrDrive(rightSideValue);
+        validateCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
+        Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
+        String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
+
+        try {
+            Collection<FileInfo> listFileInfosLeft = null;
+            if (isValidDirectoryOrDrive(leftSideValue)) {
+                log.info("Left side {} is drive or folder", leftSideValue);
+                listFileInfosLeft = mapDirFiles(algoSelected, leftSideValue);
+            } else if (isValidFileExcel(leftSideValue)) {
+                log.info("Left side {} is FileInfo excel", leftSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue, ExcelReader.getExcelPassword(leftSideValue));
+                listFileInfosLeft = fileInfoExcelReader.readExcel(algoSelected);
+            }
+
+            Collection<FileInfo> listFileInfosCenter = null;
+            if (centerSideValue != null) {
+                if (isValidDirectoryOrDrive(centerSideValue)) {
+                    log.info("Center side {} is drive or folder", centerSideValue);
+                    listFileInfosCenter = mapDirFiles(algoSelected, centerSideValue);
+                } else if (isValidFileExcel(centerSideValue)) {
+                    log.info("Center side {} is FileInfo excel", centerSideValue);
+                    FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue, ExcelReader.getExcelPassword(centerSideValue));
+                    listFileInfosCenter = fileInfoExcelReader.readExcel(algoSelected);
+                }
+            }
+
+            Collection<FileInfo> listFileInfosRight = null;
+            if (isValidDirectoryOrDrive(rightSideValue)) {
+                log.info("Right side {} is drive or folder", rightSideValue);
+                listFileInfosRight = mapDirFiles(algoSelected, rightSideValue);
+            } else if (isValidFileExcel(rightSideValue)) {
+                log.info("Right side {} is FileInfo excel", rightSideValue);
+                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue, ExcelReader.getExcelPassword(rightSideValue));
+                listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
+            }
+
+            if (listFileInfosCenter == null) {
+                Map<String, HashStatusTwo> hashStatusMap;
+                hashStatusMap = compareLeftRight(algoSelected, listFileInfosLeft, listFileInfosRight);
+                HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
+                hashStatusTwoExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
+            } else {
+                Map<String, HashStatusThree> hashStatusMap;
+                hashStatusMap = compareLeftCenterRight(algoSelected, listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
+                HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
+                hashStatusThreeExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
+            }
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
 
     public void startMerge(boolean passFlag, String hashAlgoValue, String files, String outFileValue) {
         validateMergeFiles(hashAlgoValue, files, outFileValue);
@@ -109,21 +181,6 @@ public class HashService {
         }
     }
 
-    public void startCreate(boolean passFlag, String hashAlgoValue, String dirValue, String outFileValue) {
-        dirValue = FileUtil.adjustDirectoryOrDrive(dirValue);
-        validateCreateHash(hashAlgoValue, dirValue, outFileValue);
-        Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
-        String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
-
-        try {
-            Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue);
-            FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
-            fileInfoExcelWriter.writeExcel(excelPassword, algoSelected, listFileInfos);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-    }
-
     public void startRecreate(boolean passFlag, String hashAlgoValue, String dirValue, String inFileValue, String outFileValue) {
         dirValue = FileUtil.adjustDirectoryOrDrive(dirValue);
         validateRecreateHash(hashAlgoValue, dirValue, inFileValue, outFileValue);
@@ -134,64 +191,6 @@ public class HashService {
             Collection<FileInfo> listFileInfos = mapDirFiles(algoSelected, dirValue, inFileValue);
             FileInfoExcelWriter fileInfoExcelWriter = new FileInfoExcelWriter(outFileValue);
             fileInfoExcelWriter.writeExcel(excelPassword, algoSelected, listFileInfos);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-    }
-
-    public void startCompare(boolean passFlag, String hashAlgoValue, String leftSideValue, String centerSideValue, String rightSideValue, String outFileValue) {
-        leftSideValue = FileUtil.adjustDirectoryOrDrive(leftSideValue);
-        centerSideValue = FileUtil.adjustDirectoryOrDrive(centerSideValue);
-        rightSideValue = FileUtil.adjustDirectoryOrDrive(rightSideValue);
-        validateCompareHash(hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
-        Algorithm algoSelected = Algorithm.getAlgo(hashAlgoValue);
-        String excelPassword = FileUtil.getUserPasswordHidden(passFlag, outFileValue);
-
-        try {
-            Collection<FileInfo> listFileInfosLeft = null;
-            if (isValidDirectoryOrDrive(leftSideValue)) {
-                log.info("Left side {} is drive or folder", leftSideValue);
-                listFileInfosLeft = mapDirFiles(algoSelected, leftSideValue);
-            } else if (isValidFileExcel(leftSideValue)) {
-                log.info("Left side {} is FileInfo excel", leftSideValue);
-                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(leftSideValue, ExcelReader.getExcelPassword(leftSideValue));
-                listFileInfosLeft = fileInfoExcelReader.readExcel(algoSelected);
-            }
-
-            Collection<FileInfo> listFileInfosCenter = null;
-            if (centerSideValue != null) {
-                if (isValidDirectoryOrDrive(centerSideValue)) {
-                    log.info("Center side {} is drive or folder", centerSideValue);
-                    listFileInfosCenter = mapDirFiles(algoSelected, centerSideValue);
-                } else if (isValidFileExcel(centerSideValue)) {
-                    log.info("Center side {} is FileInfo excel", centerSideValue);
-                    FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(centerSideValue, ExcelReader.getExcelPassword(centerSideValue));
-                    listFileInfosCenter = fileInfoExcelReader.readExcel(algoSelected);
-                }
-            }
-
-            Collection<FileInfo> listFileInfosRight = null;
-            if (isValidDirectoryOrDrive(rightSideValue)) {
-                log.info("Right side {} is drive or folder", rightSideValue);
-                listFileInfosRight = mapDirFiles(algoSelected, rightSideValue);
-            } else if (isValidFileExcel(rightSideValue)) {
-                log.info("Right side {} is FileInfo excel", rightSideValue);
-                FileInfoExcelReader fileInfoExcelReader = new FileInfoExcelReader(rightSideValue, ExcelReader.getExcelPassword(rightSideValue));
-                listFileInfosRight = fileInfoExcelReader.readExcel(algoSelected);
-            }
-
-            if (listFileInfosCenter == null) {
-                Map<String, HashStatusTwo> hashStatusMap;
-                hashStatusMap = compareLeftRight(algoSelected, listFileInfosLeft, listFileInfosRight);
-                HashStatusTwoExcelWriter hashStatusTwoExcelWriter = new HashStatusTwoExcelWriter(outFileValue);
-                hashStatusTwoExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
-            } else {
-                Map<String, HashStatusThree> hashStatusMap;
-                hashStatusMap = compareLeftCenterRight(algoSelected, listFileInfosLeft, listFileInfosCenter, listFileInfosRight);
-                HashStatusThreeExcelWriter hashStatusThreeExcelWriter = new HashStatusThreeExcelWriter(outFileValue);
-                hashStatusThreeExcelWriter.writeExcel(excelPassword, algoSelected, hashStatusMap);
-            }
-
         } catch (Exception exception) {
             exception.printStackTrace();
         }

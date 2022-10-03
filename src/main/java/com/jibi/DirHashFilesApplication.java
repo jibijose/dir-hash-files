@@ -25,21 +25,21 @@ public class DirHashFilesApplication {
         String outFileValue = commandLine.getOptionValue("outfile");
 
         log.info("Started in {} mode", modeValue);
-        if ("merge".equals(modeValue)) {
-            String files = commandLine.getOptionValue("files");
-            hashService.startMerge(passFlag, hashAlgoValue, files, outFileValue);
-        } else if ("create".equals(modeValue)) {
+        if ("create".equals(modeValue)) {
             String inDirValue = commandLine.getOptionValue("indir");
             hashService.startCreate(passFlag, hashAlgoValue, inDirValue, outFileValue);
-        } else if ("recreate".equals(modeValue)) {
-            String inDirValue = commandLine.getOptionValue("indir");
-            String inFileValue = commandLine.getOptionValue("infile");
-            hashService.startRecreate(passFlag, hashAlgoValue, inDirValue, inFileValue, outFileValue);
         } else if ("compare".equals(modeValue)) {
             String leftSideValue = commandLine.getOptionValue("leftside");
             String centerSideValue = commandLine.getOptionValue("centerside");
             String rightSideValue = commandLine.getOptionValue("rightside");
             hashService.startCompare(passFlag, hashAlgoValue, leftSideValue, centerSideValue, rightSideValue, outFileValue);
+        } else if ("merge".equals(modeValue)) {
+            String files = commandLine.getOptionValue("files");
+            hashService.startMerge(passFlag, hashAlgoValue, files, outFileValue);
+        } else if ("recreate".equals(modeValue)) {
+            String inDirValue = commandLine.getOptionValue("indir");
+            String inFileValue = commandLine.getOptionValue("infile");
+            hashService.startRecreate(passFlag, hashAlgoValue, inDirValue, inFileValue, outFileValue);
         } else if ("recompare".equals(modeValue)) {
             String leftSideValue = commandLine.getOptionValue("leftside");
             String centerSideValue = commandLine.getOptionValue("centerside");
