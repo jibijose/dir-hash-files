@@ -18,6 +18,8 @@ import static java.lang.String.format;
 @Slf4j
 public class FileUtil {
 
+    private static long GET_FILES_PRINT_INTERVAL = 10000;
+
     public final static String NEWFILE = "NewFile";
     public final static String MATCH = "Match";
     public final static String MISMATCH = "Mismatch";
@@ -229,6 +231,8 @@ public class FileUtil {
         return file.toString().replaceFirst(dirValuePrefix, "");
     }
 
+    private static long fileFoundCount = 0;
+
     public static List<File> getFiles(String directory) {
         List<File> fileList = new ArrayList<>();
         File[] files = new File(directory).listFiles();
@@ -237,12 +241,16 @@ public class FileUtil {
         }
         for (File element : files) {
             if (element.isDirectory() && !Files.isSymbolicLink(element.toPath())) {
-                if (!isTempDirectory(element.getPath())) {
+                if (!isTempDirectory(element.getPath(), false)) {
                     fileList.addAll(getFiles(element.getPath()));
                 }
             } else if (Files.isRegularFile(element.toPath()) && !Files.isSymbolicLink(element.toPath())) {
-                if (!isTempFile(element.getPath())) {
+                if (!isTempFile(element.getPath(), false)) {
                     fileList.add(element);
+                    fileFoundCount++;
+                    if (fileFoundCount % GET_FILES_PRINT_INTERVAL == 0) {
+                        log.debug("Found {} files", fileFoundCount);
+                    }
                 }
             } else {
                 log.trace("Not Dir/File {} ", element.toString());
@@ -260,7 +268,7 @@ public class FileUtil {
         }
     }
 
-    public static boolean isTempDirectory(String filename) {
+    public static boolean isTempDirectory(String filename, boolean silentCheck) {
         boolean fileTempStatus = false;
         String upperFileName = filename.toUpperCase();
         if (SystemUtil.isWindowsSystem()) {
@@ -276,13 +284,13 @@ public class FileUtil {
                 fileTempStatus = true;
             }
         }
-        if (fileTempStatus) {
+        if (fileTempStatus && !silentCheck) {
             log.info("Temp file/directory {}", filename);
         }
         return fileTempStatus;
     }
 
-    public static boolean isTempFile(String filename) {
+    public static boolean isTempFile(String filename, boolean silentCheck) {
         boolean fileTempStatus = false;
         String upperFileName = filename.toUpperCase();
         if (SystemUtil.isWindowsSystem()) {
@@ -290,7 +298,7 @@ public class FileUtil {
         } else if (SystemUtil.isUnixSystem()) {
 
         }
-        if (fileTempStatus) {
+        if (fileTempStatus && !silentCheck) {
             log.info("Temp file/directory {}", filename);
         }
         return fileTempStatus;
