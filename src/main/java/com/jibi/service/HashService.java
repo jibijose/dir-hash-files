@@ -19,7 +19,6 @@ import static com.jibi.util.ValidationUtil.validateRecompareHash;
 
 import com.jibi.common.Algorithm;
 import com.jibi.common.HashOperation;
-import com.jibi.concurrent.FileOperationPool;
 import com.jibi.concurrent.HashingTaskExecutor;
 import com.jibi.concurrent.MappingStatusPrint;
 import com.jibi.file.*;
@@ -31,7 +30,6 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.rightPad;
@@ -321,31 +319,24 @@ public class HashService {
         long totalFiles = files.size();
         long totalFileSize = files.stream().mapToLong(File::length).sum();
         log.info("Got {} files of total size {} to process", formatCommasInNumber(totalFiles), formatCommasInNumber(totalFileSize));
-        AtomicLong processedFiles = new AtomicLong(0);
-        AtomicLong processedFileSize = new AtomicLong(0);
 
         final Phaser phaser = new Phaser();
-        log.debug("MAIN Registered = {}, Arrived = {}, Unarrived = {}", phaser.getRegisteredParties(), phaser.getArrivedParties(), phaser.getUnarrivedParties());
         phaser.register();
-        log.debug("MAIN Registered = {}, Arrived = {}, Unarrived = {}", phaser.getRegisteredParties(), phaser.getArrivedParties(), phaser.getUnarrivedParties());
         MappingStatusPrint mappingStatusPrint = new MappingStatusPrint(totalFiles, totalFileSize);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.submit(mappingStatusPrint);
 
         Collection<FileInfo> listFileInfos = Collections.synchronizedList(new ArrayList<>());
-        String dirValuePrefix = FileUtil.getDirValuePrefix(dir);
 
-        FileOperationPool fileOperationPool = new FileOperationPool();
         HashOperation hashOperation = new HashOperation(algoSelected);
 
-        HashingTaskExecutor.getFiles(fileOperationPool, phaser, dir, dirValuePrefix, mappingStatusPrint, processedFiles, processedFileSize,
-                mapExistingFileInfos, listFileInfos, hashOperation);
+        HashingTaskExecutor.executeFileHashing(phaser, dir, mapExistingFileInfos, listFileInfos, hashOperation);
         try {
             phaser.arriveAndAwaitAdvance();
             executorService.shutdownNow();
             executorService.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException interruptedException) {
-            log.warn("Interuppted phaser", interruptedException);
+            log.warn("Interrupted phaser", interruptedException);
         }
 
         log.info("Mapped {} file hashes out of {} files", listFileInfos.size(), totalFiles);

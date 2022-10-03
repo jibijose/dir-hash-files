@@ -4,23 +4,21 @@ import static java.lang.String.format;
 import static com.jibi.util.NumberUtil.formatCommasInNumber;
 
 import com.jibi.util.DateUtil;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Date;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public class MappingStatusPrint implements Runnable {
+
+    public static AtomicLong PROCESSED_FILE_COUNT = new AtomicLong(0);
+    public static AtomicLong PROCESSED_FILE_SIZE = new AtomicLong(0);
+
     private long totalFiles;
     private long totalFileSize;
-    @Setter
-    private long processedFiles;
-    @Setter
-    private long processedFileSize;
-
     private int sleepIntervalMillis = 1000;
     private int numOfPrints = 10;
 
@@ -62,6 +60,8 @@ public class MappingStatusPrint implements Runnable {
         dateStartTime = new Date();
         boolean exitNow = false;
         while (true) {
+            long processedFiles = PROCESSED_FILE_COUNT.get();
+            long processedFileSize = PROCESSED_FILE_SIZE.get();
             try {
                 if (totalFiles > 0 && totalFileSize > 0 && processedFiles > 0 && processedFileSize > 0) {
                     String percentageCompletedByCount = format("%1$6s", decimalFormat.format(100.0 * processedFiles / totalFiles));

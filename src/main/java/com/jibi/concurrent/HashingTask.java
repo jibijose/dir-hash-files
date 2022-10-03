@@ -9,9 +9,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Phaser;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public class HashingTask extends Thread {
@@ -19,21 +17,14 @@ public class HashingTask extends Thread {
     private Phaser phaser;
     private File file;
     private String dirValuePrefix;
-    private MappingStatusPrint mappingStatusPrint;
-    private AtomicLong processedFiles;
-    private AtomicLong processedFileSize;
     private Map<String, FileInfo> mapExistingFileInfos;
     private Collection<FileInfo> listFileInfos;
     private HashOperation hashOperation;
 
-    public HashingTask(Phaser phaser, File file, String dirValuePrefix, MappingStatusPrint mappingStatusPrint, AtomicLong processedFiles, AtomicLong processedFileSize,
-                       Map<String, FileInfo> mapExistingFileInfos, Collection<FileInfo> listFileInfos, HashOperation hashOperation) {
+    public HashingTask(Phaser phaser, File file, String dirValuePrefix, Map<String, FileInfo> mapExistingFileInfos, Collection<FileInfo> listFileInfos, HashOperation hashOperation) {
         this.phaser = phaser;
         this.file = file;
         this.dirValuePrefix = dirValuePrefix;
-        this.mappingStatusPrint = mappingStatusPrint;
-        this.processedFiles = processedFiles;
-        this.processedFileSize = processedFileSize;
         this.mapExistingFileInfos = mapExistingFileInfos;
         this.listFileInfos = listFileInfos;
         this.hashOperation = hashOperation;
@@ -54,8 +45,8 @@ public class HashingTask extends Thread {
             listFileInfos.add(fileInfo);
             log.trace("Hashed file {}", relativeFilePath);
         }
-        mappingStatusPrint.setProcessedFiles(processedFiles.incrementAndGet());
-        mappingStatusPrint.setProcessedFileSize(processedFileSize.addAndGet(fileInfo.getSize()));
+        MappingStatusPrint.PROCESSED_FILE_COUNT.incrementAndGet();
+        MappingStatusPrint.PROCESSED_FILE_SIZE.addAndGet(fileInfo.getSize());
         phaser.arriveAndDeregister();
     }
 }

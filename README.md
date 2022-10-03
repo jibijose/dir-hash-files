@@ -185,5 +185,4 @@ java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p tru
 | 2        | functional    | file names should contain markers and datetime |
 | 2        | automation    | Auto script samples                            |
 | 3        | functional    | manual/auto sync mode                          |
-| 1        | bug           | files added/deleted in between                 |
  
