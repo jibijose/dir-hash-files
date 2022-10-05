@@ -1,7 +1,5 @@
 package com.jibi.file;
 
-import static com.jibi.common.Constants.CORRUPTED;
-
 import com.jibi.common.Algorithm;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.HashStatusThree;
@@ -215,13 +213,13 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         if (NEWFILE.equals(leftSide.getStatus())) {
             return cellStyles.get(DATAROWLEFTSTYLE);
         } else {
-            if (leftSide.getHash() != null && !CORRUPTED.equals(leftSide.getHash())
+            if (leftSide.hasSomeHashValue()
                     && (leftSide.getHash().equals(centerSide.getHash()) && leftSide.getHash().equals(rightSide.getHash()))) {
                 return cellStyles.get(DATAROWLEFTSTYLE);
-            } else if (leftSide.getHash() != null && !CORRUPTED.equals(leftSide.getHash())
+            } else if (leftSide.hasSomeHashValue()
                     && (leftSide.getHash().equals(centerSide.getHash()) || leftSide.getHash().equals(rightSide.getHash()))) {
                 return cellStyles.get(DATAROWLEFTSTYLE);
-            } else if (centerSide.getHash() != null && !CORRUPTED.equals(leftSide.getHash())
+            } else if (centerSide.hasSomeHashValue()
                     && centerSide.getHash().equals(rightSide.getHash())) {
                 return cellStyles.get(DATAROWLEFTMAROONSTYLE);
             } else {

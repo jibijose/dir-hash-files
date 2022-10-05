@@ -1,6 +1,8 @@
 package com.jibi.vo;
 
 import static com.jibi.common.Constants.CORRUPTED;
+import static com.jibi.common.Constants.ACCESS_DENIED;
+import static com.jibi.common.Constants.LOCKED;
 
 import lombok.*;
 
@@ -39,11 +41,15 @@ public class OneSide {
         if (!exists() || !otherSide.exists()) {
             return false;
         }
-        if (CORRUPTED.equals(hash) && CORRUPTED.equals(otherSide.getHash())
+        if (hasSomeHashValue() && otherSide.hasSomeHashValue()
                 && hash.equals(otherSide.getHash()) && size == otherSide.getSize()) {
             return true;
         }
         return false;
+    }
+
+    public boolean hasSomeHashValue() {
+        return getHash() != null && (!CORRUPTED.equals(getHash()) || !ACCESS_DENIED.equals(getHash()) || !LOCKED.equals(getHash()));
     }
 
 }

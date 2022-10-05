@@ -9,20 +9,17 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.Phaser;
 
 @Slf4j
 public class HashingTask extends Thread {
 
-    private Phaser phaser;
     private File[] files;
     private String dirValuePrefix;
     private Map<String, FileInfo> mapExistingFileInfos;
     private Collection<FileInfo> listFileInfos;
     private HashOperation hashOperation;
 
-    public HashingTask(Phaser phaser, File[] files, String dirValuePrefix, Map<String, FileInfo> mapExistingFileInfos, Collection<FileInfo> listFileInfos, HashOperation hashOperation) {
-        this.phaser = phaser;
+    public HashingTask(File[] files, String dirValuePrefix, Map<String, FileInfo> mapExistingFileInfos, Collection<FileInfo> listFileInfos, HashOperation hashOperation) {
         this.files = files;
         this.dirValuePrefix = dirValuePrefix;
         this.mapExistingFileInfos = mapExistingFileInfos;
@@ -31,6 +28,7 @@ public class HashingTask extends Thread {
     }
 
     public void run() {
+        CustomPhaser customPhaser = CustomPhaser.getInstance();
         for (File file : files) {
             String relativeFilePath = FileUtil.getFileRelativePath(file, dirValuePrefix);
             FileInfo fileInfo;
@@ -48,7 +46,7 @@ public class HashingTask extends Thread {
             }
             MappingStatusPrint.PROCESSED_FILE_COUNT.incrementAndGet();
             MappingStatusPrint.PROCESSED_FILE_SIZE.addAndGet(fileInfo.getSize());
-            phaser.arriveAndDeregister();
+            customPhaser.deregister();
         }
     }
 }

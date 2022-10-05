@@ -52,7 +52,13 @@ public class HashOperation {
             return sb.toString();
         } catch (IOException ioException) {
             log.warn("IOException in hashing file {}", file);
-            return Constants.CORRUPTED;
+            if (ioException.getClass() != null && "java.io.FileNotFoundException".equals(ioException.getClass().getName())) {
+                return Constants.ACCESS_DENIED;
+            } else if (ioException.getMessage().equals("The process cannot access the file because another process has locked a portion of the file")) {
+                return Constants.LOCKED;
+            } else {
+                return Constants.CORRUPTED;
+            }
         } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
             log.error("No such algorithm", noSuchAlgorithmException);
             throw new RuntimeException("No such algorithm");

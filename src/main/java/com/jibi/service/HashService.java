@@ -1,7 +1,6 @@
 package com.jibi.service;
 
 import static com.jibi.util.NumberUtil.formatCommasInNumber;
-import static com.jibi.common.Constants.CORRUPTED;
 
 import static com.jibi.util.FileUtil.MATCH;
 import static com.jibi.util.FileUtil.MISMATCH;
@@ -20,6 +19,7 @@ import static com.jibi.util.ValidationUtil.validateRecompareHash;
 
 import com.jibi.common.Algorithm;
 import com.jibi.common.HashOperation;
+import com.jibi.concurrent.CustomPhaser;
 import com.jibi.concurrent.HashingTaskExecutor;
 import com.jibi.concurrent.MappingStatusPrint;
 import com.jibi.file.*;
@@ -320,8 +320,8 @@ public class HashService {
         long totalFileSize = files.stream().mapToLong(File::length).sum();
         log.info("Got {} files of total size {} to process", formatCommasInNumber(totalFiles), formatCommasInNumber(totalFileSize));
 
-        final Phaser phaser = new Phaser();
-        phaser.register();
+        CustomPhaser customPhaser = CustomPhaser.getInstance();
+
         MappingStatusPrint mappingStatusPrint = new MappingStatusPrint(totalFiles, totalFileSize);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.submit(mappingStatusPrint);
@@ -331,9 +331,9 @@ public class HashService {
         HashOperation hashOperation = new HashOperation(algoSelected);
 
         HashingTaskExecutor hashingTaskExecutor = new HashingTaskExecutor(FileUtil.getDirValuePrefix(directory));
-        hashingTaskExecutor.executeFileHashing(phaser, directory, mapExistingFileInfos, listFileInfos, hashOperation);
+        hashingTaskExecutor.executeFileHashing(directory, mapExistingFileInfos, listFileInfos, hashOperation);
         try {
-            phaser.arriveAndAwaitAdvance();
+            customPhaser.awaitDeregisterAll();
             executorService.shutdownNow();
             executorService.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException interruptedException) {
@@ -367,7 +367,7 @@ public class HashService {
                         hashStatusTwo.setStatus(MISMATCH);
                     }
                 } else {
-                    if (!fileInfoLeft.getHash().equals(CORRUPTED) && !fileInfoRight.getHash().equals(CORRUPTED)
+                    if (fileInfoLeft.hasSomeHashValue() && fileInfoRight.hasSomeHashValue()
                             && fileInfoLeft.getHash().equals(fileInfoRight.getHash()) && fileInfoLeft.getSize() == fileInfoRight.getSize()) {
                         hashStatusTwo.setStatus(MATCH);
                     } else {

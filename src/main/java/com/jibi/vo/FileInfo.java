@@ -4,6 +4,8 @@ import lombok.*;
 
 import java.util.Date;
 
+import static com.jibi.common.Constants.*;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -19,4 +21,8 @@ public class FileInfo {
     private String hash;
     @EqualsAndHashCode.Exclude
     private Date lastModified;
+
+    public boolean hasSomeHashValue() {
+        return (!getHash().equals(CORRUPTED) || !getHash().equals(ACCESS_DENIED) || !getHash().equals(LOCKED));
+    }
 }
