@@ -339,7 +339,7 @@ public class HashService {
             log.warn("Interrupted phaser", interruptedException);
         }
 
-        log.info("Mapped {} file hashes out of {} files", listFileInfos.size(), totalFiles);
+        log.info("Mapped {} file hashes out of expected {} files [file counts may not match if files are deleted/modified]", listFileInfos.size(), totalFiles);
         return listFileInfos;
     }
 

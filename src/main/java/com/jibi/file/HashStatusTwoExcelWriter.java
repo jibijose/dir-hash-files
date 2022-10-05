@@ -36,12 +36,12 @@ public class HashStatusTwoExcelWriter extends ExcelWriter {
         sortedHashStatusMap.putAll(hashStatusMap);
 
         try {
-            XSSFWorkbook workbook = new XSSFWorkbook();
-            //SXSSFWorkbook workbook = new SXSSFWorkbook(workbookTemplate);
-            //workbook.setCompressTempFiles(true);
+            XSSFWorkbook workbookTemplate = new XSSFWorkbook();
+            SXSSFWorkbook workbook = new SXSSFWorkbook(workbookTemplate);
+            workbook.setCompressTempFiles(true);
 
             Sheet sheet = workbook.createSheet("HashStatus");
-            //((SXSSFSheet) sheet).setRandomAccessWindowSize(100);
+            ((SXSSFSheet) sheet).setRandomAccessWindowSize(100);
             sheet.createFreezePane(0, 1);
 
             setSheetWidths(sheet, algoLength);

@@ -8,14 +8,14 @@ import com.jibi.vo.FileInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -35,19 +35,21 @@ public class FileInfoExcelWriter extends ExcelWriter {
             algoValue = algoSelected.getValue();
         }
         listFileInfos = listFileInfos.stream()
-                .sorted((fileInfo1, fileInfo2) -> fileInfo1.getFilename().compareTo(fileInfo2.getFilename()))
+                .sorted(Comparator.comparing(FileInfo::getFilename))
                 .collect(Collectors.toList());
 
         try {
-            XSSFWorkbook workbook = new XSSFWorkbook();
-            XSSFSheet sheet = workbook.createSheet("FileInfo");
+            XSSFWorkbook workbookTemplate = new XSSFWorkbook();
+            SXSSFWorkbook workbook = new SXSSFWorkbook(workbookTemplate);
+            workbook.setCompressTempFiles(true);
+            Sheet sheet = workbook.createSheet("FileInfo");
+            ((SXSSFSheet) sheet).setRandomAccessWindowSize(100);
             sheet.createFreezePane(0, 1);
             setSheetWidths(sheet, algoLength);
             setCellStyles(workbook);
 
-            // Create a header row describing what the columns mean
             CellStyle topRowStyle = workbook.createCellStyle();
-            XSSFFont fontTop = workbook.createFont();
+            Font fontTop = workbook.createFont();
             fontTop.setBold(true);
             topRowStyle.setFont(fontTop);
             topRowStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -56,17 +58,17 @@ public class FileInfoExcelWriter extends ExcelWriter {
             topRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
             CellStyle dataRowStyle = workbook.createCellStyle();
-            XSSFFont fontData = workbook.createFont();
+            Font fontData = workbook.createFont();
             dataRowStyle.setFont(fontData);
 
-            XSSFRow headerRow = sheet.createRow(0);
+            Row headerRow = sheet.createRow(0);
             List<String> rowHeaders = Arrays.asList(algoValue, "Size", "Date Modified", "File Name");
             addStringCells(headerRow, rowHeaders, cellStyles.get(TOPROWSTYLE));
 
             AtomicInteger rowIndex = new AtomicInteger(1);
             AtomicInteger requiredFileNameWidth = new AtomicInteger(0);
             listFileInfos.stream().forEach(fileInfo -> {
-                XSSFRow dataRow = sheet.createRow(rowIndex.getAndIncrement());
+                Row dataRow = sheet.createRow(rowIndex.getAndIncrement());
                 addDataCells(dataRow, fileInfo);
                 if (fileInfo.getFilename().length() > requiredFileNameWidth.get()) {
                     requiredFileNameWidth.set(fileInfo.getFilename().length());
