@@ -13,11 +13,17 @@ import java.util.concurrent.Phaser;
 @Slf4j
 public class HashingTaskExecutor {
 
-    public static List<File> executeFileHashing(Phaser phaser, String directory, Map<String, FileInfo> mapExistingFileInfos, Collection<FileInfo> listFileInfos, HashOperation hashOperation) {
+    private FileOperationPool fileOperationPool;
+    private String dirValuePrefix;
+
+    public HashingTaskExecutor(String dirValuePrefix) {
+        fileOperationPool = new FileOperationPool();
+        this.dirValuePrefix = dirValuePrefix;
+    }
+
+    public List<File> executeFileHashing(Phaser phaser, String directory, Map<String, FileInfo> mapExistingFileInfos, Collection<FileInfo> listFileInfos, HashOperation hashOperation) {
         List<File> fileList = new ArrayList<>();
         File[] files = new File(directory).listFiles();
-        FileOperationPool fileOperationPool = new FileOperationPool();
-        String dirValuePrefix = FileUtil.getDirValuePrefix(directory);
         if (files == null) {
             return Collections.EMPTY_LIST;
         }

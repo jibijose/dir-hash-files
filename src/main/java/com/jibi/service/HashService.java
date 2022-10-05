@@ -312,9 +312,9 @@ public class HashService {
         return mapDirFilesInternal(algoSelected, dir, mapExistingFileInfos);
     }
 
-    private Collection<FileInfo> mapDirFilesInternal(Algorithm algoSelected, String dir, Map<String, FileInfo> mapExistingFileInfos) {
+    private Collection<FileInfo> mapDirFilesInternal(Algorithm algoSelected, String directory, Map<String, FileInfo> mapExistingFileInfos) {
         log.debug("************************************************************************************************************************");
-        Collection<File> files = FileUtil.getFiles(dir);
+        Collection<File> files = FileUtil.getFiles(directory);
         long totalFiles = files.size();
         long totalFileSize = files.stream().mapToLong(File::length).sum();
         log.info("Got {} files of total size {} to process", formatCommasInNumber(totalFiles), formatCommasInNumber(totalFileSize));
@@ -329,7 +329,8 @@ public class HashService {
 
         HashOperation hashOperation = new HashOperation(algoSelected);
 
-        HashingTaskExecutor.executeFileHashing(phaser, dir, mapExistingFileInfos, listFileInfos, hashOperation);
+        HashingTaskExecutor hashingTaskExecutor = new HashingTaskExecutor(FileUtil.getDirValuePrefix(directory));
+        hashingTaskExecutor.executeFileHashing(phaser, directory, mapExistingFileInfos, listFileInfos, hashOperation);
         try {
             phaser.arriveAndAwaitAdvance();
             executorService.shutdownNow();
