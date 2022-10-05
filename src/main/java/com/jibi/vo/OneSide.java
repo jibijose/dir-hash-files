@@ -1,5 +1,7 @@
 package com.jibi.vo;
 
+import static com.jibi.common.Constants.CORRUPTED;
+
 import lombok.*;
 
 import java.util.Date;
@@ -37,7 +39,8 @@ public class OneSide {
         if (!exists() || !otherSide.exists()) {
             return false;
         }
-        if (hash.equals(otherSide.getHash()) && size == otherSide.getSize()) {
+        if (CORRUPTED.equals(hash) && CORRUPTED.equals(otherSide.getHash())
+                && hash.equals(otherSide.getHash()) && size == otherSide.getSize()) {
             return true;
         }
         return false;

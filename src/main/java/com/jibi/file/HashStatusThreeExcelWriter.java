@@ -1,5 +1,7 @@
 package com.jibi.file;
 
+import static com.jibi.common.Constants.CORRUPTED;
+
 import com.jibi.common.Algorithm;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.HashStatusThree;
@@ -213,11 +215,14 @@ public class HashStatusThreeExcelWriter extends ExcelWriter {
         if (NEWFILE.equals(leftSide.getStatus())) {
             return cellStyles.get(DATAROWLEFTSTYLE);
         } else {
-            if (leftSide.getHash() != null && (leftSide.getHash().equals(centerSide.getHash()) && leftSide.getHash().equals(rightSide.getHash()))) {
+            if (leftSide.getHash() != null && !CORRUPTED.equals(leftSide.getHash())
+                    && (leftSide.getHash().equals(centerSide.getHash()) && leftSide.getHash().equals(rightSide.getHash()))) {
                 return cellStyles.get(DATAROWLEFTSTYLE);
-            } else if (leftSide.getHash() != null && (leftSide.getHash().equals(centerSide.getHash()) || leftSide.getHash().equals(rightSide.getHash()))) {
+            } else if (leftSide.getHash() != null && !CORRUPTED.equals(leftSide.getHash())
+                    && (leftSide.getHash().equals(centerSide.getHash()) || leftSide.getHash().equals(rightSide.getHash()))) {
                 return cellStyles.get(DATAROWLEFTSTYLE);
-            } else if (centerSide.getHash() != null && centerSide.getHash().equals(rightSide.getHash())) {
+            } else if (centerSide.getHash() != null && !CORRUPTED.equals(leftSide.getHash())
+                    && centerSide.getHash().equals(rightSide.getHash())) {
                 return cellStyles.get(DATAROWLEFTMAROONSTYLE);
             } else {
                 return cellStyles.get(DATAROWLEFTMAROONSTYLE);

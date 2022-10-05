@@ -1,6 +1,7 @@
 package com.jibi.service;
 
 import static com.jibi.util.NumberUtil.formatCommasInNumber;
+import static com.jibi.common.Constants.CORRUPTED;
 
 import static com.jibi.util.FileUtil.MATCH;
 import static com.jibi.util.FileUtil.MISMATCH;
@@ -366,7 +367,8 @@ public class HashService {
                         hashStatusTwo.setStatus(MISMATCH);
                     }
                 } else {
-                    if (fileInfoLeft.getHash().equals(fileInfoRight.getHash()) && fileInfoLeft.getSize() == fileInfoRight.getSize()) {
+                    if (!fileInfoLeft.getHash().equals(CORRUPTED) && !fileInfoRight.getHash().equals(CORRUPTED)
+                            && fileInfoLeft.getHash().equals(fileInfoRight.getHash()) && fileInfoLeft.getSize() == fileInfoRight.getSize()) {
                         hashStatusTwo.setStatus(MATCH);
                     } else {
                         hashStatusTwo.setStatus(MISMATCH);

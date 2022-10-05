@@ -180,10 +180,8 @@ java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p tru
 # TODO
 | Priority | Type          | Description                                    |
 |----------|:--------------|------------------------------------------------|
-| 1        | documentation | readme updates                                 |
-| 1        | bug           | behaviour when disk/drive not readable         |
-| 1        | functional    | create/recreate and compare/recompare merge    |
 | 2        | functional    | file names should contain markers and datetime |
 | 2        | automation    | Auto script samples                            |
 | 3        | functional    | manual/auto sync mode                          |
+| 3        | functional    | include empty directory hashing?               |
  

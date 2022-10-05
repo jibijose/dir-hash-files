@@ -3,6 +3,7 @@ package com.jibi.file;
 import static com.jibi.util.DateUtil.format;
 
 import com.jibi.common.Algorithm;
+import com.jibi.common.Constants;
 import com.jibi.util.FileUtil;
 import com.jibi.vo.FileInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -113,7 +114,11 @@ public class FileInfoExcelWriter extends ExcelWriter {
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(fileInfo.getHash());
-        cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
+        if (Constants.CORRUPTED.equals(fileInfo.getHash())) {
+            cell.setCellStyle(cellStyles.get(DATAROWLEFTREDSTYLE));
+        } else {
+            cell.setCellStyle(cellStyles.get(DATAROWLEFTSTYLE));
+        }
 
         cell = row.createCell(colIndex++, CellType.STRING);
         cell.setCellValue(fileInfo.getSize());

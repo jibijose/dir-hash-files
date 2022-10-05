@@ -1,11 +1,14 @@
 package com.jibi.common;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+@Slf4j
 public class HashOperation {
 
     private Algorithm algoSelected;
@@ -46,12 +49,13 @@ public class HashOperation {
             for (int i = 0; i < bytes.length; i++) {
                 sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
             }
-
             return sb.toString();
         } catch (IOException ioException) {
-            return null;
+            log.warn("IOException in hashing file {}", file);
+            return Constants.CORRUPTED;
         } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-            return null;
+            log.error("No such algorithm", noSuchAlgorithmException);
+            throw new RuntimeException("No such algorithm");
         }
     }
 }
