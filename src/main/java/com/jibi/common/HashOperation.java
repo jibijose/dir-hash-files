@@ -51,7 +51,7 @@ public class HashOperation {
             }
             return sb.toString();
         } catch (IOException ioException) {
-            log.warn("IOException in hashing file {}", file);
+            log.warn("IOException in hashing file [{}]   {}", file, ioException.getMessage());
             if (ioException.getClass() != null && "java.io.FileNotFoundException".equals(ioException.getClass().getName())) {
                 return Constants.ACCESS_DENIED;
             } else if (ioException.getMessage().equals("The process cannot access the file because another process has locked a portion of the file")) {

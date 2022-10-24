@@ -11,7 +11,7 @@ Assuming you have two or three backups of your files in drives/directories, with
 ## Requirements
 | Software      | Version |        Verify |                                               Comments |
 |---------------|:-------:|--------------:|-------------------------------------------------------:|
-| java          |   8+    | java -version | Any version 8 or above<br/>Check appveyor build status |
+| java          |  11+    | java -version | Any version 8 or above<br/>Check appveyor build status |
 
 ## Build locally
 ```
