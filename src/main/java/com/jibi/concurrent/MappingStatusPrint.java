@@ -3,7 +3,9 @@ package com.jibi.concurrent;
 import static java.lang.String.format;
 import static com.jibi.util.NumberUtil.formatCommasInNumber;
 
+import com.jibi.common.Constants;
 import com.jibi.util.DateUtil;
+import com.jibi.util.SoundUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.RoundingMode;
@@ -107,10 +109,17 @@ public class MappingStatusPrint implements Runnable {
 
                     String formattedDateEtc = DateUtil.displayTimeFormatted(new Date(dateStartTime.getTime() + expectedMaxTimeLeftSeconds * 1000));
 
-                    log.info("Progress: File {}% [{}/{}]  Size {}% [{}/{}]   Spent [{}]   Left [{}]   ETC [{}]",
-                            percentageCompletedByCount, formatCommasInNumber(format("%0" + digitsTotalFiles + "d", processedFiles)), formatCommasInNumber(totalFiles),
-                            percentageCompletedBySize, formatCommasInNumber(format("%0" + digitsTotalFileSize + "d", processedFileSize)), formatCommasInNumber(totalFileSize),
-                            formattedTimeSpent, formattedTimeLeft, formattedDateEtc);
+                    if (Constants.BLOCKED_READS.get() == 0) {
+                        log.info("Progress: File {}% [{}/{}]  Size {}% [{}/{}]   Spent [{}]   Left [{}]   ETC [{}]",
+                                percentageCompletedByCount, formatCommasInNumber(format("%0" + digitsTotalFiles + "d", processedFiles)), formatCommasInNumber(totalFiles),
+                                percentageCompletedBySize, formatCommasInNumber(format("%0" + digitsTotalFileSize + "d", processedFileSize)), formatCommasInNumber(totalFileSize),
+                                formattedTimeSpent, formattedTimeLeft, formattedDateEtc);
+                    } else {
+                        SoundUtil.tone(1000, 100);
+                        //SoundUtil.tone(5000, 100);
+                        //SoundUtil.tone(400, 500);
+                        //SoundUtil.tone(400, 500, 0.2);
+                    }
                 }
                 if (exitNow) {
                     break;

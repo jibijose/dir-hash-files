@@ -166,7 +166,7 @@ public class FileUtil {
         return excelPassword;
     }
 
-    private static String getUserInputFilePassword(String message) {
+    public static String getUserInputFilePassword(String message) {
         Scanner scanner = new Scanner(System.in);
         System.out.print(format("Enter %s : ", message));
         return scanner.nextLine();

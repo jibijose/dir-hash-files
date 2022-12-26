@@ -1,5 +1,7 @@
 package com.jibi.common;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class Constants {
 
     public static final String CORRUPTED = "CORRUPTED";
@@ -8,4 +10,5 @@ public class Constants {
 
     public static final int PHASER_THRESHOLD = 2;
 
+    public static AtomicInteger BLOCKED_READS = new AtomicInteger(0);
 }
