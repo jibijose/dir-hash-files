@@ -1,5 +1,6 @@
 package com.jibi.common;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Constants {
@@ -11,4 +12,5 @@ public class Constants {
     public static final int PHASER_THRESHOLD = 2;
 
     public static AtomicInteger BLOCKED_READS = new AtomicInteger(0);
+    public static AtomicBoolean SKIP_ALL = new AtomicBoolean(false);
 }

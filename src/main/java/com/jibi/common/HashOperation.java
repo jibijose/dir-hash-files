@@ -23,7 +23,7 @@ public class HashOperation {
             return "";
         }
 
-        while (true) {
+        while (!Constants.SKIP_ALL.get()) {
             try {
                 MessageDigest digest = MessageDigest.getInstance(algoSelected.getValue());
                 //Get file input stream for reading the file content
@@ -55,10 +55,13 @@ public class HashOperation {
             } catch (IOException ioException) {
                 log.warn("IOException in hashing file [{}]   {}", file, ioException.getMessage());
                 Constants.BLOCKED_READS.incrementAndGet();
-                String userAttemptChoice = FileUtil.getUserInputFilePassword("Reattempt (y/n)? reading file " + file.getName() + " ? ");
+                String userAttemptChoice = FileUtil.getUserInputFilePassword("Skip All (s) or Reattempt (y/n)? reading file " + file.getName() + " ? ");
                 Constants.BLOCKED_READS.decrementAndGet();
                 if (userAttemptChoice.equals("y")) {
                     log.info("Reattempting hashing file {}", file.getName());
+                    continue;
+                } else if (userAttemptChoice.equals("s")) {
+                    Constants.SKIP_ALL.set(true);
                     continue;
                 }
                 if (ioException.getClass() != null && "java.io.FileNotFoundException".equals(ioException.getClass().getName())) {
@@ -73,5 +76,6 @@ public class HashOperation {
                 throw new RuntimeException("No such algorithm");
             }
         }
+        return "";
     }
 }

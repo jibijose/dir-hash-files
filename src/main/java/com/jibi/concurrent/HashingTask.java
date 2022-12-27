@@ -41,7 +41,9 @@ public class HashingTask extends Thread {
             } else {
                 String fileHash = hashOperation.getFileChecksum(file);
                 fileInfo = new FileInfo(relativeFilePath, file.length(), fileHash, new Date(file.lastModified()));
-                listFileInfos.add(fileInfo);
+                if (!("".equals(fileHash))) {
+                    listFileInfos.add(fileInfo);
+                }
                 log.trace("Hashed file {}", relativeFilePath);
             }
             MappingStatusPrint.PROCESSED_FILE_COUNT.incrementAndGet();

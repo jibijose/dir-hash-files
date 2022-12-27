@@ -175,7 +175,18 @@ java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p fal
 ############ three way recomparison with hash and password ###########################
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m recompare -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -f "hashstatus.xlsx" -o hashstatusnew.xlsx 
 ```
-
+# Errors
+Program will pause execution with intermittent alert sound asking the user's preference with the following message prompt.
+```
+Skip All (s) or Reattempt (y/n)? reading file [FILE] ?
+```
+### Reattempt (y)
+If it is a temporary error like drive disconnection or file corruption then the user can take necessary corrections and reattempt the same file.
+### Reattempt (n)
+If it is an unrecoverable file error then the user can continue hashing other files by skipping only this file.
+### Skip All (s)
+If it is an unknown error by selecting this, program will skip all unprocessed files and will save hash status of processed files.  
+User can use recreate mode to create hash file starting from this partially successful hash status file.  
 
 # TODO
 | Priority | Type          | Description                                    |
