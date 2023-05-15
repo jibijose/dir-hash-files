@@ -195,4 +195,4 @@ User can use recreate mode to create hash file starting from this partially succ
 | 2        | automation    | Auto script samples                            |
 | 3        | functional    | manual/auto sync mode                          |
 | 3        | functional    | include empty directory hashing?               |
- 
+| 3        | functional    | ignore thumbs.db                               |
