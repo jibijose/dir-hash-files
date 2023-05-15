@@ -71,6 +71,7 @@ java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p false -h MD5 -i ".\s
 ############ create fileinfo file with hash and password ###########################
 java -jar target\dirhashfiles-1.0.0-shaded.jar -m create -p true -h MD5 -i ".\src\test\resources\testfiles\leftdir" -o fileinfo.xlsx
 ```
+![plot](./static/images/screenshots/create_screenshot.png)  
 
 ### compare
 Compares left, center (optional) and right directory/drive/fileinfo. Hashing should match in all inputs and output file password is optional.  
@@ -106,6 +107,7 @@ java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p false
 ############ three way comparison with hash and password ###########################
 java -Xms1g -Xmx4g -jar target\dirhashfiles-1.0.0-shaded.jar -m compare -p true -h MD5 -l "fileinfo.xlsx" -c ".\src\test\resources\testfiles\centerdir" -r ".\src\test\resources\testfiles\rightdir" -o hashstatus.xlsx  
 ```
+![plot](./static/images/screenshots/compare_screenshot.png)  
 
 ### merge
 Merges output files fileino/hashstatus[two/three]. Useful if you want to run in batches and later combine outputs.
