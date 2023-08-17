@@ -8,7 +8,7 @@ Assuming you have two or three backups of your files in drives/directories, with
 
 # Build status
 [![Github actions build](https://github.com/jibijose/dir-hash-files/actions/workflows/maven.yml/badge.svg)](https://github.com/jibijose/dir-hash-files/actions/workflows/maven.yml)   
-[![Build Status](https://dev.azure.com/jibijose/github-code/_apis/build/status%2Fdir-hash-files%2Fmaven-builds?branchName=master)](https://dev.azure.com/jibijose/github-code/_build/latest?definitionId=7&branchName=master)
+[![Build Status](https://dev.azure.com/jibijose/github-code/_apis/build/status%2Ffilldisk%2Fmaven-builds?branchName=master)](https://dev.azure.com/jibijose/github-code/_build/latest?definitionId=7&branchName=master)   
 
 # Build setup
 
