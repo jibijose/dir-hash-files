@@ -6,6 +6,10 @@ It also compares two/three sources and report misatches. Sources could be hash s
   
 Assuming you have two or three backups of your files in drives/directories, with the output you can easily figure out which file got corrupted and do the corrections manually. If I get time I will add one more mode to auto-sync files.  
 
+# Build status
+[![Github actions build](https://github.com/jibijose/dir-hash-files/actions/workflows/maven.yml/badge.svg)](https://github.com/jibijose/dir-hash-files/actions/workflows/maven.yml)   
+[![Build Status](https://dev.azure.com/jibijose/github-code/_apis/build/status%2Fdir-hash-files%2Fmaven-builds?branchName=master)](https://dev.azure.com/jibijose/github-code/_build/latest?definitionId=7&branchName=master)
+
 # Build setup
 
 ## Requirements
