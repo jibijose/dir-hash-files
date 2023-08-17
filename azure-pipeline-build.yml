@@ -1,0 +1,52 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  branches:
+    include:
+      - '*'
+pr:
+  - '*'
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+  - job: JDK11_Maven_Run
+    displayName: 'JDK11-Maven-Run'
+    timeoutInMinutes: 10
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: JavaToolInstaller@0
+        displayName: Install jdk
+        inputs:
+          versionSpec: '11'
+          jdkArchitectureOption: 'x64'
+          jdkSourceOption: 'PreInstalled'
+      - task: Bash@3
+        displayName: Run jdk11 maven
+        inputs:
+          targetType: 'inline'
+          script: |
+            ./mvnw clean package
+  - job: JDK17_Maven_Run
+    displayName: 'JDK17-Maven-Run'
+    timeoutInMinutes: 10
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: JavaToolInstaller@0
+        displayName: Install jdk
+        inputs:
+          versionSpec: '17'
+          jdkArchitectureOption: 'x64'
+          jdkSourceOption: 'PreInstalled'
+      - task: Bash@3
+        displayName: Run jdk17 maven
+        inputs:
+          targetType: 'inline'
+          script: |
+            ./mvnw clean package
